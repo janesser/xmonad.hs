@@ -4,6 +4,7 @@ import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.UrgencyHook
 import XMonad.Hooks.ManageHelpers
+import qualified XMonad.Hooks.EwmhDesktops as E
 import XMonad.Layout.Fullscreen
 import XMonad.Util.Run(spawnPipe)
 import XMonad.Util.EZConfig(additionalKeysP)
@@ -29,11 +30,13 @@ myManageHook = manageHook myConfig <+>
 
 myLayoutHook = fullscreenFull $ avoidStruts $ layoutHook myConfig
 
+myEventHook = E.ewmhDesktopsEventHook <+> E.fullscreenEventHook <+> fullscreenEventHook
+
 main = do
     spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
-    xmonad $ withUrgencyHook NoUrgencyHook $ myConfig {
+    xmonad $ withUrgencyHook NoUrgencyHook $ E.ewmh myConfig {
 	logHook = myLogHook spwXMobar,
 	manageHook = myManageHook,
 	layoutHook = myLayoutHook,
-	handleEventHook = fullscreenEventHook
+	handleEventHook = myEventHook
     }
