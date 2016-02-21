@@ -18,7 +18,8 @@ myConfig = defaultConfig {
     focusFollowsMouse = False
   } `additionalKeysP` [
     -- bzr branch bzr://anamnesis.bzr.sourceforge.net/bzrroot/anamnesis trunk
-    ("M-c", spawn "anamnesis -b")]
+    ("M-c", spawn "anamnesis -b"),
+    ("M-<Print>", spawn "shutter -s")]
 
 myLogHook spw = dynamicLogWithPP xmobarPP {
   ppOutput = hPutStrLn $ spw
