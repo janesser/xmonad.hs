@@ -9,6 +9,7 @@ import XMonad.Hooks.ManageHelpers
 import qualified XMonad.Hooks.EwmhDesktops as E
 
 import XMonad.Layout.Fullscreen
+import XMonad.Layout.NoBorders
 import XMonad.Util.Run(spawnPipe)
 import XMonad.Util.EZConfig(additionalKeysP)
 
@@ -32,7 +33,7 @@ myManageHook = manageDocks <+>
   manageHook myConfig <+> 
   fullscreenManageHook
 
-myLayoutHook = fullscreenFull $ avoidStruts $ layoutHook myConfig
+myLayoutHook = smartBorders $ fullscreenFull $ avoidStruts $ layoutHook myConfig
 
 myEventHook = E.ewmhDesktopsEventHook <+> 
   E.fullscreenEventHook <+> 
