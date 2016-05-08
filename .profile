@@ -1,7 +1,16 @@
 #!/bin/sh
-
-# ln -s ~/.xmonad/.profile ~/.profile
+# install: ln -s ~/.xmonad/.profile ~/.profile
+# requirements: apt-get install anamnesis x11-xserver-utils trayer network-manager xscreensaver xss-lock
 
 anamnesis --start
 
 xsetroot -solid black
+
+trayer --SetDockType true --SetPartialStrut true &
+
+if [ -x /usr/bin/nm-applet ] ; then
+   nm-applet --sm-disable &
+fi
+
+xscreensaver -no-splash &
+xss-lock -- xscreensaver-command -lock &
