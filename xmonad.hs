@@ -24,7 +24,7 @@ myConfig = defaultConfig {
     -- bzr branch bzr://anamnesis.bzr.sourceforge.net/bzrroot/anamnesis trunk
     ("M-c", spawn "anamnesis -b"),
     ("M-<Print>", spawn "shutter -s"),
-    ("M-l", spawn "xscreensaver-command --lock")]
+    ("M-L", spawn "xscreensaver-command --lock")]
 
 myLogHook spw = dynamicLogWithPP xmobarPP {
   ppOutput = hPutStrLn $ spw
