@@ -1,6 +1,7 @@
 import System.IO(hPutStrLn)
 
 import XMonad
+import XMonad.Config
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.UrgencyHook
@@ -17,7 +18,7 @@ import XMonad.Util.EZConfig(additionalKeysP)
 -- - libghc-xmonad-dev
 -- - xmobar
 
-myConfig = defaultConfig {
+myConfig = def {
     modMask = mod4Mask, -- left windows super
     focusFollowsMouse = False
   } `additionalKeysP` [
@@ -42,10 +43,11 @@ myEventHook = E.ewmhDesktopsEventHook <+>
   docksEventHook 
 
 main = do
-    spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
-    xmonad $ withUrgencyHook NoUrgencyHook $ E.ewmh myConfig {
-	logHook = myLogHook spwXMobar,
-	manageHook = myManageHook,
-	layoutHook = myLayoutHook,
-	handleEventHook = myEventHook
-    }
+  spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
+  spwXMonadRc <- spawnPipe "~/.xmonad/xmonadrc"
+  xmonad $ withUrgencyHook NoUrgencyHook $ E.ewmh myConfig {
+    logHook = myLogHook spwXMobar,
+    manageHook = myManageHook,
+    layoutHook = myLayoutHook,
+    handleEventHook = myEventHook
+  }
