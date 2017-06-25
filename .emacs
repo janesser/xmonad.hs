@@ -10,3 +10,9 @@
 (add-to-list 'load-path "/home/jan/gits/stack-ide/stack-mode/")
 (require 'stack-mode)
 (add-hook 'haskell-mode-hook 'stack-mode)
+
+
+(add-hook 'haskell-mode-hook 'haskell-indentation-mode)
+
+(custom-set-variables
+ '(haskell-stylish-on-save t))
