@@ -1,18 +1,11 @@
+;; If you don't have MELPA in your package archives:
 (require 'package)
-(add-to-list 'package-archives
-             '("melpa" . "http://melpa.org/packages/"))
-(when (< emacs-major-version 24)
-  ;; For important compatibility libraries like cl-lib
-  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
+(add-to-list
+  'package-archives
+  '("melpa" . "http://melpa.org/packages/") t)
 (package-initialize)
+(package-refresh-contents)
 
-
-(add-to-list 'load-path "/home/jan/gits/stack-ide/stack-mode/")
-(require 'stack-mode)
-(add-hook 'haskell-mode-hook 'stack-mode)
-
-
-(add-hook 'haskell-mode-hook 'haskell-indentation-mode)
-
-(custom-set-variables
- '(haskell-stylish-on-save t))
+;; Install Intero
+(package-install 'intero)
+(add-hook 'haskell-mode-hook 'intero-mode)
