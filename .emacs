@@ -9,3 +9,10 @@
 ;; Install Intero
 (package-install 'intero)
 (add-hook 'haskell-mode-hook 'intero-mode)
+
+;; Install vue-mode
+;; http://wikemacs.org/wiki/Vuejs
+(package-install 'vue-mode)
+(package-install 'vue-html-mode)
+
+(setq js-indent-level 2)
