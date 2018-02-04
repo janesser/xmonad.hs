@@ -21,3 +21,8 @@ shopt -s histappend
 
 # cabal binaries
 PATH=~/.local/bin:$PATH
+
+# go binaries
+export GOPATH=~/.go
+## openshift source2image
+export PATH=$PATH:${GOPATH}/src/github.com/openshift/source-to-image/_output/local/bin/linux/amd64/
