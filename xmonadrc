@@ -16,3 +16,5 @@ xscreensaver -no-splash &
 xss-lock -- xscreensaver-command -lock &
 
 syndaemon -i 2 -d -t -K &
+
+pulseaudio -D
