@@ -26,3 +26,12 @@ PATH=~/.local/bin:$PATH
 export GOPATH=~/.go
 ## openshift source2image
 export PATH=$PATH:${GOPATH}/src/github.com/openshift/source-to-image/_output/local/bin/linux/amd64/
+
+
+# sqlplus
+## https://help.ubuntu.com/community/Oracle%20Instant%20Client
+export LD_LIBRARY_PATH=/usr/lib/oracle/12.2/client64/lib/${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+
+# docker-compose
+## https://github.com/palantir/docker-compose-rule/blob/master/docker-compose-rule-core/src/main/java/com/palantir/docker/compose/execution/DockerComposeExecutable.java
+export DOCKER_COMPOSE_LOCATION=~/.local/bin/docker-compose
