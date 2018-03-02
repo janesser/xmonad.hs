@@ -1,20 +1,37 @@
 #!/bin/sh
-# install: ln -s ~/.xmonad/.profile ~/.profile
-# requirements: apt-get install anamnesis x11-xserver-utils trayer network-manager xscreensaver xss-lock
+# requirements: 
+#   anamnesis from sourceforge
+#   apt-get install python-gtk2 python-xdg
+#     x11-xserver-utils trayer network-manager xscreensaver xss-lock
 
-anamnesis --start
+if [ -x /usr/local/bin/anamnesis ] ; then
+   anamnesis --stop
+   anamnesis --start
+fi
 
 xsetroot -solid black
 
-trayer --SetDockType true --SetPartialStrut true &
+if [ ! "$(pidof trayer)" ] ; then
+   trayer --SetDockType true --SetPartialStrut true &
+fi
 
-if [ -x /usr/bin/nm-applet ] ; then
+if [ ! "$(pidof nm-applet)" ] ; then
    nm-applet --sm-disable &
 fi
 
-xscreensaver -no-splash &
-xss-lock -- xscreensaver-command -lock &
 
-syndaemon -i 2 -d -t -K &
+if [ ! "$(pidof xscreensaver)" ] ; then
+   xscreensaver -no-splash &
+fi
 
-pulseaudio -D
+if [ ! "$(pidof xss-lock)" ] ; then
+   xss-lock -- xscreensaver-command -lock &
+fi
+
+if [ ! "$(pidof syndaemon)" ] ; then
+   syndaemon -i 2 -d -t -K &
+fi
+
+if [ ! "$(pidof pulseaudio)" ] ; then
+   pulseaudio -D
+fi
