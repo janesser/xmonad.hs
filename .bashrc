@@ -19,7 +19,7 @@ shopt -s checkwinsize
 shopt -s histappend
 
 
-# cabal binaries
+# stack install cabal-install
 PATH=~/.local/bin:$PATH
 
 # go binaries
