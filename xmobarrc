@@ -7,14 +7,13 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
   , persistent = True
   , position = Top
   , lowerOnStart = True
-  , commands = [ Run Weather "EDDK" ["-t","<tempC>°C"] 36000
-    , Run MultiCpu ["-t", "<total>%"] 20
-    , Run ThermalZone 0 ["-t", "<temp>°C"] 20
-    , Run Battery ["-t", "<left>%"] 120
-    , Run Date "<fc=#93a1a1>%a %b %_d %Y %H:%M:%S</fc>" "date" 10
-    , Run StdinReader
-  ]
+  , commands = [ Run MultiCpu ["-t", "<total>%"] 20
+               , Run ThermalZone 0 ["-t", "<temp>°C"] 20
+               , Run Battery ["-t", "<left>%"] 120
+               , Run Date "<fc=#93a1a1>%a %b %_d %Y %H:%M:%S</fc>" "date" 10
+               , Run StdinReader
+               ]
   , sepChar = "%"
   , alignSep = "}{"
-  , template = " %StdinReader% }{ CPU: %multicpu% | TMP: %thermal0% | BAT: %battery% | CGN: %EDDK% | %date% "
+  , template = " %StdinReader% }{ CPU: %multicpu% | TMP: %thermal0% | BAT: %battery% | %date% "
 }
