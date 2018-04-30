@@ -28,6 +28,9 @@ export GOPATH=~/.go
 export PATH=$PATH:${GOPATH}/bin
 
 
+# enable /usr/local/lib
+export LD_LIBRARY_PATH=/usr/local/lib/${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+
 # sqlplus
 ## https://help.ubuntu.com/community/Oracle%20Instant%20Client
 export LD_LIBRARY_PATH=/usr/lib/oracle/12.2/client64/lib/${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
