@@ -38,3 +38,6 @@ export LD_LIBRARY_PATH=/usr/lib/oracle/12.2/client64/lib/${LD_LIBRARY_PATH:+:$LD
 # docker-compose
 ## https://github.com/palantir/docker-compose-rule/blob/master/docker-compose-rule-core/src/main/java/com/palantir/docker/compose/execution/DockerComposeExecutable.java
 export DOCKER_COMPOSE_LOCATION=~/.local/bin/docker-compose
+
+# inspectIT
+export INSPECTIT_AGENT_HOME=~/inspectIT/agent/inspectit-agent.jar
