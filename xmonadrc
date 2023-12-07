@@ -1,10 +1,11 @@
-#!/bin/sh
+#!/bin/bash
+
 # requirements: 
-#   anamnesis from sourceforge
+#   anamnesis from https://github.com/oneyb/anamnesis
 #   apt-get install python-gtk2 python-xdg
 #     x11-xserver-utils trayer network-manager xscreensaver xss-lock
 
-if [ -x /usr/local/bin/anamnesis ] ; then
+if [ -x ~/.local/bin/anamnesis ] ; then
    anamnesis --stop
    anamnesis --start
 fi
@@ -33,5 +34,9 @@ if [ ! "$(pidof syndaemon)" ] ; then
 fi
 
 if [ ! "$(pidof pulseaudio)" ] ; then
-   pulseaudio -D
+   start-pulseaudio-x11
+fi
+
+if [! "$(pidof dropbox)" ] ; then
+   dropbox start
 fi
