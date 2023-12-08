@@ -29,7 +29,8 @@ myConfig = def {
     ("<XF86MonBrightnessUp>", spawn "brightness.sh +"),
     ("<XF86MonBrightnessDown>", spawn "brightness.sh -"),
     ("<XF86AudioRaiseVolume>", spawn "volume.sh +"),
-    ("<XF86AudioLowerVolume>", spawn "volume.sh -")
+    ("<XF86AudioLowerVolume>", spawn "volume.sh -"),
+    ("<XF86AudioMute>", spawn "volume.sh mute")
   ]
 
 myLogHook spw = dynamicLogWithPP xmobarPP {
