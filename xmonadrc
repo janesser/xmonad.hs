@@ -2,7 +2,7 @@
 
 # requirements: 
 #   anamnesis from https://github.com/oneyb/anamnesis
-#   apt-get install python-gtk2 python-xdg
+#   apt-get install python-gtk2 python-xdg kupfer shutter
 #     x11-xserver-utils trayer network-manager xscreensaver xss-lock
 
 if [ -x ~/.local/bin/anamnesis ] ; then
@@ -10,7 +10,7 @@ if [ -x ~/.local/bin/anamnesis ] ; then
    anamnesis --start
 fi
 
-xsetroot -solid black
+xsetroot -solid black # feh for background image
 
 if [ ! "$(pidof trayer)" ] ; then
    trayer --SetDockType true --SetPartialStrut true &
@@ -19,7 +19,6 @@ fi
 if [ ! "$(pidof nm-applet)" ] ; then
    nm-applet --sm-disable &
 fi
-
 
 if [ ! "$(pidof xscreensaver)" ] ; then
    xscreensaver -no-splash &
@@ -37,6 +36,6 @@ if [ ! "$(pidof pulseaudio)" ] ; then
    start-pulseaudio-x11
 fi
 
-if [! "$(pidof dropbox)" ] ; then
+if [ ! "$(pidof dropbox)" ] ; then
    dropbox start
 fi

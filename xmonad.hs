@@ -22,7 +22,7 @@ myConfig = def {
     modMask = mod4Mask, -- left windows super
     focusFollowsMouse = False
   } `additionalKeysP` [
-    -- bzr branch bzr://anamnesis.bzr.sourceforge.net/bzrroot/anamnesis trunk
+    ("M-S-p", spawn "kupfer"),
     ("M-c", spawn "anamnesis -b"),
     ("M-<Print>", spawn "shutter -s"),
     ("M-S-l", spawn "xscreensaver-command --lock"),
