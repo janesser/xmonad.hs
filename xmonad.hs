@@ -1,16 +1,15 @@
 import System.IO(hPutStrLn)
 
 import XMonad
-import XMonad.Config
+
 import XMonad.Hooks.DynamicLog
-import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.UrgencyHook
-import XMonad.Hooks.ManageHelpers
+import XMonad.Hooks.EwmhDesktops
+import XMonad.Hooks.ManageDocks
 
-import qualified XMonad.Hooks.EwmhDesktops as E
-
-import XMonad.Layout.Fullscreen
 import XMonad.Layout.NoBorders
+import XMonad.Layout.Fullscreen
+
 import XMonad.Util.Run(spawnPipe)
 import XMonad.Util.EZConfig(additionalKeysP)
 
@@ -34,26 +33,20 @@ myConfig = def {
   ]
 
 myLogHook spw = dynamicLogWithPP xmobarPP {
-  ppOutput = hPutStrLn $ spw
+  ppOutput = hPutStrLn spw
 }
 
-myManageHook = manageDocks <+>
-  manageHook myConfig <+> 
-  fullscreenManageHook
+myManageHook = manageDocks <+> fullscreenManageHook
 
-myLayoutHook = smartBorders $ fullscreenFull $ avoidStruts $ layoutHook myConfig
-
-myEventHook = E.ewmhDesktopsEventHook <+> 
-  E.fullscreenEventHook <+> 
-  fullscreenEventHook <+>
-  docksEventHook 
+myLayoutHook = avoidStruts $ smartBorders (tall ||| Mirror tall ||| full) where
+    full = noBorders Full
+    tall = Tall 1 (3/100) (1/2)
 
 main = do
   spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
   spwXMonadRc <- spawnPipe "~/.xmonad/xmonadrc"
-  xmonad $ withUrgencyHook NoUrgencyHook $ E.ewmh myConfig {
+  xmonad $ docks . ewmhFullscreen . ewmh . withUrgencyHook NoUrgencyHook $ myConfig {
     logHook = myLogHook spwXMobar,
     manageHook = myManageHook,
-    layoutHook = myLayoutHook,
-    handleEventHook = myEventHook
+    layoutHook = myLayoutHook
   }
