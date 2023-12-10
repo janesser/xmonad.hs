@@ -1,8 +1,16 @@
 
-# console-data
+# console
+## console-data
 In case keymap isn't correct on xsession start.
 
     dpkg-reconfigure console-data
+
+## fast terminal
+
+    apt install cargo
+    cargo install alacritty
+    sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator ~/.cargo/bin/alacritty 50
+
 
 # power button behaviour
 Check systemd-logind

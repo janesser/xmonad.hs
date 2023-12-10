@@ -28,9 +28,9 @@ myConfig = def {
     ("M-S-l", spawn "xscreensaver-command --lock"),
     ("<XF86MonBrightnessUp>", spawn "brightness.sh +"),
     ("<XF86MonBrightnessDown>", spawn "brightness.sh -"),
-    ("<XF86AudioRaiseVolume>", spawn "volume.sh +"),
-    ("<XF86AudioLowerVolume>", spawn "volume.sh -"),
-    ("<XF86AudioMute>", spawn "volume.sh mute")
+    ("<XF86AudioMute>", spawn "amixer -D pulse set Master 1+ toggle"),
+    ("<XF86AudioLowerVolume>", spawn "amixer -D pulse set Master 10%-"),
+    ("<XF86AudioRaiseVolume>", spawn "amixer -D pulse set Master 10%+")
   ]
 
 myLogHook spw = dynamicLogWithPP xmobarPP {

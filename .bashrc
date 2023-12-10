@@ -20,7 +20,7 @@ shopt -s histappend
 
 
 # stack install cabal-install
-PATH=~/.local/bin:$PATH
+PATH=~/.cargo/bin:~/.local/bin:$PATH
 
 # go binaries
 export GOPATH=~/.go
@@ -41,3 +41,5 @@ export DOCKER_COMPOSE_LOCATION=~/.local/bin/docker-compose
 
 # inspectIT
 export INSPECTIT_AGENT_HOME=~/inspectIT/agent/inspectit-agent.jar
+
+[ -f "/home/jan/.ghcup/env" ] && source "/home/jan/.ghcup/env" # ghcup-env
