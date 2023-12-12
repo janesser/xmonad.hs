@@ -23,7 +23,7 @@ myConfig = def {
   } `additionalKeysP` [
     ("M-S-p", spawn "kupfer"),
     ("M-c", spawn "anamnesis -b"),
-    ("M-<Print>", spawn "shutter -s"),
+    ("<Print>", spawn "shutter -s"),
     ("M-S-l", spawn "xscreensaver-command --lock"),
     ("<XF86MonBrightnessUp>", spawn "brightness.sh +"),
     ("<XF86MonBrightnessDown>", spawn "brightness.sh -"),
@@ -40,7 +40,7 @@ myManageHook = manageDocks <+> fullscreenManageHook
 
 myLayoutHook = avoidStruts $ smartBorders (tall ||| Mirror tall ||| full) where
     full = noBorders Full
-    tall = Tall 1 (3/100) (1/2)
+    tall = Tall 1 (3/100) (2/3) -- M-S-Space to reset
 
 main = do
   spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
