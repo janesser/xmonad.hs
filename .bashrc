@@ -22,6 +22,9 @@ shopt -s histappend
 # stack install cabal-install
 PATH=~/.cargo/bin:~/.local/bin:$PATH
 
+setxkbmap de
+
+
 # go binaries
 export GOPATH=~/.go
 ## openshift source2image
