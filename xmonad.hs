@@ -22,7 +22,7 @@ myConfig = def {
     focusFollowsMouse = False
   } `additionalKeysP` [
     ("M-S-p", spawn "kupfer"),
-    ("M-c", spawn "anamnesis -b"),
+    ("M-c", spawn "diodon"),
     ("<Print>", spawn "shutter -s"),
     ("M-S-l", spawn "xscreensaver-command --lock"),
     ("<XF86MonBrightnessUp>", spawn "brightness.sh +"),
