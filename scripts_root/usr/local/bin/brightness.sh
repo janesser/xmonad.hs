@@ -4,10 +4,10 @@ ACT=`xfpm-power-backlight-helper --get-brightness`
 MAX=`xfpm-power-backlight-helper --get-max-brightness`
 
 if [ -z $OP ] ; then
-    echo $ACT
+    printf '%3.0f%%' $(($ACT * 100 / $MAX))
 else
-    NEW=$(($ACT $OP 10))
-    if [$NEW > $MAX] ; then
+    NEW=$(($ACT $OP 8))
+    if [ "$NEW" -gt "$MAX" ] ; then
         NEW=$MAX
     fi
     pkexec  xfpm-power-backlight-helper --set-brightness $NEW

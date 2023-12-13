@@ -9,19 +9,19 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
   , lowerOnStart = True
   , commands = [ Run MultiCpu ["-t", "<total>%"] 20
                , Run ThermalZone 0 ["-t", "<temp>°C"] 20
-               , Run Battery ["-t", "<left>%"] 120
+               , Run Battery ["-t", "<left>%"] 60
                , Run Date "<fc=#93a1a1>%a %b %_d %Y %H:%M:%S</fc>" "date" 10
                , Run Com "/bin/bash" ["-c",
                     "pactl -n xmobar get-sink-volume $(pactl get-default-sink) | grep -Po \"[0-9]{1,2}%\" | head -1"] 
-                    "volume" 30
+                    "volume" 20
                , Run Com "/bin/bash" ["-c",
                     "pactl -n xmobar get-sink-mute $(pactl get-default-sink) | grep -Po \"M?(?=ute: j)\" & exit 0"] 
-                    "volume-mute" 30
+                    "volume-mute" 20
                , Run Com "brightness.sh" [] 
-                    "brightness" 30
+                    "brightness" 20
                , Run StdinReader
                ]
   , sepChar = "%"
   , alignSep = "}{"
-  , template = " %StdinReader% }{ CPU: %multicpu% | TMP: %thermal0% | BAT: %battery% | BRT: <fc=#bbbbbb>%brightness%</fc> | VOL: %volume%<fc=#ff0000>%volume-mute%</fc> | %date% "
+  , template = " %StdinReader% } %date% { CPU: %multicpu% | TMP: %thermal0% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=red>%volume-mute%</fc> | BAT: <fc=white>%battery%</fc>"
 }
