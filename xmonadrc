@@ -2,7 +2,7 @@
 
 # requirements: 
 #   anamnesis from https://github.com/oneyb/anamnesis
-#   apt-get install kupfer shutter diodon
+#   apt-get install xmonad xmobar libpango1.0-dev libpangokupfer shutter diodon
 #     x11-xserver-utils trayer network-manager-gnome light-locker
 
 if [ -x ~/.local/bin/anamnesis ] ; then

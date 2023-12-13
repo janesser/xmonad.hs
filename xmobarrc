@@ -11,9 +11,17 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
                , Run ThermalZone 0 ["-t", "<temp>°C"] 20
                , Run Battery ["-t", "<left>%"] 120
                , Run Date "<fc=#93a1a1>%a %b %_d %Y %H:%M:%S</fc>" "date" 10
+               , Run Com "/bin/bash" ["-c",
+                    "pactl -n xmobar get-sink-volume $(pactl get-default-sink) | grep -Po \"[0-9]{1,2}%\" | head -1"] 
+                    "volume" 30
+               , Run Com "/bin/bash" ["-c",
+                    "pactl -n xmobar get-sink-mute $(pactl get-default-sink) | grep -Po \"M?(?=ute: j)\" & exit 0"] 
+                    "volume-mute" 30
+               , Run Com "brightness.sh" [] 
+                    "brightness" 30
                , Run StdinReader
                ]
   , sepChar = "%"
   , alignSep = "}{"
-  , template = " %StdinReader% }{ CPU: %multicpu% | TMP: %thermal0% | BAT: %battery% | %date% "
+  , template = " %StdinReader% }{ CPU: %multicpu% | TMP: %thermal0% | BAT: %battery% | BRT: <fc=#bbbbbb>%brightness%</fc> | VOL: %volume%<fc=#ff0000>%volume-mute%</fc> | %date% "
 }

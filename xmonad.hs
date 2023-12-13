@@ -22,14 +22,14 @@ myConfig = def {
     focusFollowsMouse = False
   } `additionalKeysP` [
     ("M-S-p", spawn "kupfer"),
-    ("M-c", spawn "diodon"),
+    ("M-ö", spawn "diodon"),
     ("<Print>", spawn "shutter -s"),
     ("M-S-l", spawn "light-locker-command -l"),
     ("<XF86MonBrightnessUp>", spawn "brightness.sh +"),
     ("<XF86MonBrightnessDown>", spawn "brightness.sh -"),
-    ("<XF86AudioMute>", spawn "amixer -D pulse set Master 1+ toggle"),
-    ("<XF86AudioLowerVolume>", spawn "amixer -D pulse set Master 10%-"),
-    ("<XF86AudioRaiseVolume>", spawn "amixer -D pulse set Master 10%+")
+    ("<XF86AudioMute>", spawn "amixer set Master 1+ toggle"),
+    ("<XF86AudioLowerVolume>", spawn "amixer set Master 10%-"),
+    ("<XF86AudioRaiseVolume>", spawn "amixer set Master 10%+")
   ]
 
 myLogHook spw = dynamicLogWithPP xmobarPP {
