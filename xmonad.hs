@@ -24,7 +24,7 @@ myConfig = def {
     ("M-S-p", spawn "kupfer"),
     ("M-c", spawn "diodon"),
     ("<Print>", spawn "shutter -s"),
-    ("M-S-l", spawn "xscreensaver-command --lock"),
+    ("M-S-l", spawn "light-locker-command -l"),
     ("<XF86MonBrightnessUp>", spawn "brightness.sh +"),
     ("<XF86MonBrightnessDown>", spawn "brightness.sh -"),
     ("<XF86AudioMute>", spawn "amixer -D pulse set Master 1+ toggle"),
