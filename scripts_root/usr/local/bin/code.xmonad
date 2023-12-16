@@ -1,0 +1,2 @@
+#!/bin/sh
+code ~/projs/xmonad.hs

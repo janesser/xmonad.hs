@@ -2,6 +2,7 @@ import System.IO(hPutStrLn)
 
 import XMonad
 
+import XMonad.Actions.UpdateFocus
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.UrgencyHook
 import XMonad.Hooks.EwmhDesktops
@@ -22,7 +23,7 @@ myConfig = def {
     focusFollowsMouse = False
   } `additionalKeysP` [
     ("M-S-p", spawn "kupfer"),
-    ("M-ö", spawn "diodon"),
+    ("C-ö", spawn "diodon"),
     ("<Print>", spawn "shutter -s"),
     ("M-S-l", spawn "light-locker-command -l"),
     ("<XF86MonBrightnessUp>", spawn "brightness.sh +"),
@@ -38,9 +39,10 @@ myLogHook spw = dynamicLogWithPP xmobarPP {
 
 myManageHook = manageDocks <+> fullscreenManageHook
 
-myLayoutHook = avoidStruts $ smartBorders (tall ||| Mirror tall ||| full) where
+myLayoutHook = avoidStruts $ smartBorders (tall ||| half ||| full) where
     full = noBorders Full
     tall = Tall 1 (3/100) (2/3) -- M-S-Space to reset
+    half = Tall 1 (3/100) (1/2) 
 
 main = do
   spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
@@ -48,5 +50,7 @@ main = do
   xmonad $ docks . ewmhFullscreen . ewmh . withUrgencyHook NoUrgencyHook $ myConfig {
     logHook = myLogHook spwXMobar,
     manageHook = myManageHook,
-    layoutHook = myLayoutHook
+    layoutHook = myLayoutHook,
+    startupHook = adjustEventInput,
+    handleEventHook = focusOnMouseMove
   }
