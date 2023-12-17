@@ -1,11 +1,6 @@
 #!/bin/bash
 
-# requirements: 
-#   anamnesis from https://github.com/oneyb/anamnesis
-#   apt-get install xmonad xmobar libpango1.0-dev libpangokupfer shutter diodon
-#     x11-xserver-utils trayer network-manager-gnome light-locker
-
-if [ -x ~/.local/bin/anamnesis ] ; then
+if [ ! "$(pidof diodon)" ] ; then
    diodon &
 fi
 
@@ -19,8 +14,8 @@ if [ ! "$(pidof nm-applet)" ] ; then
    nm-applet --sm-disable &
 fi
 
-if [ ! "$(pidof xss-lock)" ] ; then
-   light-locker-command &
+if [ ! "$(pidof light-locker)" ] ; then
+   light-locker &
 fi
 
 if [ ! "$(pidof syndaemon)" ] ; then
@@ -28,7 +23,7 @@ if [ ! "$(pidof syndaemon)" ] ; then
 fi
 
 if [ ! "$(pidof pulseaudio)" ] ; then
-   start-pulseaudio-x11
+   pulseaudio -D
 fi
 
 if [ ! "$(pidof dropbox)" ] ; then
