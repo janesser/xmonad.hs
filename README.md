@@ -23,6 +23,7 @@ Check systemd-logind
     sudo nano /etc/systemd/logind.conf
 
         HandlePowerKey=suspend
+        IdleAction=suspend
 
     sudo systemctl restart systemd-logind
 
