@@ -22,11 +22,9 @@ if [ ! "$(pidof syndaemon)" ] ; then
    syndaemon -i 2 -d -t -K &
 fi
 
-if [ ! "$(pidof pulseaudio)" ] ; then
-   pulseaudio -D
-fi
 export DEFAULT_SINK=`pactl get-default-sink`
 
+# pipewire-pulse
 if [ ! "$(pidof dropbox)" ] ; then
    dropbox start
 fi

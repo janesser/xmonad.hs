@@ -39,3 +39,12 @@ Used e.g. by thunderbird
     ls ~/.local/share/applications/*
     ls /usr/share/applications/*
     xdg-settings set default-web-browser google-chrome.desktop
+
+# audio setup
+pipewire supercedes pulseaudio - finally ?
+
+    apt install pipewire-audio easyeffects
+    sudo mkdir -p /etc/pipewire
+    sudo cp /usr/share/pipewire/pipewire.conf /etc/pipewire/pipewire.conf
+    systenctl restart --user pipewire
+    # reconnect your device
