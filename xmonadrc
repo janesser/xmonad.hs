@@ -25,6 +25,7 @@ fi
 if [ ! "$(pidof pulseaudio)" ] ; then
    pulseaudio -D
 fi
+export DEFAULT_SINK=`pactl get-default-sink`
 
 if [ ! "$(pidof dropbox)" ] ; then
    dropbox start

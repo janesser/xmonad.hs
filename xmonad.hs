@@ -28,9 +28,9 @@ myConfig = def {
     ("M-S-l", spawn "light-locker-command -l"),
     ("<XF86MonBrightnessUp>", spawn "brightness.sh +"),
     ("<XF86MonBrightnessDown>", spawn "brightness.sh -"),
-    ("<XF86AudioMute>", spawn "amixer set Master 1+ toggle"),
-    ("<XF86AudioLowerVolume>", spawn "amixer set Master 10%-"),
-    ("<XF86AudioRaiseVolume>", spawn "amixer set Master 10%+")
+    ("<XF86AudioMute>", spawn "pactl set-sink-mute @DEFAULT_SINK@ toggle"),
+    ("<XF86AudioLowerVolume>", spawn "pactl set-sink-volume @DEFAULT_SINK@ -10%"),
+    ("<XF86AudioRaiseVolume>", spawn "pactl set-sink-volume @DEFAULT_SINK@ +10%")
   ]
 
 myLogHook spw = dynamicLogWithPP xmobarPP {
@@ -46,7 +46,7 @@ myLayoutHook = avoidStruts $ smartBorders (tall ||| half ||| full) where
 
 main = do
   spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
-  spwXMonadRc <- spawnPipe "~/.xmonad/xmonadrc"
+  spwXMonadRc <- spawnPipe ". ~/.xmonad/xmonadrc"
   xmonad $ docks . ewmhFullscreen . ewmh . withUrgencyHook NoUrgencyHook $ myConfig {
     logHook = myLogHook spwXMobar,
     manageHook = myManageHook,

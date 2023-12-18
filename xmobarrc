@@ -12,7 +12,7 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
                , Run Battery ["-t", "<left>%"] 60
                , Run Date "<fc=#93a1a1>%a %b %_d %Y %H:%M:%S</fc>" "date" 10
                , Run Com "/bin/bash" ["-c",
-                    "pactl -n xmobar get-sink-volume $(pactl get-default-sink) | grep -Po \"[0-9]{1,2}%\" | head -1"] 
+                    "pactl -n xmobar get-sink-volume $(pactl get-default-sink) | grep -Po \"[0-9]{1,3}%\" | head -1"] 
                     "volume" 20
                , Run Com "/bin/bash" ["-c",
                     "pactl -n xmobar get-sink-mute $(pactl get-default-sink) | grep -Po \"M?(?=ute: j)\" & exit 0"] 
