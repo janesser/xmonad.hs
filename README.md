@@ -5,7 +5,13 @@ My opinionated xmonad setup.
 
 ## Requirements
 
-    apt-get install xmonad xmobar libpango1.0-dev kupfer shutter diodon x11-xserver-utils trayer network-manager-gnome light-locker-settings
+    apt-get install xmonad xmobar libpango1.0-dev shutter diodon x11-xserver-utils trayer network-manager-gnome light-locker-settings pcmanfm
+
+## candidates
+
+    dex kupfer flatpak podman
+
+    openvoiceos
 
 # console
 

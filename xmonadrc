@@ -18,8 +18,9 @@ if [ ! "$(pidof light-locker)" ] ; then
    light-locker &
 fi
 
+# suppress movement to avoid accidental mouse-focus (no -t)
 if [ ! "$(pidof syndaemon)" ] ; then
-   syndaemon -i 2 -d -t -K &
+   syndaemon -i 2 -d -K & 
 fi
 
 export DEFAULT_SINK=`pactl get-default-sink`

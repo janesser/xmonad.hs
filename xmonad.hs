@@ -10,6 +10,8 @@ import XMonad.Hooks.ManageDocks
 
 import XMonad.Layout.NoBorders
 import XMonad.Layout.Fullscreen
+import XMonad.Layout.Accordion
+import XMonad.Layout.Tabbed
 
 import XMonad.Util.Run(spawnPipe)
 import XMonad.Util.EZConfig(additionalKeysP)
@@ -20,8 +22,9 @@ import XMonad.Util.EZConfig(additionalKeysP)
 
 myConfig = def {
     modMask = mod4Mask, -- left windows super
-    focusFollowsMouse = False
+    focusFollowsMouse = True
   } `additionalKeysP` [
+    ("M-e", spawn "pcmanfm"),
     ("M-S-p", spawn "kupfer"),
     ("C-ö", spawn "diodon"),
     ("<Print>", spawn "shutter -s"),
@@ -39,10 +42,12 @@ myLogHook spw = dynamicLogWithPP xmobarPP {
 
 myManageHook = manageDocks <+> fullscreenManageHook
 
-myLayoutHook = avoidStruts $ smartBorders (tall ||| half ||| full) where
+myLayoutHook = avoidStruts $ smartBorders (tall ||| half ||| full ||| tabbed ||| accordion) where
     full = noBorders Full
     tall = Tall 1 (3/100) (2/3) -- M-S-Space to reset
     half = Tall 1 (3/100) (1/2) 
+    tabbed = simpleTabbed
+    accordion = Accordion
 
 main = do
   spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
