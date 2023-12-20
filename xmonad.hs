@@ -1,61 +1,102 @@
-import System.IO(hPutStrLn)
-
+import System.IO (hPutStrLn)
 import XMonad
-
+import XMonad.Actions.SpawnOn
 import XMonad.Actions.UpdateFocus
 import XMonad.Hooks.DynamicLog
-import XMonad.Hooks.UrgencyHook
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.ManageDocks
-
-import XMonad.Layout.NoBorders
+import XMonad.Hooks.UrgencyHook
 import XMonad.Layout.Fullscreen
-import XMonad.Layout.Accordion
+import XMonad.Layout.NoBorders
+import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Tabbed
+import XMonad.Util.EZConfig (additionalKeysP)
+import XMonad.Util.Run (spawnPipe)
+import XMonad.Util.SpawnOnce
 
-import XMonad.Util.Run(spawnPipe)
-import XMonad.Util.EZConfig(additionalKeysP)
+myConfig =
+  def
+    { modMask = mod4Mask -- left windows super
+    , focusFollowsMouse = True
+    , workspaces =
+        [ "1:htop"
+        , "2:comm"
+        , "3:web"
+        , "4:ide"
+        , "5:entertain"
+        , "6:adult"
+        , "7:games"
+        , "8:education"
+        , "9:admin"
+        ]
+    }
+    `additionalKeysP` [ ("M-e", spawn "pcmanfm")
+                      , ("M-S-p", spawn "kupfer")
+                      , ("C-ö", spawn "copyq toggle")
+                      , ("<Print>", spawn "shutter -s")
+                      , ("M-S-l", spawn "light-locker-command -l")
+                      , ("<XF86MonBrightnessUp>", spawn "brightness.sh +")
+                      , ("<XF86MonBrightnessDown>", spawn "brightness.sh -")
+                      ,
+                        ( "<XF86AudioMute>"
+                        , spawn "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+                        )
+                      ,
+                        ( "<XF86AudioLowerVolume>"
+                        , spawn "pactl set-sink-volume @DEFAULT_SINK@ -10%"
+                        )
+                      ,
+                        ( "<XF86AudioRaiseVolume>"
+                        , spawn "pactl set-sink-volume @DEFAULT_SINK@ +10%"
+                        )
+                      ]
 
--- deb packages required:
--- - libghc-xmonad-dev
--- - xmobar
+myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
 
-myConfig = def {
-    modMask = mod4Mask, -- left windows super
-    focusFollowsMouse = True
-  } `additionalKeysP` [
-    ("M-e", spawn "pcmanfm"),
-    ("M-S-p", spawn "kupfer"),
-    ("C-ö", spawn "diodon"),
-    ("<Print>", spawn "shutter -s"),
-    ("M-S-l", spawn "light-locker-command -l"),
-    ("<XF86MonBrightnessUp>", spawn "brightness.sh +"),
-    ("<XF86MonBrightnessDown>", spawn "brightness.sh -"),
-    ("<XF86AudioMute>", spawn "pactl set-sink-mute @DEFAULT_SINK@ toggle"),
-    ("<XF86AudioLowerVolume>", spawn "pactl set-sink-volume @DEFAULT_SINK@ -10%"),
-    ("<XF86AudioRaiseVolume>", spawn "pactl set-sink-volume @DEFAULT_SINK@ +10%")
-  ]
+myManageHook =
+  composeAll
+    [ className =? "stalonetray" --> doIgnore
+    , className =? "google-chrome" --> doShift "3:web"
+    , className =? "code" --> doShift "4:ide"
+    , title =? "WhatsApp Web" --> doShift "2:comm"
+    , title =? "Element.*" --> doShift "2:comm"
+    , className =? "signal" --> doShift "2:comm"
+    , className =? "thunderbird" --> doShift "2:comm"
+    , title =? "YouTube.*" --> doShift "5:entertain"
+    ]
 
-myLogHook spw = dynamicLogWithPP xmobarPP {
-  ppOutput = hPutStrLn spw
-}
+myLayoutHook =
+  avoidStruts
+    $ onWorkspaces ["1:htop", "3:web"] full
+    $ onWorkspace "2:comm" tabbed
+    $ onWorkspace "4:ide" tall
+    $ smartBorders (tall ||| full ||| tabbed)
+ where
+  full = noBorders Full
+  tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset
+  tabbed = simpleTabbed
 
-myManageHook = manageDocks <+> fullscreenManageHook
+myStartupHook :: X ()
+myStartupHook = do
+  spawnOnOnce "1:htop" "x-terminal-emulator -e htop"
+  spawnOnOnce "2:comm" "comm.sh"
+  spawnOnOnce "3:web" "google-chrome --restore-last-session"
 
-myLayoutHook = avoidStruts $ smartBorders (tall ||| half ||| full ||| tabbed ||| accordion) where
-    full = noBorders Full
-    tall = Tall 1 (3/100) (2/3) -- M-S-Space to reset
-    half = Tall 1 (3/100) (1/2) 
-    tabbed = simpleTabbed
-    accordion = Accordion
-
+-- start comm.sh
+-- start google-chrome
 main = do
   spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
   spwXMonadRc <- spawnPipe ". ~/.xmonad/xmonadrc"
-  xmonad $ docks . ewmhFullscreen . ewmh . withUrgencyHook NoUrgencyHook $ myConfig {
-    logHook = myLogHook spwXMobar,
-    manageHook = myManageHook,
-    layoutHook = myLayoutHook,
-    startupHook = adjustEventInput,
-    handleEventHook = focusOnMouseMove
-  }
+  xmonad
+    $ docks
+    . ewmhFullscreen
+    . ewmh
+    . withUrgencyHook NoUrgencyHook
+    $ myConfig
+      { logHook = myLogHook spwXMobar
+      , manageHook =
+          myManageHook <+> manageDocks <+> fullscreenManageHook
+      , layoutHook = myLayoutHook
+      , startupHook = myStartupHook
+      , handleEventHook = focusOnMouseMove
+      }

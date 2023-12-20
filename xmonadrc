@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ ! "$(pidof diodon)" ] ; then
-   diodon &
+if [ ! "$(pidof copyq)" ] ; then
+   copyq &
 fi
 
 xsetroot -solid black # feh for background image
