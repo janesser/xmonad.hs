@@ -1,5 +1,12 @@
 #!/bin/bash
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 pushd .
+cd $SCRIPT_DIR
+
+mkdir -p ~/ovos/config
+cp config/* ~/ovos/config/
+
 mkdir -p ~/projs
 cd ~/projs
 git clone https://github.com/OpenVoiceOS/ovos-docker.git
@@ -17,3 +24,7 @@ podman-compose -f docker-compose.yml -f docker-compose.skills.yml up -d
 
 # podman-compose -f docker-compose.yml -f docker-compose.skills.yml exec ovos_audio bash
 ## try ovos-speak
+
+# podman system prune -a -f
+
+popd
