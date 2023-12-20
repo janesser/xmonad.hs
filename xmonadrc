@@ -6,8 +6,8 @@ fi
 
 xsetroot -solid black # feh for background image
 
-if [ ! "$(pidof trayer)" ] ; then
-   trayer --SetDockType true --SetPartialStrut true &
+if [ ! "$(pidof stalonetray)" ] ; then
+   stalonetray &
 fi
 
 if [ ! "$(pidof nm-applet)" ] ; then

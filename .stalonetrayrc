@@ -1,0 +1,7 @@
+# check /usr/share/doc/stalonetray/examples
+
+background "#555555"
+geometry 1x1+1920+1056
+grow_gravity E
+icon_gravity NE
+icon_size 24

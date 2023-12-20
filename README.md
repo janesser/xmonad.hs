@@ -5,13 +5,17 @@ My opinionated xmonad setup.
 
 ## Requirements
 
-    apt-get install xmonad xmobar libpango1.0-dev shutter diodon x11-xserver-utils trayer network-manager-gnome light-locker-settings pcmanfm
+    apt-get install xmonad xmobar libpango1.0-dev shutter diodon x11-xserver-utils stalonetray network-manager-gnome light-locker-settings pcmanfm
 
 ## candidates
 
     dex kupfer flatpak podman
 
     openvoiceos
+
+## dismissed
+
+    trayer
 
 # console
 
@@ -30,6 +34,7 @@ Check systemd-logind
 
         HandlePowerKey=suspend
         IdleAction=suspend
+        IdleActionSec=10min
 
     sudo systemctl restart systemd-logind
 
