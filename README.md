@@ -5,17 +5,25 @@ My opinionated xmonad setup.
 
 ## Requirements
 
-    apt-get install xmonad xmobar libpango1.0-dev shutter diodon x11-xserver-utils stalonetray network-manager-gnome light-locker-settings pcmanfm
+    apt-get install xmonad xmobar libpango1.0-dev shutter copyq x11-xserver-utils network-manager-gnome light-locker-settings pcmanfm trayer
+    
+### Extras
 
-## candidates
+    cargo
 
-    dex kupfer flatpak podman
+## Candidates
+
+    dex kupfer flatpak podman scrot i3blocks
 
     openvoiceos
 
-## dismissed
+    https://github.com/davatorium/rofi
+    https://github.com/xmonad/xmonad-contrib/blob/master/XMonad/Prompt/OrgMode.hs
 
-    trayer
+## Dismissed
+
+    stalonetray
+    diodon
 
 # console
 

@@ -1,18 +1,21 @@
-import System.IO (hPutStrLn)
+import Control.Monad (liftM2)
 import Data.List
+import System.IO (hPutStrLn)
 import XMonad
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.UpdateFocus
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
+import XMonad.Hooks.FadeWindows
 import XMonad.Hooks.ManageDocks
+import XMonad.Hooks.RefocusLast (isFloat)
 import XMonad.Hooks.UrgencyHook
 import XMonad.Layout.Fullscreen
 import XMonad.Layout.NoBorders
 import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Tabbed
 import XMonad.Util.EZConfig (additionalKeysP)
-import XMonad.Util.Run (spawnPipe)
+import XMonad.Util.Run (spawnPipe, spawnExternalProcess)
 import XMonad.Util.SpawnOnce
 
 myConfig =
@@ -36,6 +39,8 @@ myConfig =
                       , ("C-ö", spawn "copyq toggle")
                       , ("<Print>", spawn "shutter -s")
                       , ("M-S-l", spawn "light-locker-command -l")
+                      , ("C-ä", spawn "killall xcompmgr; xcompmgr -cCfF")
+                      , ("C-ü", spawn "killall xcompmgr")
                       , ("<XF86MonBrightnessUp>", spawn "brightness.sh +")
                       , ("<XF86MonBrightnessDown>", spawn "brightness.sh -")
                       ,
@@ -60,11 +65,14 @@ myManageHook =
     , role =? "browser" --> doShift "3:web"
     , className =? "code" --> doShift "4:ide"
     , title =? "WhatsApp Web" --> doShift "2:comm"
-    , fmap ( "Element" `isPrefixOf`) title --> doShift "2:comm"
+    , fmap ("Element" `isPrefixOf`) title --> doShift "2:comm"
     , className =? "signal" --> doShift "2:comm"
     , className =? "thunderbird" --> doShift "2:comm"
-    , title =? "YouTube" --> doShift "5:entertain"
-    ] where role = stringProperty "WM_WINDOW_ROLE"
+    , fmap ("Youtube" `isPrefixOf`) title --> doShift "5:entertain"
+    , fmap ("Spotify" `isPrefixOf`) title --> doShift "5:entertain"
+    ]
+ where
+  role = stringProperty "WM_WINDOW_ROLE"
 
 myLayoutHook =
   avoidStruts
@@ -83,8 +91,13 @@ myStartupHook = do
   spawnOnOnce "2:comm" "comm.sh"
   spawnOnOnce "3:web" "google-chrome --restore-last-session"
 
--- start comm.sh
--- start google-chrome
+myFadeHook =
+  composeAll
+    [ opaque
+    , isUnfocused --> opacity (7 / 10)
+    , liftM2 (&&) isFloating isUnfocused --> opacity (5 / 10)
+    ]
+
 main = do
   spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
   spwXMonadRc <- spawnPipe ". ~/.xmonad/xmonadrc"
@@ -94,10 +107,10 @@ main = do
     . ewmh
     . withUrgencyHook NoUrgencyHook
     $ myConfig
-      { logHook = myLogHook spwXMobar
+      { logHook = myLogHook spwXMobar <+> fadeWindowsLogHook myFadeHook
       , manageHook =
           myManageHook <+> manageDocks <+> fullscreenManageHook
       , layoutHook = myLayoutHook
       , startupHook = myStartupHook
-      , handleEventHook = focusOnMouseMove
+      , handleEventHook = focusOnMouseMove <+> fadeWindowsEventHook
       }
