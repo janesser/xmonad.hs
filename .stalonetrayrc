@@ -1,13 +1,13 @@
 # check /usr/share/doc/stalonetray/examples
 
 background "#555555"
+dockapp_mode wmaker
 # xrandr 1920 x 1080
 ## count with first icon placed and then gravity
-## one pixel off to make it float
-geometry 1x1+1895+1056
+geometry 1x1+1896+1056
 grow_gravity SE
 icon_gravity SE
 icon_size 24
 kludges force_icons_size
 window_layer top
-window_type dock
+window_type toolbar

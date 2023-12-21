@@ -1,4 +1,5 @@
 import System.IO (hPutStrLn)
+import Data.List
 import XMonad
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.UpdateFocus
@@ -56,14 +57,14 @@ myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
 myManageHook =
   composeAll
     [ className =? "stalonetray" --> doIgnore
-    , className =? "google-chrome" --> doShift "3:web"
+    , role =? "browser" --> doShift "3:web"
     , className =? "code" --> doShift "4:ide"
     , title =? "WhatsApp Web" --> doShift "2:comm"
-    , title =? "Element.*" --> doShift "2:comm"
+    , fmap ( "Element" `isPrefixOf`) title --> doShift "2:comm"
     , className =? "signal" --> doShift "2:comm"
     , className =? "thunderbird" --> doShift "2:comm"
-    , title =? "YouTube.*" --> doShift "5:entertain"
-    ]
+    , title =? "YouTube" --> doShift "5:entertain"
+    ] where role = stringProperty "WM_WINDOW_ROLE"
 
 myLayoutHook =
   avoidStruts
