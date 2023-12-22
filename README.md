@@ -5,15 +5,17 @@ My opinionated xmonad setup.
 
 ## Requirements
 
-    apt-get install xmonad xmobar libpango1.0-dev shutter copyq x11-xserver-utils network-manager-gnome light-locker-settings pcmanfm trayer
+    apt-get install xmonad xmobar libpango1.0-dev shutter copyq x11-xserver-utils network-manager-gnome light-locker-settings pcmanfm trayer dex
     
 ### Extras
 
     cargo
+    gimp
+    org-mode emacs-gtk
 
 ## Candidates
 
-    dex kupfer flatpak podman scrot i3blocks
+    kupfer flatpak podman scrot
 
     openvoiceos
 
@@ -31,8 +33,11 @@ My opinionated xmonad setup.
 FIXME breaks multi-user capa
 
     sudo apt install cargo
-    cargo install alacritty
+    cargo install alacritty # single seated, otherwise sudo
     sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator ~/.cargo/bin/alacritty 50
+
+    sudo apt install fish
+    chsh
 
 # power button behaviour
 
@@ -60,7 +65,7 @@ Used e.g. by thunderbird
     xdg-settings set default-web-browser google-chrome.desktop
 
 # audio setup
-pipewire supercedes pulseaudio - finally ?
+pipewire supercedes pulseaudio - getting bluetooth headset working
 
     apt install pipewire-audio easyeffects
     sudo mkdir -p /etc/pipewire
