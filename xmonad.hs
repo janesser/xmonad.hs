@@ -18,6 +18,7 @@ import XMonad.Layout.NoBorders
 import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Tabbed
 import XMonad.Util.EZConfig (additionalKeysP)
+import XMonad.Util.Hacks
 import XMonad.Util.Run (spawnPipe)
 import XMonad.Util.SpawnOnce
 
@@ -75,20 +76,26 @@ myConfig =
                       , ("M-o S-t", spawn "emacs ~/Dropbox/orgzly/todo.org")
                       , ("M-o S-e", spawn "emacs ~/Dropbox/orgzly/tochter1.org")
                       , ("M-m", manPrompt def)
+                      , ("M-b", sendMessage ToggleStruts)
+                      , ("M-C-k", spawn "xkill")
                       ]
 
 myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
 
 myManageHook =
   composeAll
-    [ className =? "panel" --> doIgnore -- FIXME trayer on top - not reliable yet
-    , className =? "google-chrome" --> doShift "3:web"
-    , className =? "code" --> doShift "4:ide"
-    , title =? "WhatsApp Web" --> doShift "2:comm"
+    [ -- comm
+      title =? "WhatsApp Web" --> doShift "2:comm"
+    , fmap ("det.social" `isPrefixOf`) title --> doShift "2:comm"
     , fmap ("Element" `isPrefixOf`) title --> doShift "2:comm"
     , className =? "signal" --> doShift "2:comm"
     , className =? "thunderbird" --> doShift "2:comm"
-    , fmap ("Youtube" `isPrefixOf`) title --> doShift "5:entertain"
+    , -- web
+      role =? "browser" --> doShift "3:web"
+    , -- ide
+      className =? "code" --> doShift "4:ide"
+    , -- entertain
+      fmap ("Youtube" `isPrefixOf`) title --> doShift "5:entertain"
     , fmap ("Spotify" `isPrefixOf`) title --> doShift "5:entertain"
     , className =? "vlc" --> doSideFloat CE
     ]
@@ -111,6 +118,8 @@ myStartupHook = do
   spawnOnOnce "1:htop" "x-terminal-emulator -e htop"
   spawnOnOnce "2:comm" "comm.sh"
   spawnOnOnce "3:web" "google-chrome --restore-last-session"
+  -- height needs to be explicit, check ToggleStruts
+  spawnOnce "trayer --align right --transparent true --alpha 150 --widthtype request --height 26 --SetPartialStrut true &"
 
 myFadeHook =
   composeAll
@@ -128,6 +137,7 @@ main = do
     . ewmhFullscreen
     . ewmh
     . withUrgencyHook NoUrgencyHook
+    . javaHack
     $ myConfig
       { logHook = myLogHook spwXMobar <+> fadeWindowsLogHook myFadeHook
       , manageHook =

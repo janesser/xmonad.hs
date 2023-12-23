@@ -6,10 +6,6 @@ fi
 
 xsetroot -solid black # feh for background image
 
-if [ ! "$(pidof trayer)" ] ; then
-   trayer --align right --transparent true --alpha 200 --widthtype request &
-fi
-
 if [ ! "$(pidof nm-applet)" ] ; then
    nm-applet --sm-disable &
 fi
