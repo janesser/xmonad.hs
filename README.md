@@ -5,26 +5,27 @@ My opinionated xmonad setup.
 
 ## Requirements
 
-    apt-get install xmonad xmobar libpango1.0-dev shutter copyq x11-xserver-utils network-manager-gnome light-locker-settings pcmanfm trayer dex
+    apt-get install xmonad xmobar shutter copyq x11-xserver-utils network-manager-gnome light-locker-settings pcmanfm trayer dex
     
 ### Extras
 
-    cargo
-    gimp
-    org-mode emacs-gtk
-    remmina-plugin-x2go
+* cargo
+* gimp
+* org-mode emacs-gtk
+* x2goclient
+* podman-compose
+* snap
 
 ## Candidates
 
-* flatpak snap
-* podman 
+* flatpak
 * scrot
 * openvoiceos
 * https://github.com/davatorium/rofi
 
 ## Dismissed
-- stalonetray - not claiming top view properly
-- diodon - selection capture won't work / broken icon
+- stalonetray
+- diodon
 
 # console
 
