@@ -22,15 +22,22 @@ import XMonad.Util.Hacks
 import XMonad.Util.Run (spawnPipe)
 import XMonad.Util.SpawnOnce
 
-import XMonad.Prompt.Man
-
 import XMonad.Prompt
+import XMonad.Prompt.FuzzyMatch
+import XMonad.Prompt.Man
 import XMonad.Prompt.OrgMode
+import XMonad.Prompt.Window
 
 {-# NOINLINE orgToday #-}
 orgToday = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y]" <$> getCurrentTime
 {-# NOINLINE orgNow #-}
 orgNow = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y %H:%M:%S]" <$> getCurrentTime
+
+myWindowPromptConfig =
+  def
+    { searchPredicate = fuzzyMatch
+    , sorter = fuzzySort
+    }
 
 myConfig =
   def
@@ -78,6 +85,8 @@ myConfig =
                       , ("M-m", manPrompt def)
                       , ("M-b", sendMessage ToggleStruts)
                       , ("M-C-k", spawn "xkill")
+                      , ("M-C-g", windowPrompt myWindowPromptConfig Goto allWindows)
+                      , ("M-C-b", windowPrompt myWindowPromptConfig Bring allWindows)
                       ]
 
 myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
