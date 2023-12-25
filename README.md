@@ -12,20 +12,19 @@ My opinionated xmonad setup.
     cargo
     gimp
     org-mode emacs-gtk
+    remmina-plugin-x2go
 
 ## Candidates
 
-    kupfer flatpak podman scrot
-
-    openvoiceos
-
-    https://github.com/davatorium/rofi
-    https://github.com/xmonad/xmonad-contrib/blob/master/XMonad/Prompt/OrgMode.hs
+* flatpak snap
+* podman 
+* scrot
+* openvoiceos
+* https://github.com/davatorium/rofi
 
 ## Dismissed
-
-    stalonetray
-    diodon
+- stalonetray - not claiming top view properly
+- diodon - selection capture won't work / broken icon
 
 # console
 

@@ -17,6 +17,8 @@ import XMonad.Layout.Fullscreen
 import XMonad.Layout.NoBorders
 import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Tabbed
+import XMonad.Layout.LayoutScreens
+import XMonad.Layout.Grid
 import XMonad.Util.EZConfig (additionalKeysP)
 import XMonad.Util.Hacks
 import XMonad.Util.Run (spawnPipe)
@@ -87,6 +89,8 @@ myConfig =
                       , ("M-C-k", spawn "xkill")
                       , ("M-C-g", windowPrompt myWindowPromptConfig Goto allWindows)
                       , ("M-C-b", windowPrompt myWindowPromptConfig Bring allWindows)
+                      , ("M-C-<Space>", layoutScreens 4 Grid)
+                      , ("M-C-S-<Space>", rescreen)
                       ]
 
 myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
@@ -115,11 +119,11 @@ myLayoutHook =
   avoidStruts
     $ onWorkspaces ["1:htop", "3:web"] full
     $ onWorkspace "2:comm" tabbed
-    $ onWorkspace "4:ide" tall
-    $ smartBorders (tall ||| full ||| tabbed)
+    $ smartBorders (tall ||| tallM ||| full ||| tabbed)
  where
   full = noBorders Full
   tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset
+  tallM = Mirror tall
   tabbed = simpleTabbed
 
 myStartupHook :: X ()
