@@ -13,8 +13,11 @@ My opinionated xmonad setup.
 * gimp
 * org-mode emacs-gtk
 * x2goclient
+    * x2goserver-x2goagent
+    * lightdm-remote-session-x2go
 * podman-compose
 * snap
+* xcompmgr
 
 ## Candidates
 
@@ -72,3 +75,10 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
     sudo cp /usr/share/pipewire/pipewire.conf /etc/pipewire/pipewire.conf
     systenctl restart --user pipewire
     # reconnect your device
+
+# Jupyter
+
+    pipx install jupyterlab
+    pipx inject jupyterlab jupyterlab-git
+    jupyter-lab &
+    # jupyter-lab stop

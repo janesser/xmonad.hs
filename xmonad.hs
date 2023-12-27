@@ -143,7 +143,7 @@ myFadeHook =
 
 main = do
   spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
-  spwXMonadRc <- spawnPipe ". ~/.xmonad/xmonadrc"
+  spwXMonadRc <- spawnPipe ". ~/.xmonad/xmonadrc" -- writes ~/.ssh/env
   xmonad
     $ docks
     . ewmhFullscreen

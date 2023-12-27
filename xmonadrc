@@ -24,8 +24,6 @@ if [ ! "$(pidof syndaemon)" ] ; then
    syndaemon -i 2 -d -K & 
 fi
 
-export DEFAULT_SINK=`pactl get-default-sink`
-
 # pipewire-pulse
 if [ ! "$(pidof dropbox)" ] ; then
    dropbox start
@@ -60,3 +58,8 @@ fi
 if [ ! "$(xwininfo -root -tree | grep 'det.social')" ]; then
     dex .local/share/applications/chrome-hbpeoicanfoeibcjgkepjpbkdmelgaem-Default.desktop &
 fi
+
+## ssh-agent
+echo "# GENERATED FILE" > ~/.ssh/env
+killall ssh-agent
+ssh-agent -c >> ~/.ssh/env
