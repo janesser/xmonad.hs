@@ -43,7 +43,7 @@ FIXME breaks multi-user capa
 
     sudo apt install fish
     chsh
-    ln -sf ./ssh-env.fish ~/.config/fish/conf.d/ssh-env.fish
+    ln -sf ~/projs/xmonad.hs/.config/fish/conf.d/ssh-env.fish ~/.config/fish/conf.d/ssh-env.fish
 
 # power button behaviour
 
