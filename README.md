@@ -1,17 +1,27 @@
-
 # xmonad.hs
 
 My opinionated xmonad setup.
 
-## Requirements
+## Essential requirements
 
-    apt-get install xmonad xmobar shutter copyq x11-xserver-utils network-manager-gnome light-locker-settings pcmanfm trayer dex
+    apt-get install xmonad xmobar light-locker-settings pcmanfm trayer dex xscreensaver
+
+### Recommended
+
+* shutter
+* copyq
+* x11-xserver-utils
+* network-manager-gnome
+* org-mode emacs-gtk
+
+Enable .local/bin for dmenu
+
+    ln -s ~/projs/xmonad.hs/.profile ~/.profile
 
 ### Extras
 
 * cargo
 * gimp
-* org-mode emacs-gtk
 * x2goclient
   * x2goserver-x2goagent
   * lightdm-remote-session-x2go
@@ -25,15 +35,14 @@ My opinionated xmonad setup.
 * scrot
 * openvoiceos
 * <https://github.com/davatorium/rofi>
+* <https://hackage.haskell.org/package/xmonad-contrib-0.13/docs/XMonad-Actions-TreeSelect.html>
 
 ## Dismissed
 
 * stalonetray
 * diodon
 
-# console
-
-## fast terminal
+## fast terminal and console
 
 FIXME breaks multi-user capa
 
@@ -45,7 +54,7 @@ FIXME breaks multi-user capa
     chsh
     ln -sf ~/projs/xmonad.hs/.config/fish/conf.d/ssh-env.fish ~/.config/fish/conf.d/ssh-env.fish
 
-# power button behaviour
+## power button behaviour
 
 Check systemd-logind
 
@@ -57,13 +66,13 @@ Check systemd-logind
 
     sudo systemctl restart systemd-logind
 
-# default applications e.g. browser
+## default applications e.g. browser
 
-## applications alternatives
+### applications alternatives
 
     sudo update-alternatives --config x-www-browser
 
-## XDG default applications
+### XDG default applications
 
 Used e.g. by thunderbird
 
@@ -71,7 +80,17 @@ Used e.g. by thunderbird
     ls /usr/share/applications/*
     xdg-settings set default-web-browser google-chrome.desktop
 
-# audio setup
+### us keyboard fix
+
+:rage: Silly time spend on this
+
+Most startup scripts are prior to xdg-autostarts.
+Keep an eye on `grep 'Exec=' /etc/xdg/autostart/*`
+
+    sudo apt remove --purge ibus im-config # which in my case was defaulting to us-keyb
+
+
+## audio setup
 
 pipewire supercedes pulseaudio - getting bluetooth headset working
 
@@ -81,14 +100,14 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
     systenctl restart --user pipewire
     # reconnect your device
 
-# Jupyter
+## Jupyter
 
     pipx install jupyterlab
     pipx inject jupyterlab jupyterlab-git
     jupyter-lab &
     # jupyter-lab stop
 
-# GHCup
+## GHCup
 
 Used for haskell-language-server. <https://www.haskell.org/ghcup/>
 
@@ -96,7 +115,18 @@ Used for haskell-language-server. <https://www.haskell.org/ghcup/>
     # answer Y to haskell-language-server
     curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 
-# VSCOde
+## VSCode
 
     snap install code
     ln -sf ~/projs/xmonad.hs/.config/Code/User/settings.json ~/.config/Code/User/settings.json
+
+## PAIN POINTS
+
+Sources of annoyance that are barely sustainable.
+
+### browser TODO
+
+i have dozens of tabs, of these 4 are relevant for inbound notifications.
+the rest are kind reminders i will place elsewhere, need some tabs hibernation to file and back.
+
+web-applications (like mastodon, whatsapp web) should be fully isolated. maybe having a dedicated snap or something.

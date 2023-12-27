@@ -131,7 +131,7 @@ myStartupHook = do
   spawnOnOnce "1:htop" "x-terminal-emulator -e htop"
   spawnOnOnce "3:web" "google-chrome --restore-last-session"
   -- height needs to be explicit, check ToggleStruts
-  spawnOnce "trayer --align right --transparent true --alpha 150 --widthtype request --height 26 --SetPartialStrut true &"
+  spawnOnce "trayer --align right --transparent true --alpha 150 --widthtype request --height 26 --SetPartialStrut true"
 
 myFadeHook =
   composeAll
