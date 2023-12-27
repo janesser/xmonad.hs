@@ -6,15 +6,15 @@ My opinionated xmonad setup.
 ## Requirements
 
     apt-get install xmonad xmobar shutter copyq x11-xserver-utils network-manager-gnome light-locker-settings pcmanfm trayer dex
-    
+
 ### Extras
 
 * cargo
 * gimp
 * org-mode emacs-gtk
 * x2goclient
-    * x2goserver-x2goagent
-    * lightdm-remote-session-x2go
+  * x2goserver-x2goagent
+  * lightdm-remote-session-x2go
 * podman-compose
 * snap
 * xcompmgr
@@ -24,15 +24,17 @@ My opinionated xmonad setup.
 * flatpak
 * scrot
 * openvoiceos
-* https://github.com/davatorium/rofi
+* <https://github.com/davatorium/rofi>
 
 ## Dismissed
-- stalonetray
-- diodon
+
+* stalonetray
+* diodon
 
 # console
 
 ## fast terminal
+
 FIXME breaks multi-user capa
 
     sudo apt install cargo
@@ -41,6 +43,7 @@ FIXME breaks multi-user capa
 
     sudo apt install fish
     chsh
+    ln -sf ./ssh-env.fish ~/.config/fish/conf.d/ssh-env.fish
 
 # power button behaviour
 
@@ -61,6 +64,7 @@ Check systemd-logind
     sudo update-alternatives --config x-www-browser
 
 ## XDG default applications
+
 Used e.g. by thunderbird
 
     ls ~/.local/share/applications/*
@@ -68,6 +72,7 @@ Used e.g. by thunderbird
     xdg-settings set default-web-browser google-chrome.desktop
 
 # audio setup
+
 pipewire supercedes pulseaudio - getting bluetooth headset working
 
     apt install pipewire-audio easyeffects
@@ -82,3 +87,16 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
     pipx inject jupyterlab jupyterlab-git
     jupyter-lab &
     # jupyter-lab stop
+
+# GHCup
+
+Used for haskell-language-server. <https://www.haskell.org/ghcup/>
+
+    sudo apt install build-essential curl libffi-dev libffi8ubuntu1 libgmp-dev libgmp10 libncurses-dev
+    # answer Y to haskell-language-server
+    curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+
+# VSCOde
+
+    snap install code
+    ln -sf ~/projs/xmonad.hs/.config/Code/User/settings.json ~/.config/Code/User/settings.json

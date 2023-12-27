@@ -1,2 +1,3 @@
 #!/bin/sh
+source ~/.ssh/env
 code ~/projs/xmonad.hs
