@@ -63,3 +63,7 @@ fi
 echo "# GENERATED FILE" > ~/.ssh/env
 killall ssh-agent
 ssh-agent -c >> ~/.ssh/env
+
+if [ `udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN` ]; then
+   onboard &
+fi

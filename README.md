@@ -4,17 +4,22 @@ My opinionated xmonad setup.
 
 ## Essential requirements
 
-    apt-get install xmonad xmobar light-locker-settings pcmanfm trayer dex xscreensaver
+    sudo apt install xmonad xmobar light-locker-settings pcmanfm trayer dex xscreensaver
 
 ### Recommended
 
-* shutter
-* copyq
-* x11-xserver-utils
-* network-manager-gnome
-* org-mode emacs-gtk
+* Recommended requirements
 
-Enable .local/bin for dmenu
+    sudo apt install shutter \
+        copyq \
+        x11-xserver-utils \
+        network-manager-gnome \
+        org-mode emacs-gtk \
+        onboard
+
+* <https://gitlab.com/bitseater/meteo>
+
+* Enable .local/bin for dmenu
 
     ln -s ~/projs/xmonad.hs/.profile ~/.profile
 
@@ -89,12 +94,11 @@ Keep an eye on `grep 'Exec=' /etc/xdg/autostart/*`
 
     sudo apt remove --purge ibus im-config # which in my case was defaulting to us-keyb
 
-
 ## audio setup
 
 pipewire supercedes pulseaudio - getting bluetooth headset working
 
-    apt install pipewire-audio easyeffects
+    apt install pipewire-audio easyeffects blueman
     sudo mkdir -p /etc/pipewire
     sudo cp /usr/share/pipewire/pipewire.conf /etc/pipewire/pipewire.conf
     systenctl restart --user pipewire

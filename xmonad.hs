@@ -78,11 +78,11 @@ myConfig =
                         ( "<XF86AudioRaiseVolume>"
                         , spawn "pactl set-sink-volume @DEFAULT_SINK@ +10%"
                         )
-                      , ("M-o j", orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/orgzly/journal.org")
-                      , ("M-o t", orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/orgzly/todo.org")
+                      , ("M-o j", orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/journal.org")
+                      , ("M-o t", orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/orgzly/todos.org")
                       , ("M-o e", orgPrompt def orgToday "~/Dropbox/orgzly/tochter1.org")
-                      , ("M-o S-j", spawn "emacs ~/Dropbox/orgzly/journal.org")
-                      , ("M-o S-t", spawn "emacs ~/Dropbox/orgzly/todo.org")
+                      , ("M-o S-j", spawn "emacs ~/Dropbox/journal.org")
+                      , ("M-o S-t", spawn "emacs ~/Dropbox/orgzly/todos.org")
                       , ("M-o S-e", spawn "emacs ~/Dropbox/orgzly/tochter1.org")
                       , ("M-m", manPrompt def)
                       , ("M-b", sendMessage ToggleStruts)
@@ -129,7 +129,7 @@ myLayoutHook =
 myStartupHook :: X ()
 myStartupHook = do
   spawnOnOnce "1:htop" "x-terminal-emulator -e htop"
-  spawnOnOnce "3:web" "google-chrome --restore-last-session"
+  spawnOnOnce "3:web" "x-www-browser --restore-last-session"
   -- height needs to be explicit, check ToggleStruts
   spawnOnce "trayer --align right --transparent true --alpha 150 --widthtype request --height 26 --SetPartialStrut true"
 
