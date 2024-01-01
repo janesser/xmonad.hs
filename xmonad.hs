@@ -7,6 +7,7 @@ import Text.Printf
 import XMonad
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.UpdateFocus
+import XMonad.Actions.MouseGestures -- TODO https://hackage.haskell.org/package/xmonad-contrib-0.17.1/docs/XMonad-Actions-MouseGestures.html
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeWindows
