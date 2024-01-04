@@ -4,7 +4,9 @@ import Data.Time
 import System.IO (hPutStrLn)
 import System.IO.Unsafe
 import Text.Printf
+
 import XMonad
+
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.UpdateFocus
 import XMonad.Actions.MouseGestures -- TODO https://hackage.haskell.org/package/xmonad-contrib-0.17.1/docs/XMonad-Actions-MouseGestures.html
@@ -14,12 +16,16 @@ import XMonad.Hooks.FadeWindows
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers
 import XMonad.Hooks.UrgencyHook
+
+import XMonad.Layout.Accordion
 import XMonad.Layout.Fullscreen
+import XMonad.Layout.Grid
+import XMonad.Layout.LayoutScreens
 import XMonad.Layout.NoBorders
 import XMonad.Layout.PerWorkspace
+import XMonad.Layout.Renamed
 import XMonad.Layout.Tabbed
-import XMonad.Layout.LayoutScreens
-import XMonad.Layout.Grid
+
 import XMonad.Util.EZConfig (additionalKeysP)
 import XMonad.Util.Hacks
 import XMonad.Util.Run (spawnPipe)
@@ -45,7 +51,7 @@ myWindowPromptConfig =
 myConfig =
   def
     { modMask = mod4Mask -- left windows super
-    , focusFollowsMouse = True
+    , focusFollowsMouse = False
     , workspaces =
         [ "1:htop"
         , "2:comm"
@@ -117,15 +123,17 @@ myManageHook =
   role = stringProperty "WM_WINDOW_ROLE"
 
 myLayoutHook =
-  avoidStruts
-    $ onWorkspaces ["1:htop", "3:web"] full
-    $ onWorkspace "2:comm" tabbed
-    $ smartBorders (tall ||| tallM ||| full ||| tabbed)
+  avoidStruts $
+    onWorkspace "1:htop" full $
+      onWorkspace "2:comm" tabbed $
+        onWorkspace "3:web" accordion $
+          smartBorders (tall ||| tallM ||| full ||| tabbed ||| accordion)
  where
-  full = noBorders Full
+  full = renamed [Replace "Full"] $ noBorders Full
   tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset
-  tallM = Mirror tall
-  tabbed = simpleTabbed
+  tallM = renamed [Replace "Mirror Tall"] $ Mirror tall
+  tabbed = renamed [Replace "Tabbed"] $ simpleTabbed
+  accordion = Accordion
 
 myStartupHook :: X ()
 myStartupHook = do
@@ -147,15 +155,15 @@ main = do
   spwXMonadRc <- spawnPipe ". ~/.xmonad/xmonadrc" -- writes ~/.ssh/env
   xmonad
     $ docks
-    . ewmhFullscreen
-    . ewmh
-    . withUrgencyHook NoUrgencyHook
-    . javaHack
+      . ewmhFullscreen
+      . ewmh
+      . withUrgencyHook NoUrgencyHook
+      . javaHack
     $ myConfig
       { logHook = myLogHook spwXMobar <+> fadeWindowsLogHook myFadeHook
       , manageHook =
           manageDocks <+> myManageHook <+> fullscreenManageHook
       , layoutHook = myLayoutHook
       , startupHook = myStartupHook
-      , handleEventHook = focusOnMouseMove <+> fadeWindowsEventHook
+      , handleEventHook = fadeWindowsEventHook -- <+> focusOnMouseMove
       }

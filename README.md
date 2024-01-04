@@ -104,14 +104,18 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
     systenctl restart --user pipewire
     # reconnect your device
 
-## Jupyter
+## IDE
+
+developer tools
+
+### Jupyter
 
     pipx install jupyterlab
     pipx inject jupyterlab jupyterlab-git
     jupyter-lab &
     # jupyter-lab stop
 
-## GHCup
+### GHCup
 
 Used for haskell-language-server. <https://www.haskell.org/ghcup/>
 
@@ -119,7 +123,7 @@ Used for haskell-language-server. <https://www.haskell.org/ghcup/>
     # answer Y to haskell-language-server
     curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 
-## VSCode
+### VSCode
 
     snap install code
     ln -sf ~/projs/xmonad.hs/.config/Code/User/settings.json ~/.config/Code/User/settings.json
@@ -128,9 +132,11 @@ Used for haskell-language-server. <https://www.haskell.org/ghcup/>
 
 Sources of annoyance that are barely sustainable.
 
-### browser TODO
+### browser
 
 i have dozens of tabs, of these 4 are relevant for inbound notifications.
 the rest are kind reminders i will place elsewhere, need some tabs hibernation to file and back.
 
 web-applications (like mastodon, whatsapp web) should be fully isolated. maybe having a dedicated snap or something.
+
+Trying <https://chromewebstore.google.com/detail/cluster-window-tab-manage/aadahadfdmiibmdhfmpbeeebejmjnkef>

@@ -1,23 +1,14 @@
 #!/bin/bash
 
+#  /etc/xdg/autostart/light-locker.desktop
+#  /etc/xdg/autostart/xscreensaver.desktop
+#  /etc/xdg/autostart/nm-applet.desktop
+
 if [ ! "$(pidof copyq)" ] ; then
    copyq &
 fi
 
 xsetroot -solid black # feh for background image
-
-if [ ! "$(pidof nm-applet)" ] ; then
-   nm-applet --sm-disable &
-fi
-
-if [ ! "$(pidof xscreensaver)" ] ; then
-   xscreensaver --no-splash &
-fi
-
-
-if [ ! "$(pidof light-locker)" ] ; then
-   light-locker &
-fi
 
 # suppress movement to avoid accidental mouse-focus (no -t)
 if [ ! "$(pidof syndaemon)" ] ; then
@@ -45,17 +36,17 @@ if [ ! "$(pidof signal-desktop)" ]; then
 fi
 
 # whatsapp
-if [ ! "$(xwininfo -root -tree | grep 'WhatsApp Web')" ]; then
+if [ false && ! "$(xwininfo -root -tree | grep 'WhatsApp Web')" ]; then
     dex .local/share/applications/chrome-hnpfjngllnobngcgfapefoaidbinmjnm-Default.desktop &
 fi
 
 # elements
-if [ ! "$(xwininfo -root -tree | grep 'Element')" ]; then
+if [ false && ! "$(xwininfo -root -tree | grep 'Element')" ]; then
     dex .local/share/applications/chrome-ejhkdoiecgkmdpomoahkdihbcldkgjci-Default.desktop &
 fi
 
 # mastodon det.social
-if [ ! "$(xwininfo -root -tree | grep 'det.social')" ]; then
+if [ false && ! "$(xwininfo -root -tree | grep 'det.social')" ]; then
     dex .local/share/applications/chrome-hbpeoicanfoeibcjgkepjpbkdmelgaem-Default.desktop &
 fi
 
