@@ -139,7 +139,9 @@ Used for haskell-language-server. <https://www.haskell.org/ghcup/>
 
 VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
 
-<https://www.linuxcapable.com/install-vscodium-on-ubuntu-linux/>
+Installation instructions here: <https://www.linuxcapable.com/install-vscodium-on-ubuntu-linux/>
+
+    ln -sf ~/projs/xmonad.hs/.config/VSCodium/User/settings.json ~/.config/VSCodium/User/settings.json
 
 #### Extensions
 
