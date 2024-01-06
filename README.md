@@ -128,15 +128,12 @@ Used for haskell-language-server. <https://www.haskell.org/ghcup/>
     snap install code
     ln -sf ~/projs/xmonad.hs/.config/Code/User/settings.json ~/.config/Code/User/settings.json
 
-## PAIN POINTS
+### Librewolf
 
-Sources of annoyance that are barely sustainable.
+Installation instructions here: <https://librewolf.net/installation/debian/>
 
-### browser
+    update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/librewolf 250
 
-i have dozens of tabs, of these 4 are relevant for inbound notifications.
-the rest are kind reminders i will place elsewhere, need some tabs hibernation to file and back.
+Allow history storage and whitelist a few cookies.
 
-web-applications (like mastodon, whatsapp web) should be fully isolated. maybe having a dedicated snap or something.
-
-Trying <https://chromewebstore.google.com/detail/cluster-window-tab-manage/aadahadfdmiibmdhfmpbeeebejmjnkef>
+NOTE There is no Single-Site-Browsing / Progressive-Web-App in FF-Desktop and derivatives.
