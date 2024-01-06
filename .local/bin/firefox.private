@@ -1,2 +1,7 @@
-#!/bin/sh
-firefox --private-window
+#!/bin/bash
+
+if [ -x $(command -v librewolf) ]; then
+    librewolf --private-window
+else
+    firefox --private-window
+fi
