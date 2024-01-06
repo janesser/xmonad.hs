@@ -1,3 +1,6 @@
 #!/bin/sh
 source ~/.ssh/env
+
+export GIT_SSH=$(which ssh)
+
 code ~/projs/xmonad.hs
