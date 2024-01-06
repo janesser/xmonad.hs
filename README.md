@@ -31,7 +31,6 @@ My opinionated xmonad setup.
   * x2goserver-x2goagent
   * lightdm-remote-session-x2go
 * podman-compose
-* snap
 * xcompmgr
 
 ## Candidates
@@ -46,6 +45,9 @@ My opinionated xmonad setup.
 
 * stalonetray
 * diodon
+* snap
+  * vscode
+  * firefox
 
 ## fast terminal and console
 
@@ -73,6 +75,16 @@ Check systemd-logind
 
 ## default applications e.g. browser
 
+### Librewolf
+
+Installation instructions here: <https://librewolf.net/installation/debian/>
+
+    update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/librewolf 250
+
+Allow history storage and whitelist a few cookies.
+
+NOTE There is no Single-Site-Browsing / Progressive-Web-App in FF-Desktop and derivatives.
+
 ### applications alternatives
 
     sudo update-alternatives --config x-www-browser
@@ -83,7 +95,7 @@ Used e.g. by thunderbird
 
     ls ~/.local/share/applications/*
     ls /usr/share/applications/*
-    xdg-settings set default-web-browser google-chrome.desktop
+    xdg-settings set default-web-browser librewolf.desktop
 
 ### us keyboard fix
 
@@ -123,17 +135,24 @@ Used for haskell-language-server. <https://www.haskell.org/ghcup/>
     # answer Y to haskell-language-server
     curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 
-### VSCode
+### Codium
+
+VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
+
+<https://www.linuxcapable.com/install-vscodium-on-ubuntu-linux/>
+
+#### Extensions
+
+    codium --list-extensions
+        bmalehorn.vscode-fish
+        DavidAnson.vscode-markdownlint
+        foxundermoon.shell-format
+        haskell.haskell
+        justusadam.language-haskell
+        mads-hartmann.bash-ide-vscode
+    codium --install-extension (<extension-id> | <extension-vsix-path>)
+
+#### ~~VSCode~~
 
     snap install code
     ln -sf ~/projs/xmonad.hs/.config/Code/User/settings.json ~/.config/Code/User/settings.json
-
-### Librewolf
-
-Installation instructions here: <https://librewolf.net/installation/debian/>
-
-    update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/librewolf 250
-
-Allow history storage and whitelist a few cookies.
-
-NOTE There is no Single-Site-Browsing / Progressive-Web-App in FF-Desktop and derivatives.

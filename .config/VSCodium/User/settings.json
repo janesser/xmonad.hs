@@ -15,5 +15,6 @@
     "haskell.formattingProvider": "fourmolu",
     "haskell.serverEnvironment": {
       
-    }
+    },
+    "git.rebaseWhenSync": true
 }

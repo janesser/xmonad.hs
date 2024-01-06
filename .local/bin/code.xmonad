@@ -1,6 +1,7 @@
-#!/bin/sh
-source ~/.ssh/env
+#!/bin/bash
 
-export GIT_SSH=$(which ssh)
-
-code ~/projs/xmonad.hs
+if [ -x $(command -v codium) ]; then
+    codium ~/projs/xmonad.hs
+else
+    code ~/projs/xmonad.hs
+fi
