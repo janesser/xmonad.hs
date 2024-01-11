@@ -48,6 +48,7 @@ My opinionated xmonad setup.
 * snap
   * vscode
   * firefox
+  * chromium
 
 ## fast terminal and console
 
@@ -60,6 +61,12 @@ FIXME breaks multi-user capa
     sudo apt install fish
     chsh
     ln -sf ~/projs/xmonad.hs/.config/fish/conf.d/ssh-env.fish ~/.config/fish/conf.d/ssh-env.fish
+
+### nala
+
+    sudo apt install nala
+    sudo nala fetch # pick wisely
+    nala --install-completion=fish --show-completion=fish
 
 ## power button behaviour
 
