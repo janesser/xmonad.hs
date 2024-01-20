@@ -16,5 +16,8 @@
     "haskell.serverEnvironment": {
       
     },
-    "git.rebaseWhenSync": true
+    "git.rebaseWhenSync": true,
+    "[haskell]": {
+      "editor.defaultFormatter": "haskell.haskell"
+    }
 }

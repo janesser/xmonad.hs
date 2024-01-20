@@ -25,13 +25,16 @@ My opinionated xmonad setup.
 
 ### Extras
 
-* cargo
-* gimp
+    sudo apt install \
+        cargo \
+        gimp \
+        podman-compose \
+        texworks \
+        pandoc
+
 * x2goclient
   * x2goserver-x2goagent
   * lightdm-remote-session-x2go
-* podman-compose
-* xcompmgr
 
 ## Candidates
 
@@ -40,6 +43,7 @@ My opinionated xmonad setup.
 * openvoiceos
 * <https://github.com/davatorium/rofi>
 * <https://hackage.haskell.org/package/xmonad-contrib-0.13/docs/XMonad-Actions-TreeSelect.html>
+* xcompmgr
 
 ## Dismissed
 

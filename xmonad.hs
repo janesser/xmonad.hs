@@ -1,15 +1,12 @@
 import Control.Monad (liftM2)
-import Data.List
 import Data.Time
 import System.IO (hPutStrLn)
 import System.IO.Unsafe
-import Text.Printf
 
 import XMonad
 
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.UpdateFocus
-import XMonad.Actions.MouseGestures -- TODO https://hackage.haskell.org/package/xmonad-contrib-0.17.1/docs/XMonad-Actions-MouseGestures.html
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeWindows
@@ -26,16 +23,17 @@ import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Renamed
 import XMonad.Layout.Tabbed
 
-import XMonad.Util.EZConfig (additionalKeysP)
-import XMonad.Util.Hacks
-import XMonad.Util.Run (spawnPipe)
-import XMonad.Util.SpawnOnce
-
 import XMonad.Prompt
 import XMonad.Prompt.FuzzyMatch
 import XMonad.Prompt.Man
 import XMonad.Prompt.OrgMode
 import XMonad.Prompt.Window
+
+import XMonad.Util.Hacks
+import XMonad.Util.Run
+import XMonad.Util.SpawnOnce
+import XMonad.Util.DocumentedKeys
+
 
 {-# NOINLINE orgToday #-}
 orgToday = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y]" <$> getCurrentTime
@@ -58,66 +56,60 @@ myConfig =
         , "3:web"
         , "4:ide"
         , "5:entertain"
-        , "6:adult"
+        , "6:private"
         , "7:games"
         , "8:education"
         , "9:admin"
         ]
     }
-    `additionalKeysP` [ ("M-e", spawn "pcmanfm")
-                      , ("M-S-p", spawn "kupfer")
-                      , ("C-ö", spawn "copyq toggle")
-                      , ("<Print>", spawn "shutter -s")
-                      , ("M-S-l", spawn "light-locker-command -l")
-                      , ("C-ä", spawn "killall xcompmgr; xcompmgr -cCfF")
-                      , ("C-ü", spawn "killall xcompmgr")
-                      , ("<XF86MonBrightnessUp>", spawn "brightness.sh +")
-                      , ("<XF86MonBrightnessDown>", spawn "brightness.sh -")
-                      ,
-                        ( "<XF86AudioMute>"
-                        , spawn "pactl set-sink-mute @DEFAULT_SINK@ toggle"
-                        )
-                      ,
-                        ( "<XF86AudioLowerVolume>"
-                        , spawn "pactl set-sink-volume @DEFAULT_SINK@ -10%"
-                        )
-                      ,
-                        ( "<XF86AudioRaiseVolume>"
-                        , spawn "pactl set-sink-volume @DEFAULT_SINK@ +10%"
-                        )
-                      , ("M-o j", orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/journal.org")
-                      , ("M-o t", orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/orgzly/todos.org")
-                      , ("M-o e", orgPrompt def orgToday "~/Dropbox/orgzly/tochter1.org")
-                      , ("M-o S-j", spawn "emacs ~/Dropbox/journal.org")
-                      , ("M-o S-t", spawn "emacs ~/Dropbox/orgzly/todos.org")
-                      , ("M-o S-e", spawn "emacs ~/Dropbox/orgzly/tochter1.org")
-                      , ("M-m", manPrompt def)
-                      , ("M-b", sendMessage ToggleStruts)
-                      , ("M-C-k", spawn "xkill")
-                      , ("M-C-g", windowPrompt myWindowPromptConfig Goto allWindows)
-                      , ("M-C-b", windowPrompt myWindowPromptConfig Bring allWindows)
-                      , ("M-C-<Space>", layoutScreens 4 Grid)
-                      , ("M-C-S-<Space>", rescreen)
-                      ]
+    `additionalKeysPdoc` [ ("M-e", docSpawn "pcmanfm")
+                         , ("M-S-p", docSpawn "kupfer")
+                         , ("C-ö", docSpawn "copyq toggle")
+                         , ("<Print>", docSpawn "shutter -s")
+                         , ("M-S-l", docSpawn "light-locker-command -l")
+                         , ("C-ä", docSpawn "killall xcompmgr; xcompmgr -cCfF")
+                         , ("C-ü", docSpawn "killall xcompmgr")
+                         , ("<XF86MonBrightnessUp>", docSpawn "brightness.sh +")
+                         , ("<XF86MonBrightnessDown>", docSpawn "brightness.sh -")
+                         ,
+                           ( "<XF86AudioMute>"
+                           , docSpawn "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+                           )
+                         ,
+                           ( "<XF86AudioLowerVolume>"
+                           , docSpawn "pactl set-sink-volume @DEFAULT_SINK@ -10%"
+                           )
+                         ,
+                           ( "<XF86AudioRaiseVolume>"
+                           , docSpawn "pactl set-sink-volume @DEFAULT_SINK@ +10%"
+                           )
+                         , ("M-o j", docKey "add TODO to journal" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/journal.org")
+                         , ("M-o t", docKey "add TODO to family todos" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/orgzly/todos.org")
+                         , ("M-o e", docKey "add entry to tochter1" $ orgPrompt def orgToday "~/Dropbox/orgzly/tochter1.org")
+                         , ("M-o S-j", docSpawn "emacs ~/Dropbox/journal.org")
+                         , ("M-o S-t", docSpawn "emacs ~/Dropbox/orgzly/todos.org")
+                         , ("M-o S-e", docSpawn "emacs ~/Dropbox/orgzly/tochter1.org")
+                         , ("M-m", docKey "manPrompt" $ manPrompt def)
+                         , ("M-b", docKey "sendMessage ToggleStruts" $ sendMessage ToggleStruts)
+                         , ("M-C-k", docSpawn "xkill")
+                         , ("M-C-g", docKey "windowPrompt goto" $ windowPrompt myWindowPromptConfig Goto allWindows)
+                         , ("M-C-b", docKey "windowPrompt bring" $ windowPrompt myWindowPromptConfig Bring allWindows)
+                         , ("M-C-<Space>", docKey "layoutScreens 4 Grid" $ layoutScreens 4 Grid)
+                         , ("M-C-S-<Space>", docKey "rescreen" rescreen)
+                         ]
 
 myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
 
 myManageHook =
   composeAll
     [ -- comm
-      title =? "WhatsApp Web" --> doShift "2:comm"
-    , fmap ("det.social" `isPrefixOf`) title --> doShift "2:comm"
-    , fmap ("Element" `isPrefixOf`) title --> doShift "2:comm"
-    , className =? "signal" --> doShift "2:comm"
+      className =? "signal" --> doShift "2:comm"
     , className =? "thunderbird" --> doShift "2:comm"
-    , -- web
-      role =? "browser" --> doShift "3:web"
     , -- ide
-      className =? "code" --> doShift "4:ide"
+      className =? "vscodium" --> doShift "4:ide"
     , -- entertain
-      fmap ("Youtube" `isPrefixOf`) title --> doShift "5:entertain"
-    , fmap ("Spotify" `isPrefixOf`) title --> doShift "5:entertain"
-    , className =? "vlc" --> doSideFloat CE
+      className =? "vlc" --> doSideFloat CE
+    , role =? "PictureInPicture" --> doSideFloat CE
     ]
  where
   role = stringProperty "WM_WINDOW_ROLE"
@@ -132,7 +124,7 @@ myLayoutHook =
   full = renamed [Replace "Full"] $ noBorders Full
   tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset
   tallM = renamed [Replace "Mirror Tall"] $ Mirror tall
-  tabbed = renamed [Replace "Tabbed"] $ simpleTabbed
+  tabbed = renamed [Replace "Tabbed"] simpleTabbed
   accordion = Accordion
 
 myStartupHook :: X ()
@@ -150,6 +142,7 @@ myFadeHook =
     , className =? "vlc" --> opaque
     ]
 
+main :: IO ()
 main = do
   spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
   spwXMonadRc <- spawnPipe ". ~/.xmonad/xmonadrc" -- writes ~/.ssh/env
