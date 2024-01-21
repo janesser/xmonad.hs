@@ -4,51 +4,30 @@
 #  /etc/xdg/autostart/xscreensaver.desktop
 #  /etc/xdg/autostart/nm-applet.desktop
 
-if [ ! "$(pidof copyq)" ] ; then
-   copyq &
-fi
+start_once () {
+   PRG=$1
+   ARGS=$2
+   if [ -x $(command -v $PRG) ] && [ ! "$(pidof $PRG)" ]; then
+      exec $PRG $ARGS &
+   fi
+}
 
 xsetroot -solid black # feh for background image
 
+start_once copyq
 # suppress movement to avoid accidental mouse-focus (no -t)
-if [ ! "$(pidof syndaemon)" ] ; then
-   syndaemon -i 2 -d -K & 
-fi
-
-# pipewire-pulse
-if [ ! "$(pidof dropbox)" ] ; then
-   dropbox start
-fi
-
+start_once syndaemon "-i 2 -d -K"
+start_once dropbox start
 # sudo add-apt-repository ppa:bitseater/ppa
-if [ ! "$(pidof com.gitlab.bitseater.meteo)" ] ; then
-   com.gitlab.bitseater.meteo &
-fi
+start_once com.gitlab.bitseater.meteo
 
 ### COMM ###
 
-if [ ! "$(pidof thunderbird)" ]; then
-    thunderbird &
-fi
-
-if [ ! "$(pidof signal-desktop)" ]; then
-    signal-desktop &
-fi
-
-# # whatsapp
-# if [ ! "$(xwininfo -root -tree | grep 'WhatsApp Web')" ]; then
-#     dex .local/share/applications/chrome-hnpfjngllnobngcgfapefoaidbinmjnm-Default.desktop &
-# fi
-
-# # elements
-# if [ ! "$(xwininfo -root -tree | grep 'Element')" ]; then
-#     dex .local/share/applications/chrome-ejhkdoiecgkmdpomoahkdihbcldkgjci-Default.desktop &
-# fi
-
-# # mastodon det.social
-# if [ ! "$(xwininfo -root -tree | grep 'det.social')" ]; then
-#     dex .local/share/applications/chrome-hbpeoicanfoeibcjgkepjpbkdmelgaem-Default.desktop &
-# fi
+start_once thunderbird
+start_once signal-desktop 
+start_once whatsapp-for-linux # compiled from github
+start_once element-desktop
+start_once dev.geopjr.Tuba # compiled from github
 
 ## ssh-agent
 echo "# GENERATED FILE" > ~/.ssh/env
@@ -56,5 +35,5 @@ killall ssh-agent
 ssh-agent -c >> ~/.ssh/env
 
 if [ `udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN` ]; then
-   onboard &
+   start_once onboard
 fi

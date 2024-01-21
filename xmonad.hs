@@ -131,6 +131,9 @@ myManageHook =
   composeAll
     [ -- comm
       className =? "signal" --> doShift "2:comm"
+    , className =? "element" --> doShift "2:comm"
+    , className =? "whatsapp-for-linux" --> doShift "2:comm"
+    , className =? "dev.geopjr.Tuba" --> doShift "2:comm"
     , className =? "thunderbird" --> doShift "2:comm"
     , -- ide
       className =? "vscodium" --> doShift "4:ide"
