@@ -1,6 +1,11 @@
 #!/bin/bash
 
 GHCUP_PREFIX=
+
+if [ -f ~/.ghcup/env ]; then
+    source ~/.ghcup/env
+fi
+
 if [ -x $(command -v ghcup) ]; then
     GHCUP_PREFIX="ghcup run --ghc recommended --cabal recommended --hls recommended --stack recommended --"
 fi
