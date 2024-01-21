@@ -15,7 +15,8 @@ My opinionated xmonad setup.
         x11-xserver-utils \
         network-manager-gnome \
         org-mode emacs-gtk \
-        onboard
+        onboard \
+        easyeffects
 
 * <https://gitlab.com/bitseater/meteo>
 
