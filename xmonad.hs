@@ -1,4 +1,4 @@
-import Control.Monad (liftM2)
+import Control.Monad
 import Data.Time
 import System.IO (hPutStrLn)
 import System.IO.Unsafe
@@ -50,7 +50,7 @@ myKeysConfig :: XConfig l -> XConfig l
 myKeysConfig =
   addDescrKeys
     ((mod4Mask .|. shiftMask, xK_h), xMessage)
-    (liftM2 (++) (liftM2 (++) myBasicKeys myWindowKeys) myJournalKeys)
+    (myBasicKeys <+> myWindowKeys <+> myJournalKeys)
 
 myBasicKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
 myBasicKeys c =
@@ -81,6 +81,7 @@ myBasicKeys c =
       , ("M-m", addName "manPrompt" $ manPrompt def)
       ]
 
+myWindowKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
 myWindowKeys c =
   subtitle "My Window Keys"
     : mkNamedKeymap
