@@ -1,7 +1,13 @@
 #!/bin/bash
 
+GHCUP_PREFIX=
+if [ -x $(command -v ghcup) ]; then
+    GHCUP_PREFIX="ghcup run --ghc recommended --cabal recommended --hls recommended --stack recommended --"
+fi
+
 if [ -x $(command -v codium) ]; then
-    codium ~/projs/xmonad.hs
+    echo $GHCUP_PREFIX codium ~/projs/xmonad.hs
+    exec $GHCUP_PREFIX codium ~/projs/xmonad.hs
 else
-    code ~/projs/xmonad.hs
+    exec $GHCUP_PREFIX code ~/projs/xmonad.hs
 fi

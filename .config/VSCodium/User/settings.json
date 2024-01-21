@@ -7,7 +7,6 @@
       "stack": "recommended"
     },
     "haskell.manageHLS": "GHCup",
-    "extensions.ignoreRecommendations": true,
     "git.autofetch": true,
     "[shellscript]": {
       "editor.defaultFormatter": "foxundermoon.shell-format"

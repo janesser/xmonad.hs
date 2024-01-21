@@ -29,11 +29,11 @@ import XMonad.Prompt.Man
 import XMonad.Prompt.OrgMode
 import XMonad.Prompt.Window
 
+import XMonad.Util.EZConfig (mkNamedKeymap)
 import XMonad.Util.Hacks
+import XMonad.Util.NamedActions
 import XMonad.Util.Run
 import XMonad.Util.SpawnOnce
-import XMonad.Util.DocumentedKeys
-
 
 {-# NOINLINE orgToday #-}
 orgToday = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y]" <$> getCurrentTime
@@ -46,57 +46,83 @@ myWindowPromptConfig =
     , sorter = fuzzySort
     }
 
+myKeysConfig :: XConfig l -> XConfig l
+myKeysConfig =
+  addDescrKeys
+    ((mod4Mask .|. shiftMask, xK_h), xMessage)
+    (liftM2 (++) (liftM2 (++) myBasicKeys myWindowKeys) myJournalKeys)
+
+myBasicKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
+myBasicKeys c =
+  subtitle "My Basic Keys"
+    : mkNamedKeymap
+      c
+      [ ("M-e", spawn' "pcmanfm")
+      , ("M-S-p", spawn' "kupfer")
+      , ("C-ö", spawn' "copyq toggle")
+      , ("<Print>", spawn' "shutter -s")
+      , ("M-S-l", spawn' "light-locker-command -l")
+      , ("<XF86MonBrightnessUp>", spawn' "brightness.sh +")
+      , ("<XF86MonBrightnessDown>", spawn' "brightness.sh -")
+      ,
+        ( "<XF86AudioMute>"
+        , spawn' "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+        )
+      ,
+        ( "<XF86AudioLowerVolume>"
+        , spawn' "pactl set-sink-volume @DEFAULT_SINK@ -10%"
+        )
+      ,
+        ( "<XF86AudioRaiseVolume>"
+        , spawn' "pactl set-sink-volume @DEFAULT_SINK@ +10%"
+        )
+      , ("M-b", addName "sendMessage ToggleStruts" $ sendMessage ToggleStruts)
+      , ("M-C-k", spawn' "xkill")
+      , ("M-m", addName "manPrompt" $ manPrompt def)
+      ]
+
+myWindowKeys c =
+  subtitle "My Window Keys"
+    : mkNamedKeymap
+      c
+      [ ("C-ä", spawn' "killall xcompmgr; xcompmgr -cCfF")
+      , ("C-ü", spawn' "killall xcompmgr")
+      , ("M-C-g", addName "windowPrompt goto" $ windowPrompt myWindowPromptConfig Goto allWindows)
+      , ("M-C-b", addName "windowPrompt bring" $ windowPrompt myWindowPromptConfig Bring allWindows)
+      , ("M-C-<Space>", addName "layoutScreens 4 Grid" $ layoutScreens 4 Grid)
+      , ("M-C-S-<Space>", addName "rescreen" rescreen)
+      ]
+
+myJournalKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
+myJournalKeys c =
+  subtitle "My Keys"
+    : mkNamedKeymap
+      c
+      [ ("M-o j", addName "add TODO to journal" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/journal.org")
+      , ("M-o t", addName "add TODO to family todos" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/orgzly/todos.org")
+      , ("M-o e", addName "add entry to tochter1" $ orgPrompt def orgToday "~/Dropbox/orgzly/tochter1.org")
+      , ("M-o S-j", spawn' "emacs ~/Dropbox/journal.org")
+      , ("M-o S-t", spawn' "emacs ~/Dropbox/orgzly/todos.org")
+      , ("M-o S-e", spawn' "emacs ~/Dropbox/orgzly/tochter1.org")
+      ]
+
 myConfig =
-  def
-    { modMask = mod4Mask -- left windows super
-    , focusFollowsMouse = False
-    , workspaces =
-        [ "1:htop"
-        , "2:comm"
-        , "3:web"
-        , "4:ide"
-        , "5:entertain"
-        , "6:private"
-        , "7:games"
-        , "8:education"
-        , "9:admin"
-        ]
-    }
-    `additionalKeysPdoc` [ ("M-e", docSpawn "pcmanfm")
-                         , ("M-S-p", docSpawn "kupfer")
-                         , ("C-ö", docSpawn "copyq toggle")
-                         , ("<Print>", docSpawn "shutter -s")
-                         , ("M-S-l", docSpawn "light-locker-command -l")
-                         , ("C-ä", docSpawn "killall xcompmgr; xcompmgr -cCfF")
-                         , ("C-ü", docSpawn "killall xcompmgr")
-                         , ("<XF86MonBrightnessUp>", docSpawn "brightness.sh +")
-                         , ("<XF86MonBrightnessDown>", docSpawn "brightness.sh -")
-                         ,
-                           ( "<XF86AudioMute>"
-                           , docSpawn "pactl set-sink-mute @DEFAULT_SINK@ toggle"
-                           )
-                         ,
-                           ( "<XF86AudioLowerVolume>"
-                           , docSpawn "pactl set-sink-volume @DEFAULT_SINK@ -10%"
-                           )
-                         ,
-                           ( "<XF86AudioRaiseVolume>"
-                           , docSpawn "pactl set-sink-volume @DEFAULT_SINK@ +10%"
-                           )
-                         , ("M-o j", docKey "add TODO to journal" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/journal.org")
-                         , ("M-o t", docKey "add TODO to family todos" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/orgzly/todos.org")
-                         , ("M-o e", docKey "add entry to tochter1" $ orgPrompt def orgToday "~/Dropbox/orgzly/tochter1.org")
-                         , ("M-o S-j", docSpawn "emacs ~/Dropbox/journal.org")
-                         , ("M-o S-t", docSpawn "emacs ~/Dropbox/orgzly/todos.org")
-                         , ("M-o S-e", docSpawn "emacs ~/Dropbox/orgzly/tochter1.org")
-                         , ("M-m", docKey "manPrompt" $ manPrompt def)
-                         , ("M-b", docKey "sendMessage ToggleStruts" $ sendMessage ToggleStruts)
-                         , ("M-C-k", docSpawn "xkill")
-                         , ("M-C-g", docKey "windowPrompt goto" $ windowPrompt myWindowPromptConfig Goto allWindows)
-                         , ("M-C-b", docKey "windowPrompt bring" $ windowPrompt myWindowPromptConfig Bring allWindows)
-                         , ("M-C-<Space>", docKey "layoutScreens 4 Grid" $ layoutScreens 4 Grid)
-                         , ("M-C-S-<Space>", docKey "rescreen" rescreen)
-                         ]
+  myKeysConfig $
+    def
+      { modMask = mod4Mask -- left windows super
+      , focusFollowsMouse = False
+      , workspaces =
+          [ "1:htop"
+          , "2:comm"
+          , "3:web"
+          , "4:ide"
+          , "5:entertain"
+          , "6:private"
+          , "7:games"
+          , "8:education"
+          , "9:admin"
+          ]
+      }
 
 myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
 
