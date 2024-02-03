@@ -4,7 +4,9 @@ My opinionated xmonad setup.
 
 ## Essential requirements
 
-    sudo apt install xmonad xmobar light-locker-settings pcmanfm trayer dex xscreensaver
+    sudo apt install xmonad xmobar \
+        light-locker-settings pcmanfm trayer xscreensaver \
+        libghc-split-dev
 
 ### Recommended
 
@@ -31,7 +33,9 @@ My opinionated xmonad setup.
         gimp \
         podman-compose \
         texworks \
-        pandoc
+        pandoc \
+        dex \
+        geeqie
 
 * x2goclient
   * x2goserver-x2goagent

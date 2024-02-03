@@ -1,9 +1,11 @@
 import Control.Monad
+import Data.List.Split
 import Data.Time
 import System.IO (hPutStrLn)
 import System.IO.Unsafe
 
 import XMonad
+import XMonad.Config
 
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.UpdateFocus
@@ -28,7 +30,9 @@ import XMonad.Prompt.FuzzyMatch
 import XMonad.Prompt.Man
 import XMonad.Prompt.OrgMode
 import XMonad.Prompt.Window
+import XMonad.Prompt.XMonad
 
+import Data.List (intercalate)
 import XMonad.Util.EZConfig (mkNamedKeymap)
 import XMonad.Util.Hacks
 import XMonad.Util.NamedActions
@@ -49,37 +53,53 @@ myWindowPromptConfig =
 myKeysConfig :: XConfig l -> XConfig l
 myKeysConfig =
   addDescrKeys
-    ((mod4Mask .|. shiftMask, xK_h), xMessage)
+    ((mod4Mask .|. shiftMask, xK_h), noName . xKeysPrompt def)
     (myBasicKeys <+> myWindowKeys <+> myJournalKeys)
 
+myBasicKeyMap =
+  [ ("M-x", noName $ xmonadPrompt def)
+  , ("M-e", spawn' "pcmanfm")
+  , ("M-S-p", spawn' "kupfer")
+  , ("C-ö", spawn' "copyq toggle")
+  , ("<Print>", spawn' "shutter -s")
+  , ("M-S-l", spawn' "light-locker-command -l")
+  , ("<XF86MonBrightnessUp>", spawn' "brightness.sh +")
+  , ("<XF86MonBrightnessDown>", spawn' "brightness.sh -")
+  ,
+    ( "<XF86AudioMute>"
+    , spawn' "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+    )
+  ,
+    ( "<XF86AudioLowerVolume>"
+    , spawn' "pactl set-sink-volume @DEFAULT_SINK@ -10%"
+    )
+  ,
+    ( "<XF86AudioRaiseVolume>"
+    , spawn' "pactl set-sink-volume @DEFAULT_SINK@ +10%"
+    )
+  , ("M-b", addName "sendMessage ToggleStruts" $ sendMessage ToggleStruts)
+  , ("M-C-k", spawn' "xkill")
+  , ("M-m", addName "manPrompt" $ manPrompt def)
+  ]
 myBasicKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
 myBasicKeys c =
   subtitle "My Basic Keys"
-    : mkNamedKeymap
-      c
-      [ ("M-e", spawn' "pcmanfm")
-      , ("M-S-p", spawn' "kupfer")
-      , ("C-ö", spawn' "copyq toggle")
-      , ("<Print>", spawn' "shutter -s")
-      , ("M-S-l", spawn' "light-locker-command -l")
-      , ("<XF86MonBrightnessUp>", spawn' "brightness.sh +")
-      , ("<XF86MonBrightnessDown>", spawn' "brightness.sh -")
-      ,
-        ( "<XF86AudioMute>"
-        , spawn' "pactl set-sink-mute @DEFAULT_SINK@ toggle"
-        )
-      ,
-        ( "<XF86AudioLowerVolume>"
-        , spawn' "pactl set-sink-volume @DEFAULT_SINK@ -10%"
-        )
-      ,
-        ( "<XF86AudioRaiseVolume>"
-        , spawn' "pactl set-sink-volume @DEFAULT_SINK@ +10%"
-        )
-      , ("M-b", addName "sendMessage ToggleStruts" $ sendMessage ToggleStruts)
-      , ("M-C-k", spawn' "xkill")
-      , ("M-m", addName "manPrompt" $ manPrompt def)
-      ]
+    : mkNamedKeymap c myBasicKeyMap
+
+xKeysPrompt :: XPConfig -> [((KeyMask, KeySym), NamedAction)] -> X ()
+xKeysPrompt c keylist = do
+  mkXPrompt Bindings c (mkComplFunFromList' c $ showKmSimple keylist) doIt
+ where
+  doIt k = spawn $ "xdotool key " ++ doToolKey k
+  doToolKey = intercalate "+" . map doControlKey . splitOn "-"
+  doControlKey "C" = "Control_L"
+  doControlKey "S" = "Shift_L"
+  doControlKey "M4" = "Super_L"
+  doControlKey k = filter (/= '>') $ filter (/= '<') k
+
+data Bindings = Bindings
+instance XPrompt Bindings where
+  showXPrompt Bindings = "Bindings: "
 
 myWindowKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
 myWindowKeys c =
