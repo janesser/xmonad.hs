@@ -9,7 +9,11 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
   , lowerOnStart = True
   , commands = [ Run MultiCpu ["-t", "<total>%"] 20
                , Run ThermalZone 0 ["-t", "<temp>°C"] 20
-               , Run Battery ["-t", "<left>%"] 60
+               , Run Battery [ "-t", "<acstatus>"
+               , "--"
+               , "-O", "<fc=white><left>%</fc>"
+               , "-o", "<fc=red><timeleft>h</fc>"
+               ] 60
                , Run Date "<fc=#93a1a1>%a %b %_d %Y %H:%M:%S</fc>" "date" 10
                , Run Com "/bin/bash" ["-c",
                     "pactl -n xmobar get-sink-volume $(pactl get-default-sink) | grep -Po \"[0-9]{1,3}%\" | head -1"] 
@@ -23,5 +27,5 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
                ]
   , sepChar = "%"
   , alignSep = "}{"
-  , template = " %StdinReader% } %date% { CPU: %multicpu% | TMP: %thermal0% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=red>%volume-mute%</fc> | BAT: <fc=white>%battery%</fc>"
+  , template = " %StdinReader% } %date% { CPU: %multicpu% | TMP: %thermal0% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
 }
