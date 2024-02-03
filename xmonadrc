@@ -4,7 +4,7 @@
 #  /etc/xdg/autostart/xscreensaver.desktop
 #  /etc/xdg/autostart/nm-applet.desktop
 
-start_once () {
+start_once() {
    PRG=$1
    ARGS=$2
    if [ -x $(command -v $PRG) ] && [ ! "$(pidof $PRG)" ]; then
@@ -24,16 +24,16 @@ start_once com.gitlab.bitseater.meteo
 ### COMM ###
 
 start_once thunderbird
-start_once signal-desktop 
+start_once signal-desktop
 start_once whatsapp-for-linux # compiled from github
 start_once element-desktop
 start_once dev.geopjr.Tuba # compiled from github
 
 ## ssh-agent
-echo "# GENERATED FILE" > ~/.ssh/env
+echo "# GENERATED FILE" >~/.ssh/env
 killall ssh-agent
-ssh-agent -c >> ~/.ssh/env
+ssh-agent -c >>~/.ssh/env
 
-if [ `udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN` ]; then
+if [ $(udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN) ]; then
    start_once onboard
 fi
