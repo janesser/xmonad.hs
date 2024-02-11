@@ -9,6 +9,7 @@ import XMonad.Config
 
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.UpdateFocus
+import XMonad.Actions.CopyWindow
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeWindows
@@ -112,6 +113,8 @@ myWindowKeys c =
       , ("M-C-b", addName "windowPrompt bring" $ windowPrompt myWindowPromptConfig Bring allWindows)
       , ("M-C-<Space>", addName "layoutScreens 4 Grid" $ layoutScreens 4 Grid)
       , ("M-C-S-<Space>", addName "rescreen" rescreen)
+      , ("M-C-a", noName $ windows copyToAll)
+      , ("M-C-S-a", noName killAllOtherCopies)
       ]
 
 myJournalKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
