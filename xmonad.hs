@@ -153,9 +153,9 @@ myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
 myManageHook =
   composeAll
     [ -- comm
-      className =? "signal" --> doShift "2:comm"
-    , className =? "element" --> doShift "2:comm"
-    , className =? "whatsapp-for-linux" --> doShift "2:comm"
+      className =? "Signal" --> doShift "2:comm"
+    , className =? "Element" --> doShift "2:comm"
+    , className =? "Whatsapp-for-linux" --> doShift "2:comm"
     , className =? "dev.geopjr.Tuba" --> doShift "2:comm"
     , className =? "thunderbird" --> doShift "2:comm"
     , -- ide
@@ -163,6 +163,8 @@ myManageHook =
     , -- entertain
       className =? "vlc" --> doSideFloat CE
     , role =? "PictureInPicture" --> doSideFloat CE
+    , -- admin
+      className =? "easyeffects" --> doShift "9:admin"
     ]
  where
   role = stringProperty "WM_WINDOW_ROLE"
