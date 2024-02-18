@@ -58,6 +58,7 @@ My opinionated xmonad setup.
   * vscode
   * firefox
   * chromium
+* whatsapp-for-linux
 
 ## fast terminal and console
 
@@ -100,6 +101,11 @@ Installation instructions here: <https://librewolf.net/installation/debian/>
 Allow history storage and whitelist a few cookies.
 
 NOTE There is no Single-Site-Browsing / Progressive-Web-App in FF-Desktop and derivatives.
+
+#### search engines
+
+* <https://ecosia.helpscoutdocs.com/article/406-about-ecosia>
+* <https://stract.com/about>
 
 ### applications alternatives
 

@@ -25,7 +25,7 @@ start_once com.gitlab.bitseater.meteo
 
 start_once thunderbird
 start_once signal-desktop
-start_once whatsapp-for-linux # compiled from github
+start_once whatsie # compiled from github
 start_once element-desktop
 start_once dev.geopjr.Tuba # compiled from github
 

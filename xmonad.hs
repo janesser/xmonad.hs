@@ -155,7 +155,7 @@ myManageHook =
     [ -- comm
       className =? "Signal" --> doShift "2:comm"
     , className =? "Element" --> doShift "2:comm"
-    , className =? "Whatsapp-for-linux" --> doShift "2:comm"
+    , className =? "WhatSie" --> doShift "2:comm"
     , className =? "dev.geopjr.Tuba" --> doShift "2:comm"
     , className =? "thunderbird" --> doShift "2:comm"
     , -- ide
