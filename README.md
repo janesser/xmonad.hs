@@ -119,6 +119,10 @@ Used e.g. by thunderbird
     ls /usr/share/applications/*
     xdg-settings set default-web-browser librewolf.desktop
 
+### mimeapps
+
+    ln -Pfv ~/projs/xmonad.hs/.config/mimeapps.list ~/.config/mimeapps.list
+
 ### us keyboard fix
 
 :rage: Silly time spend on this
