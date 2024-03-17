@@ -23,7 +23,7 @@ start_once com.gitlab.bitseater.meteo
 
 ### COMM ###
 
-start_once thunderbird
+start_once evolution
 start_once signal-desktop
 start_once whatsie # compiled from github
 start_once element-desktop
