@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://repo.charm.sh/apt/
+Suites: *
+Components: *
+Signed-By: /etc/apt/keyrings/charm.gpg

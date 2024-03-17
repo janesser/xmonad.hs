@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://linux.teamviewer.com/deb
+Suites: stable
+Components: main
+Signed-By: /usr/share/keyrings/teamviewer-keyring.gpg

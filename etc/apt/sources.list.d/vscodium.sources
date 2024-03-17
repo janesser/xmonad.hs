@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://download.vscodium.com/debs
+Suites: vscodium
+Components: main
+Signed-By: /usr/share/keyrings/vscodium.gpg

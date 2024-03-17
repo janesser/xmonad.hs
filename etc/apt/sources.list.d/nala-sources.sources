@@ -1,0 +1,4 @@
+Types: deb
+URIs: http://mirrors.edge.kernel.org/ubuntu/
+Suites: noble
+Components: main restricted universe multiverse

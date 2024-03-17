@@ -1,0 +1,7 @@
+Types: deb
+URIs: https://repo.skype.com/deb
+Suites: stable
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/skype.gpg
+
