@@ -80,6 +80,7 @@ myBasicKeyMap =
     )
   , ("M-b", addName "sendMessage ToggleStruts" $ sendMessage ToggleStruts)
   , ("M-C-k", spawn' "xkill")
+  , ("M-C-p", addName "xprops" $ spawn "x-terminal-emulator --hold -e xprop")
   , ("M-m", addName "manPrompt" $ manPrompt def)
   ]
 myBasicKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
@@ -113,8 +114,8 @@ myWindowKeys c =
       , ("M-C-b", addName "windowPrompt bring" $ windowPrompt myWindowPromptConfig Bring allWindows)
       , ("M-C-<Space>", addName "layoutScreens 4 Grid" $ layoutScreens 4 Grid)
       , ("M-C-S-<Space>", addName "rescreen" rescreen)
-      , ("M-C-a", noName $ windows copyToAll)
-      , ("M-C-S-a", noName killAllOtherCopies)
+      , ("M-C-a", addName "copy window to all workspaces" $ windows copyToAll)
+      , ("M-C-S-a", addName "kill all other window copies" $ killAllOtherCopies)
       ]
 
 myJournalKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
@@ -158,6 +159,7 @@ myManageHook =
     , className =? "WhatSie" --> doShift "2:comm"
     , className =? "dev.geopjr.Tuba" --> doShift "2:comm"
     , className =? "thunderbird" --> doShift "2:comm"
+    , className =? "Evolution" --> doShift "2:comm"
     , -- ide
       className =? "vscodium" --> doShift "4:ide"
     , -- entertain
@@ -186,7 +188,6 @@ myStartupHook :: X ()
 myStartupHook = do
   spawnOnOnce "1:htop" "x-terminal-emulator -e htop"
   spawnOnOnce "3:web" "x-www-browser --restore-last-session"
-  spawnOnOnce "9:admin" "easyeffects"
   -- height needs to be explicit, check ToggleStruts
   spawnOnce "trayer --align right --transparent true --alpha 150 --widthtype request --height 26 --SetPartialStrut true"
 

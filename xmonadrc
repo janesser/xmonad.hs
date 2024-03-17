@@ -29,6 +29,9 @@ start_once whatsie # compiled from github
 start_once element-desktop
 start_once dev.geopjr.Tuba # compiled from github
 
+## ADMIN
+start_once easyeffects
+
 ## ssh-agent
 echo "# GENERATED FILE" >~/.ssh/env
 killall ssh-agent
