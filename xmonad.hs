@@ -108,8 +108,8 @@ myWindowKeys c =
   subtitle "My Window Keys"
     : mkNamedKeymap
       c
-      [ ("C-ä", spawn' "killall xcompmgr; xcompmgr -cCfF")
-      , ("C-ü", spawn' "killall xcompmgr")
+      [ ("M-C-ä", spawn' "killall xcompmgr; xcompmgr -cCfF")
+      , ("M-C-S-ä", spawn' "killall xcompmgr")
       , ("M-C-g", addName "windowPrompt goto" $ windowPrompt myWindowPromptConfig Goto allWindows)
       , ("M-C-b", addName "windowPrompt bring" $ windowPrompt myWindowPromptConfig Bring allWindows)
       , ("M-C-<Space>", addName "layoutScreens 4 Grid" $ layoutScreens 4 Grid)
