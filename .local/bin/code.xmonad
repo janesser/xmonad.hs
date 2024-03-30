@@ -7,11 +7,14 @@ if [ -f ~/.ghcup/env ]; then
 fi
 
 if [ -x $(command -v ghcup) ]; then
+    ghcup install ghc recommended
+    ghcup install cabal recommended
+    ghcup install hls recommended
+    ghcup install stack recommended
     GHCUP_PREFIX="ghcup run --ghc recommended --cabal recommended --hls recommended --stack recommended --"
 fi
 
 if [ -x $(command -v codium) ]; then
-    echo $GHCUP_PREFIX codium ~/projs/xmonad.hs
     exec $GHCUP_PREFIX codium ~/projs/xmonad.hs
 else
     exec $GHCUP_PREFIX code ~/projs/xmonad.hs

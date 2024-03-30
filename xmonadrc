@@ -41,3 +41,7 @@ ssh-agent -c >>~/.ssh/env
 if [ -n "$(udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN)" ]; then
    start_once onboard
 fi
+
+if [ -f "$HOME/chuwi_ubook_xpro.xkb" ] ; then
+   xkbcomp "$HOME/chuwi_ubook_xpro.xkb" $DISPLAY
+fi

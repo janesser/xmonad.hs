@@ -30,16 +30,26 @@ My opinionated xmonad setup.
 
     sudo apt install \
         cargo \
-        gimp \
+        golang-go \
         podman-compose \
         texworks \
         pandoc \
-        dex \
-        geeqie
+        gimp \
+        geeqie \
+        dex
 
-* x2goclient
-  * x2goserver-x2goagent
-  * lightdm-remote-session-x2go
+#### x2goclient
+
+* x2goserver-x2goagent
+* lightdm-remote-session-x2go
+
+#### glow (shell markdown viewer)
+
+    sudo apt install golang-go
+    go install github.com/charmbracelet/glow@latest
+    # PATH should expand over ~/go/bin/glow
+
+#### Tuba (mastodon client)
 
 ## Candidates
 
@@ -69,8 +79,10 @@ FIXME breaks multi-user capa
     sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator ~/.cargo/bin/alacritty 50
 
     sudo apt install fish
-    chsh
+    chsh $(which fish)
     ln -sf ~/projs/xmonad.hs/.config/fish/conf.d/ssh-env.fish ~/.config/fish/conf.d/ssh-env.fish
+    fish_config theme choose Tomorrow
+    fish_config theme save
 
 ### nala
 
@@ -134,6 +146,14 @@ Keep an eye on `grep 'Exec=' /etc/xdg/autostart/*`
 
     sudo apt remove --purge ibus im-config # which in my case was defaulting to us-keyb
 
+### special pipe-key combo
+
+    ln -s ~/projs/xmonad.hs/chuwi_ubook_xpro.xkb ~/chuwi_ubook_xpro.xkb
+
+    xkbcomp $DISPLAY chuwi_ubook_xpro.xkb
+    # edit
+    xkbcomp chuwi_ubook_xpro.xkb $DISPLAY
+
 ## audio setup
 
 pipewire supercedes pulseaudio - getting bluetooth headset working
@@ -147,13 +167,6 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
 ## IDE
 
 developer tools
-
-### Jupyter
-
-    pipx install jupyterlab
-    pipx inject jupyterlab jupyterlab-git
-    jupyter-lab &
-    # jupyter-lab stop
 
 ### GHCup
 
@@ -181,8 +194,38 @@ Installation instructions here: <https://www.linuxcapable.com/install-vscodium-o
         justusadam.language-haskell
         mads-hartmann.bash-ide-vscode
     codium --install-extension (<extension-id> | <extension-vsix-path>)
+    ln -sf ~/projs/xmonad.hs/.config/VSCodium/User/settings.json ~/.config/VSCodium/User/settings.json
 
-#### ~~VSCode~~
+### Jupyter
 
-    snap install code
-    ln -sf ~/projs/xmonad.hs/.config/Code/User/settings.json ~/.config/Code/User/settings.json
+    pipx install jupyterlab
+    pipx inject jupyterlab jupyterlab-git
+    jupyter-lab &
+    # jupyter-lab stop
+
+## Social Tools
+
+### Signal Desktop
+
+<https://www.signal.org/download/linux/>
+
+    sudo apt install signal-desktop
+
+### WhatSie (Whatsapp Client)
+
+    mkdir -p ~/projs; cd ~/projs
+    git clone https://github.com/keshavbhatt/whatsie.git
+    cd whatsie/src
+    qmake PREFIX=/usr/local
+    make -j4
+    sudo make install
+
+### Tuba (Mastodon Client)
+
+    mkdir -p ~/projs; cd ~/projs
+    git clone https://github.com/GeopJr/Tuba.git
+    cd Tuba
+    git checkout v0.6.3
+    sudo apt install meson valac libjson-glib-dev libxml2-dev libgee-0.8-dev libsoup-3.0-dev libadwaita-1-dev libsecret-1-dev libgtksourceview-5-dev
+    meson setup --prefix /usr/local --reconfigure builddir/
+    sudo make install
