@@ -2,4 +2,4 @@ Types: deb
 URIs: https://packages.element.io/debian/
 Suites: default
 Components: main
-Signed-By: /usr/share/keyrings/element-io-archive-keyring.gpg
+Signed-By: /etc/apt/keyrings/element-io-archive-keyring.gpg

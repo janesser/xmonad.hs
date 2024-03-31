@@ -1,8 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #  /etc/xdg/autostart/light-locker.desktop
 #  /etc/xdg/autostart/xscreensaver.desktop
-#  /etc/xdg/autostart/nm-applet.desktop
 
 start_once() {
    PRG=$1
@@ -42,6 +41,6 @@ if [ -n "$(udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN)" ]; then
    start_once onboard
 fi
 
-if [ -f "$HOME/chuwi_ubook_xpro.xkb" ] ; then
+if [ -f "$HOME/chuwi_ubook_xpro.xkb" ]; then
    xkbcomp "$HOME/chuwi_ubook_xpro.xkb" $DISPLAY
 fi

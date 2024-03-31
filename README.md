@@ -22,7 +22,9 @@ My opinionated xmonad setup.
 
 * <https://gitlab.com/bitseater/meteo>
 
-* Enable .local/bin for dmenu
+### Extend PATH variable
+
+For e.g. dmenu and others.
 
     ln -s ~/projs/xmonad.hs/.profile ~/.profile
 
@@ -70,6 +72,12 @@ My opinionated xmonad setup.
   * chromium
 * whatsapp-for-linux
 
+## apt sources.list.d
+
+    sudo rsync -nrv --del etc/apt/sources.list.d/ /etc/apt/sources.list.d/
+    sudo rsync -nrv --del etc/apt/keyrings/ /etc/apt/keyrings/
+    # remove "n" for dry-run once assured
+
 ## fast terminal and console
 
 FIXME breaks multi-user capa
@@ -79,7 +87,7 @@ FIXME breaks multi-user capa
     sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator ~/.cargo/bin/alacritty 50
 
     sudo apt install fish
-    chsh $(which fish)
+    chsh -s $(which fish)
     ln -sf ~/projs/xmonad.hs/.config/fish/conf.d/ssh-env.fish ~/.config/fish/conf.d/ssh-env.fish
     fish_config theme choose Tomorrow
     fish_config theme save
