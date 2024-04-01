@@ -4,7 +4,8 @@
 #  /etc/xdg/autostart/xscreensaver.desktop
 
 start_once() {
-   PRG=$1
+   LINK=`which $1`
+   PRG=`readlink -f $LINK` # dive behind x-www-browser etc.
    ARGS=$2
    if [ -x $(command -v $PRG) ] && [ ! "$(pidof $PRG)" ]; then
       exec $PRG $ARGS &
@@ -41,6 +42,6 @@ if [ -n "$(udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN)" ]; then
    start_once onboard
 fi
 
-if [ -f "$HOME/chuwi_ubook_xpro.xkb" ]; then
-   xkbcomp "$HOME/chuwi_ubook_xpro.xkb" $DISPLAY
+if [ -f "$HOME/$(hostname).xkb" ]; then
+   xkbcomp "$HOME/$(hostname).xkb" $DISPLAY
 fi

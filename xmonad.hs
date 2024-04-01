@@ -3,6 +3,8 @@ import Data.List.Split
 import Data.Time
 import System.IO (hPutStrLn)
 import System.IO.Unsafe
+import System.Directory
+import Network.HostName
 
 import XMonad
 import XMonad.Config
@@ -202,7 +204,12 @@ myFadeHook =
 
 main :: IO ()
 main = do
-  spwXMobar <- spawnPipe "xmobar ~/.xmonad/xmobarrc"
+  xmobarrcHostspecific <- ("~/.xmonad/xmobarrc." ++) <$> getHostName
+  xmobarrcHostspecificExists <- doesFileExist xmobarrcHostspecific
+  spwXMobar <-
+    if xmobarrcHostspecificExists
+      then spawnPipe $ "xmobar " ++ xmobarrcHostspecific
+      else spawnPipe $ "xmobar ~/.xmonad/xmobarrc"
   spwXMonadRc <- spawnPipe "bash ~/.xmonad/xmonadrc" -- writes ~/.ssh/env
   xmonad
     $ docks

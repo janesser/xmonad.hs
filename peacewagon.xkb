@@ -1372,11 +1372,11 @@ xkb_symbols "pc+de+inet(evdev)" {
     };
     key <AB08> {
         type= "FOUR_LEVEL",
-        symbols[Group1]= [           comma,       semicolon,  periodcentered,        multiply ]
+        symbols[Group1]= [           comma,       semicolon,  less,        multiply ]
     };
     key <AB09> {
         type= "FOUR_LEVEL",
-        symbols[Group1]= [          period,           colon,           U2026,        division ]
+        symbols[Group1]= [          period,           colon,           greater,        division ]
     };
     key <AB10> {
         type= "FOUR_LEVEL",

@@ -27,8 +27,6 @@ My opinionated xmonad setup. With all dependencies expanded.
 More recommended less mandatory
 
     sudo apt install \
-        cargo \
-        golang-go \
         podman-compose \
         texworks \
         pandoc \
@@ -85,17 +83,18 @@ Applications now deprecated and uninstalled
 
 ### fast terminal and console
 
-FIXME breaks multi-user capa
-
     sudo apt install cargo
-    cargo install alacritty # single seated, otherwise sudo
-    sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator ~/.cargo/bin/alacritty 50
+    sudo cargo install alacritty --root /usr/local
+    sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator $(which alacritty) 50
 
     sudo apt install fish
     chsh -s $(which fish)
     ln -sf ~/projs/xmonad.hs/.config/fish/conf.d/ssh-env.fish ~/.config/fish/conf.d/ssh-env.fish
     fish_config theme choose Tomorrow
     fish_config theme save
+
+    mkdir -p ~/projs; cd ~/projs
+    git clone https://github.com/kovidgoyal/kitty.git --depth 1 && cd kitty
 
 ### nala
 
@@ -116,7 +115,7 @@ Keep an eye on `grep 'Exec=' /etc/xdg/autostart/*`
 
     sudo apt remove --purge ibus im-config # which in my case was defaulting to us-keyb
 
-### special pipe-key combo
+### special pipe-key combo (tablet keyboard)
 
     ln -s ~/projs/xmonad.hs/chuwi_ubook_xpro.xkb ~/chuwi_ubook_xpro.xkb
 
@@ -128,7 +127,7 @@ Keep an eye on `grep 'Exec=' /etc/xdg/autostart/*`
 
 pipewire supercedes pulseaudio - getting bluetooth headset working
 
-    apt install pipewire-audio easyeffects blueman
+    sudo apt install pipewire-audio easyeffects blueman
     sudo mkdir -p /etc/pipewire
     sudo cp /usr/share/pipewire/pipewire.conf /etc/pipewire/pipewire.conf
     systenctl restart --user pipewire
@@ -249,5 +248,5 @@ Installation instructions here: <https://www.linuxcapable.com/install-vscodium-o
     # or
     sudo apt install claws-mail claws-mail-vcalendar-plugin
 
-    sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/evolution 25
-    sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/claws-mail 25
+    sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/evolution 50
+    sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/claws-mail 50
