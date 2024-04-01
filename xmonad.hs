@@ -158,8 +158,9 @@ myManageHook =
     , className =? "Element" --> doShift "2:comm"
     , className =? "WhatSie" --> doShift "2:comm"
     , className =? "dev.geopjr.Tuba" --> doShift "2:comm"
-    , className =? "thunderbird" --> doShift "2:comm"
+    , className =? "Thunderbird" --> doShift "2:comm"
     , className =? "Evolution" --> doShift "2:comm"
+    , className =? "Claws-mail" --> doShift "2:comm"
     , -- ide
       className =? "vscodium" --> doShift "4:ide"
     , -- entertain

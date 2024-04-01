@@ -1,6 +1,6 @@
 # xmonad.hs
 
-My opinionated xmonad setup.
+My opinionated xmonad setup. With all dependencies expanded.
 
 ## Essential requirements
 
@@ -8,7 +8,7 @@ My opinionated xmonad setup.
         light-locker-settings pcmanfm trayer xscreensaver \
         libghc-split-dev
 
-### Recommended
+### Recommended requiremends
 
 * Recommended requirements
 
@@ -22,13 +22,9 @@ My opinionated xmonad setup.
 
 * <https://gitlab.com/bitseater/meteo>
 
-### Extend PATH variable
+### Optional requirements
 
-For e.g. dmenu and others.
-
-    ln -s ~/projs/xmonad.hs/.profile ~/.profile
-
-### Extras
+More recommended less mandatory
 
     sudo apt install \
         cargo \
@@ -40,29 +36,41 @@ For e.g. dmenu and others.
         geeqie \
         dex
 
-#### x2goclient
+### Extend PATH variable
 
-* x2goserver-x2goagent
-* lightdm-remote-session-x2go
+For e.g. dmenu and others.
 
-#### glow (shell markdown viewer)
+    ln -s ~/projs/xmonad.hs/.profile ~/.profile
 
-    sudo apt install golang-go
-    go install github.com/charmbracelet/glow@latest
-    # PATH should expand over ~/go/bin/glow
+### apt sources.list.d
 
-#### Tuba (mastodon client)
+    sudo rsync -nrv --del etc/apt/sources.list.d/ /etc/apt/sources.list.d/
+    sudo rsync -nrv --del etc/apt/keyrings/ /etc/apt/keyrings/
+    # remove "n" for dry-run once assured
 
-## Candidates
+### power button behaviour
 
-* flatpak
+Check systemd-logind
+
+    sudo nano /etc/systemd/logind.conf
+
+        HandlePowerKey=suspend
+        IdleAction=suspend
+        IdleActionSec=10min
+
+    sudo systemctl restart systemd-logind
+
+## Candidates & Experiments
+
 * scrot
 * openvoiceos
 * <https://github.com/davatorium/rofi>
 * <https://hackage.haskell.org/package/xmonad-contrib-0.13/docs/XMonad-Actions-TreeSelect.html>
 * xcompmgr
 
-## Dismissed
+### Dismissed / Deprecated
+
+Applications now deprecated and uninstalled
 
 * stalonetray
 * diodon
@@ -70,15 +78,12 @@ For e.g. dmenu and others.
   * vscode
   * firefox, thunderbird
   * chromium
+* flatpak
 * whatsapp-for-linux
 
-## apt sources.list.d
+## System utilities
 
-    sudo rsync -nrv --del etc/apt/sources.list.d/ /etc/apt/sources.list.d/
-    sudo rsync -nrv --del etc/apt/keyrings/ /etc/apt/keyrings/
-    # remove "n" for dry-run once assured
-
-## fast terminal and console
+### fast terminal and console
 
 FIXME breaks multi-user capa
 
@@ -97,49 +102,6 @@ FIXME breaks multi-user capa
     sudo apt install nala
     sudo nala fetch # pick wisely
     nala --install-completion=fish --show-completion=fish
-
-## power button behaviour
-
-Check systemd-logind
-
-    sudo nano /etc/systemd/logind.conf
-
-        HandlePowerKey=suspend
-        IdleAction=suspend
-        IdleActionSec=10min
-
-    sudo systemctl restart systemd-logind
-
-## default applications e.g. browser
-
-### Librewolf
-
-Installation instructions here: <https://librewolf.net/installation/debian/>
-
-    update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/librewolf 250
-
-Allow history storage and whitelist a few cookies.
-
-NOTE There is no Single-Site-Browsing / Progressive-Web-App in FF-Desktop and derivatives.
-
-#### search engines
-
-* <https://searx.be>
-* <https://ecosia.helpscoutdocs.com/article/406-about-ecosia>
-* <https://stract.com/about>
-* <https://about.qwant.com/en/>
-
-### applications alternatives
-
-    sudo update-alternatives --config x-www-browser
-
-### XDG default applications
-
-Used e.g. by thunderbird
-
-    ls ~/.local/share/applications/*
-    ls /usr/share/applications/*
-    xdg-settings set default-web-browser librewolf.desktop
 
 ### mimeapps
 
@@ -162,7 +124,7 @@ Keep an eye on `grep 'Exec=' /etc/xdg/autostart/*`
     # edit
     xkbcomp chuwi_ubook_xpro.xkb $DISPLAY
 
-## audio setup
+### audio setup
 
 pipewire supercedes pulseaudio - getting bluetooth headset working
 
@@ -172,7 +134,39 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
     systenctl restart --user pipewire
     # reconnect your device
 
-## IDE
+### x2goclient
+
+* x2goserver-x2goagent
+* lightdm-remote-session-x2go
+
+## Office applications
+
+### Librewolf
+
+Installation instructions here: <https://librewolf.net/installation/debian/>
+
+    sudo update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/librewolf 250
+
+Allow history storage and whitelist a few cookies.
+
+NOTE There is no Single-Site-Browsing / Progressive-Web-App in FF-Desktop and derivatives.
+
+#### search engines
+
+* <https://searx.be>
+* <https://ecosia.helpscoutdocs.com/article/406-about-ecosia>
+* <https://stract.com/about>
+* <https://about.qwant.com/en/>
+
+#### XDG default applications
+
+Used e.g. by thunderbird
+
+    ls ~/.local/share/applications/*
+    ls /usr/share/applications/*
+    xdg-settings set default-web-browser librewolf.desktop
+
+## Developer Tools
 
 developer tools
 
@@ -211,6 +205,12 @@ Installation instructions here: <https://www.linuxcapable.com/install-vscodium-o
     jupyter-lab &
     # jupyter-lab stop
 
+### glow (shell markdown viewer)
+
+    sudo apt install golang-go
+    go install github.com/charmbracelet/glow@latest
+    # PATH should expand over ~/go/bin/glow
+
 ## Social Tools
 
 ### Signal Desktop
@@ -237,3 +237,17 @@ Installation instructions here: <https://www.linuxcapable.com/install-vscodium-o
     sudo apt install meson valac libjson-glib-dev libxml2-dev libgee-0.8-dev libsoup-3.0-dev libadwaita-1-dev libsecret-1-dev libgtksourceview-5-dev
     meson setup --prefix /usr/local --reconfigure builddir/
     sudo make install
+
+### Element Desktop (Matrix.org Client)
+
+<https://element.io/download>
+
+### Mail Client
+
+    # alternatively
+    sudo apt install evolution
+    # or
+    sudo apt install claws-mail claws-mail-vcalendar-plugin
+
+    sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/evolution 25
+    sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/claws-mail 25
