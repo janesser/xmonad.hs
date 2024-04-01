@@ -83,18 +83,33 @@ Applications now deprecated and uninstalled
 
 ### fast terminal and console
 
-    sudo apt install cargo
-    sudo cargo install alacritty --root /usr/local
-    sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator $(which alacritty) 50
-
     sudo apt install fish
     chsh -s $(which fish)
     ln -sf ~/projs/xmonad.hs/.config/fish/conf.d/ssh-env.fish ~/.config/fish/conf.d/ssh-env.fish
     fish_config theme choose Tomorrow
     fish_config theme save
 
+
+    # latest version of kitty
     mkdir -p ~/projs; cd ~/projs
     git clone https://github.com/kovidgoyal/kitty.git --depth 1 && cd kitty
+    sudo apt install libdbus-1-dev libxcursor-dev libxrandr-dev libxi-dev libxinerama-dev libgl1-mesa-dev libxkbcommon-x11-dev libfontconfig-dev libx11-xcb-dev liblcms2-dev libssl-dev libpython3-dev libxxhash-dev libsimde-dev python3-sphinx-copybutton python3-sphinx-inline-tabs
+    # ./dev.sh build
+    make linux-package
+    cd linux-package
+    sudo rsync -rv . /usr/local
+
+    sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/local/bin/kitty 50
+    sudo update-alternatives --config x-terminal-emulator
+
+    # integrate kitten with fish
+    ln -s /usr/local/lib/kitty/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish .config/fish/conf.d/kitty-shell-integration.fish
+    ln -s /usr/local/lib/kitty/shell-integration/fish/vendor_completions.d/clone-in-kitty.fish .config/fish/completions/clone-in-kitty.fish
+    ln -s /usr/local/lib/kitty/shell-integration/fish/vendor_completions.d/kitten.fish .config/fish/completions/kitten.fish
+    ln -s /usr/local/lib/kitty/shell-integration/fish/vendor_completions.d/kitty.fish .config/fish/completions/kitty.fish
+
+    mkdir ~/.config/kitty
+    cp ~/projs/xmonad.hs/.config/kitty/* ~/.config/kitty/
 
 ### nala
 
