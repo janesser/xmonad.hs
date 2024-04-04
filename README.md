@@ -18,7 +18,8 @@ My opinionated xmonad setup. With all dependencies expanded.
         network-manager-gnome \
         org-mode emacs-gtk \
         onboard \
-        easyeffects
+        easyeffects \
+        hw-probe
 
 * <https://gitlab.com/bitseater/meteo>
 
@@ -65,6 +66,8 @@ Check systemd-logind
 * <https://github.com/davatorium/rofi>
 * <https://hackage.haskell.org/package/xmonad-contrib-0.13/docs/XMonad-Actions-TreeSelect.html>
 * xcompmgr
+* clementine
+* shotcut
 
 ### Dismissed / Deprecated
 
@@ -132,11 +135,23 @@ Keep an eye on `grep 'Exec=' /etc/xdg/autostart/*`
 
 ### special pipe-key combo (tablet keyboard)
 
-    ln -s ~/projs/xmonad.hs/chuwi_ubook_xpro.xkb ~/chuwi_ubook_xpro.xkb
+    sudo cp usr/share/X11/xkb/symbols/de.chuwi_ubook_xpro /usr/share/X11/xkb/symbols/de.chuwi_ubook_xpro
+    sudo cp etc/default/keyboard /etc/default/keyboard
 
-    xkbcomp $DISPLAY chuwi_ubook_xpro.xkb
-    # edit
-    xkbcomp chuwi_ubook_xpro.xkb $DISPLAY
+After reboot, verify
+
+    setxkbmap -print
+        # output
+        xkb_keymap {
+                xkb_keycodes  { include "evdev+aliases(qwerty)" };
+                xkb_types     { include "complete"      };
+                xkb_compat    { include "complete"      };
+                xkb_symbols   { include "pc+de.chuwi_ubook_xpro+inet(evdev)"    };
+                xkb_geometry  { include "pc(pc105)"     };
+        };
+
+Good guide here:
+<https://medium.com/@damko/a-simple-humble-but-comprehensive-guide-to-xkb-for-linux-6f1ad5e13450>
 
 ### audio setup
 
@@ -152,6 +167,12 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
 
 * x2goserver-x2goagent
 * lightdm-remote-session-x2go
+
+### IPU3 webcam
+
+    sudo nala install libcamera-tools
+    # camera won't appear
+    ## https://unix.stackexchange.com/questions/767100/chuwi-ubook-x-2023-ipu3-csi2-webcams-not-working-in-ubuntu-and-debian
 
 ## Office applications
 

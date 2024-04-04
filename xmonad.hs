@@ -62,7 +62,6 @@ myKeysConfig =
 myBasicKeyMap =
   [ ("M-x", noName $ xmonadPrompt def)
   , ("M-e", spawn' "pcmanfm")
-  , ("M-S-p", spawn' "kupfer")
   , ("C-ö", spawn' "copyq toggle")
   , ("<Print>", spawn' "shutter -s")
   , ("M-S-l", spawn' "light-locker-command -l")
