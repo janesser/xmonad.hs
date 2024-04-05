@@ -4,9 +4,9 @@ My opinionated xmonad setup. With all dependencies expanded.
 
 ## Essential requirements
 
-    sudo apt install xmonad xmobar \
-        light-locker-settings pcmanfm trayer xscreensaver \
-        libghc-split-dev
+    sudo apt install xmonad xmobar libghc-split-dev libghc-hostname-dev \
+        light-locker-settings trayer xscreensaver \
+        pcmanfm xarchiver
 
 ### Recommended requiremends
 
@@ -33,7 +33,8 @@ More recommended less mandatory
         pandoc \
         gimp \
         geeqie \
-        dex
+        dex \
+        dict
 
 ### Extend PATH variable
 
@@ -42,6 +43,8 @@ For e.g. dmenu and others.
     ln -s ~/projs/xmonad.hs/.profile ~/.profile
 
 ### apt sources.list.d
+
+Ubuntu Mantic 23 with some additional repositories
 
     sudo rsync -nrv --del etc/apt/sources.list.d/ /etc/apt/sources.list.d/
     sudo rsync -nrv --del etc/apt/keyrings/ /etc/apt/keyrings/
@@ -172,7 +175,10 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
 
     sudo nala install libcamera-tools
     # camera won't appear
-    ## https://unix.stackexchange.com/questions/767100/chuwi-ubook-x-2023-ipu3-csi2-webcams-not-working-in-ubuntu-and-debian
+
+<https://unix.stackexchange.com/questions/767100/chuwi-ubook-x-2023-ipu3-csi2-webcams-not-working-in-ubuntu-and-debian>
+
+<https://bugs.libcamera.org/show_bug.cgi?id=216>
 
 ## Office applications
 
@@ -185,6 +191,10 @@ Installation instructions here: <https://librewolf.net/installation/debian/>
 Allow history storage and whitelist a few cookies.
 
 NOTE There is no Single-Site-Browsing / Progressive-Web-App in FF-Desktop and derivatives.
+
+Signal 11 due to missing apparmor profile with Ubuntu 24 Noble
+<https://gitlab.com/librewolf-community/browser/source/-/issues/146>
+TODO take this to codeberg.org issues
 
 #### search engines
 
@@ -202,8 +212,6 @@ Used e.g. by thunderbird
     xdg-settings set default-web-browser librewolf.desktop
 
 ## Developer Tools
-
-developer tools
 
 ### GHCup
 
