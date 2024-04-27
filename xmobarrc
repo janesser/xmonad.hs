@@ -8,7 +8,7 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
   , position = Top
   , lowerOnStart = True
   , commands = [ Run MultiCpu ["-t", "<total>%"] 20
-               , Run ThermalZone 3 ["-t", "<temp>°C"] 20
+               , Run ThermalZone 0 ["-t", "<temp>°C"] 20
                , Run Battery [ "-t", "<acstatus>"
                , "--"
                , "-O", "<fc=white><left>%</fc>"
@@ -27,5 +27,5 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
                ]
   , sepChar = "%"
   , alignSep = "}{"
-  , template = " %StdinReader% } %date% { CPU: %multicpu% | TMP: %thermal3% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
+  , template = " %StdinReader% } %date% { CPU: %multicpu% | TMP: %thermal0% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
 }

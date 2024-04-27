@@ -19,7 +19,10 @@ My opinionated xmonad setup. With all dependencies expanded.
         org-mode emacs-gtk \
         onboard \
         easyeffects \
-        hw-probe
+        pipewire-audio \
+        hw-probe \
+        etckeeper \
+        xpdf
 
 * <https://gitlab.com/bitseater/meteo>
 
@@ -31,7 +34,7 @@ More recommended less mandatory
         podman-compose \
         texworks \
         pandoc \
-        gimp \
+        multimedia-graphics \
         geeqie \
         dex \
         dict
@@ -99,7 +102,7 @@ Applications now deprecated and uninstalled
     # latest version of kitty
     mkdir -p ~/projs; cd ~/projs
     git clone https://github.com/kovidgoyal/kitty.git --depth 1 && cd kitty
-    sudo apt install libdbus-1-dev libxcursor-dev libxrandr-dev libxi-dev libxinerama-dev libgl1-mesa-dev libxkbcommon-x11-dev libfontconfig-dev libx11-xcb-dev liblcms2-dev libssl-dev libpython3-dev libxxhash-dev libsimde-dev python3-sphinx-copybutton python3-sphinx-inline-tabs
+    sudo apt install libdbus-1-dev libxcursor-dev libxrandr-dev libxi-dev libxinerama-dev libgl1-mesa-dev libxkbcommon-x11-dev libfontconfig-dev libx11-xcb-dev liblcms2-dev libssl-dev libpython3-dev libxxhash-dev libsimde-dev python3-sphinx-copybutton python3-sphinx-inline-tabs libxkbcommon-x11-dev golang python3-sphinxext-opengraph furo
     # ./dev.sh build
     make linux-package
     cd linux-package
@@ -109,12 +112,13 @@ Applications now deprecated and uninstalled
     sudo update-alternatives --config x-terminal-emulator
 
     # integrate kitten with fish
+    cd ~
     ln -s /usr/local/lib/kitty/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish .config/fish/conf.d/kitty-shell-integration.fish
     ln -s /usr/local/lib/kitty/shell-integration/fish/vendor_completions.d/clone-in-kitty.fish .config/fish/completions/clone-in-kitty.fish
     ln -s /usr/local/lib/kitty/shell-integration/fish/vendor_completions.d/kitten.fish .config/fish/completions/kitten.fish
     ln -s /usr/local/lib/kitty/shell-integration/fish/vendor_completions.d/kitty.fish .config/fish/completions/kitty.fish
 
-    mkdir ~/.config/kitty
+    mkdir -p ~/.config/kitty
     cp ~/projs/xmonad.hs/.config/kitty/* ~/.config/kitty/
 
 ### nala
