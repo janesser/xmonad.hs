@@ -177,15 +177,6 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
 * x2goserver-x2goagent
 * lightdm-remote-session-x2go
 
-### IPU3 webcam
-
-    sudo nala install libcamera-tools
-    # camera won't appear
-
-<https://unix.stackexchange.com/questions/767100/chuwi-ubook-x-2023-ipu3-csi2-webcams-not-working-in-ubuntu-and-debian>
-
-<https://bugs.libcamera.org/show_bug.cgi?id=216>
-
 ## Office applications
 
 ### Librewolf
@@ -197,10 +188,6 @@ Installation instructions here: <https://librewolf.net/installation/debian/>
 Allow history storage and whitelist a few cookies.
 
 NOTE There is no Single-Site-Browsing / Progressive-Web-App in FF-Desktop and derivatives.
-
-Signal 11 due to missing apparmor profile with Ubuntu 24 Noble
-<https://gitlab.com/librewolf-community/browser/source/-/issues/146>
-TODO take this to codeberg.org issues
 
 #### search engines
 
@@ -317,3 +304,10 @@ Installation instructions here: <https://www.linuxcapable.com/install-vscodium-o
 
     sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/evolution 50
     sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/claws-mail 50
+
+## Games
+
+### Steam on Linux
+
+    FIXME steamwebhelper sends nonsense ev_events
+    https://github.com/ValveSoftware/steam-for-linux/issues/10544
