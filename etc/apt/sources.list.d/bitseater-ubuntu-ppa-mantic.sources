@@ -1,9 +1,8 @@
 Types: deb
 URIs: https://ppa.launchpadcontent.net/bitseater/ppa/ubuntu/
-Suites: mantic
+Suites: noble
 Components: main
-Signed-By: 
- -----BEGIN PGP PUBLIC KEY BLOCK-----
+Signed-By: -----BEGIN PGP PUBLIC KEY BLOCK-----
  .
  mQINBFYYykEBEACpFngNcSA+jA+Guol41zwJebvZATAuT7nF4w5gKNjJQLDlReVn
  LA0udLXh5GbhmlFT1QYQpQuZjuczYBU7CPnkcjljtF7onR1zR+ys+yh5srafHZPc

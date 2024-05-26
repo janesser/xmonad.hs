@@ -1,9 +1,8 @@
 Types: deb
 URIs: https://ppa.launchpadcontent.net/longsleep/golang-backports/ubuntu/
-Suites: mantic
+Suites: noble
 Components: main
-Signed-By: 
- -----BEGIN PGP PUBLIC KEY BLOCK-----
+Signed-By: -----BEGIN PGP PUBLIC KEY BLOCK-----
  .
  mI0ET551kQEEAME7Iyb7+c79CVWVwe+QaNlAVgauke1Q9Ycw8Rdxj55lKBJ5Ilpp
  LwiKreAVin4CCaGEtT9btePbYYKg8I+/dsiDbE9+o8e8FIMEBwy+FS+9bwLZ5WZP

@@ -1,4 +1,4 @@
 Types: deb
 URIs: http://mirrors.edge.kernel.org/ubuntu/
-Suites: mantic
+Suites: noble
 Components: main restricted universe multiverse
