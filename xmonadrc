@@ -27,7 +27,7 @@ start_once nm-applet
 start_once x-mail-client
 start_once signal-desktop
 start_once whatsie # compiled from github
-start_once element-desktop
+# start_once element-desktop
 start_once dev.geopjr.Tuba # compiled from github
 
 ## ADMIN

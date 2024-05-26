@@ -90,6 +90,8 @@ Applications now deprecated and uninstalled
 
 ## System utilities
 
+    sudo apt install bumblebee-nvidia
+
 ### fast terminal and console
 
     sudo apt install fish
@@ -258,6 +260,22 @@ Installation instructions here: <https://www.linuxcapable.com/install-vscodium-o
     go install github.com/charmbracelet/glow@latest
     # PATH should expand over ~/go/bin/glow
 
+### eclipse
+
+    sudo apt install snap
+    sudo snap install --classic snapcraft
+    mkdir -p ~/projs; cd ~/projs
+    git clone https://github.com/janesser/eclipse-snap
+    cd eclipse-snap
+    ECLIPSE_PACKAGE=eclipse-pde
+    ./try-build.sh
+    snap run eclipse-pde
+
+### kubernetes
+
+    go install github.com/kubernetes/kubectl@latest # FIXME https://github.com/kubernetes/kubectl/issues/1140
+    go install github.com/derailed/k9s@latest
+
 ## Social Tools
 
 ### Signal Desktop
@@ -268,6 +286,7 @@ Installation instructions here: <https://www.linuxcapable.com/install-vscodium-o
 
 ### WhatSie (Whatsapp Client)
 
+    sudo apt install qtbase5-dev qtwebengine5-dev qtwebengine5-dev-tools
     mkdir -p ~/projs; cd ~/projs
     git clone https://github.com/keshavbhatt/whatsie.git
     cd whatsie/src
