@@ -8,6 +8,11 @@ My opinionated xmonad setup. With all dependencies expanded.
         light-locker-settings trayer xscreensaver \
         pcmanfm xarchiver
 
+Installation of xmonad xmonad-contrib can be superceded by git-based installation see COMPILE.md.
+
+    Keep `xmonad` installed for `/usr/share/xsession/xmonad.desktop`.
+    All independent `libghc*` can be removed.
+
 ### Recommended requiremends
 
 * Recommended requirements

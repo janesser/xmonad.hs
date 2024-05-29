@@ -203,13 +203,13 @@ myFadeHook =
 
 main :: IO ()
 main = do
-  xmobarrcHostspecific <- ("~/.xmonad/xmobarrc." ++) <$> getHostName
+  xmobarrcHostspecific <- ("~/.config/xmonad/xmobarrc." ++) <$> getHostName
   xmobarrcHostspecificExists <- doesFileExist xmobarrcHostspecific
   spwXMobar <-
     if xmobarrcHostspecificExists
       then spawnPipe $ "xmobar " ++ xmobarrcHostspecific
-      else spawnPipe $ "xmobar ~/.xmonad/xmobarrc"
-  spwXMonadRc <- spawnPipe "bash ~/.xmonad/xmonadrc" -- writes ~/.ssh/env
+      else spawnPipe $ "xmobar ~/.config/xmonad/xmobarrc"
+  spwXMonadRc <- spawnPipe "bash ~/.config/xmonad/xmonadrc" -- writes ~/.ssh/env
   xmonad
     $ docks
       . ewmhFullscreen
@@ -222,5 +222,5 @@ main = do
           manageDocks <+> myManageHook <+> fullscreenManageHook
       , layoutHook = myLayoutHook
       , startupHook = myStartupHook
-      , handleEventHook = fadeWindowsEventHook -- <+> focusOnMouseMove
+      , handleEventHook = fadeWindowsEventHook <+> fixSteamFlicker -- <+> focusOnMouseMove
       }
