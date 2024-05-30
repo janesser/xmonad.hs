@@ -265,8 +265,15 @@ Installation instructions here: <https://www.linuxcapable.com/install-vscodium-o
 
 ### kubernetes
 
-    go install github.com/kubernetes/kubectl@latest # FIXME https://github.com/kubernetes/kubectl/issues/1140
-    go install github.com/derailed/k9s@latest
+    cd projs
+    git clone https://github.com/kubernetes/kubernetes.git
+    cd kubernetes
+    build/run.sh make kubectl
+    ln -sf $(pwd)/_output/dockerized/bin/linux/amd64/kubectl ~/.local/bin/
+
+    kubectl version
+    less ~/.kube/config
+    kubectl config get-contexts
 
 ## Social Tools
 
