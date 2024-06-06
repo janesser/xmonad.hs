@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://baltocdn.com/helm/stable/debian/
+Suites: all
+Components: main
+Signed-By: /etc/apt/keyrings/helm.gpg
