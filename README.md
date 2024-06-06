@@ -5,7 +5,7 @@ My opinionated xmonad setup. With all dependencies expanded.
 ## Essential requirements
 
     sudo apt install xmonad xmobar libghc-split-dev libghc-hostname-dev \
-        light-locker-settings trayer xscreensaver \
+        light-locker-settings haskell-gtk-sni-tray-utils xscreensaver \
         pcmanfm xarchiver
 
 Installation of xmonad xmonad-contrib can be superceded by git-based installation see COMPILE.md.
@@ -28,8 +28,6 @@ Installation of xmonad xmonad-contrib can be superceded by git-based installatio
         hw-probe \
         etckeeper \
         xpdf
-
-* <https://gitlab.com/bitseater/meteo>
 
 ### Optional requirements
 
@@ -84,7 +82,7 @@ Check systemd-logind
 
 Applications now deprecated and uninstalled
 
-* stalonetray
+* stalonetray / trayer
 * diodon
 * snap
   * vscode
@@ -182,6 +180,30 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
 * x2goserver-x2goagent
 * lightdm-remote-session-x2go
 
+### bitseater meteo
+
+    git clone https://github.com/SkyMaverick/statusnotifier.git
+    cd statusnotifier
+    diff --git a/src/meson.build b/src/meson.build
+        index f457fc3..46fd5d1 100644
+        --- a/src/meson.build
+        +++ b/src/meson.build
+        @@ -59,7 +59,7 @@ if get_option('enable_introspection')
+            sni_vapi_deps = '''
+                gobject-2.0
+                -        gtk+-3.0
+                +        gdk-pixbuf-2.0
+    meson setup --reconfigure --prefix /usr/local --clearcache -D enable_introspection=true -D enable_vala=true -D enable_dbusmenu=false build/
+    meson compile -C build/
+    meson install -C build/
+
+    sudo apt install build-essential git meson ninja-build valac desktop-file-utils gettext libgtk-4-dev libadwaita-1-dev libsoup-3.0-dev libjson-glib-dev libwebkitgtk-6.0-dev
+    git clone --branch meteo-1.0 https://gitlab.com/janesser1/meteo.git
+    cd meteo
+    meson setup --prefix /usr/local build/
+    cd build
+    meson install
+
 ## Office applications
 
 ### Librewolf
@@ -275,6 +297,20 @@ Installation instructions here: <https://www.linuxcapable.com/install-vscodium-o
     less ~/.kube/config
     kubectl config get-contexts
 
+#### flux2
+
+    nix-env -i fluxcd
+    flux --version # 2.2.2
+    flux install
+    export GITHUB_TOKEN=<redacted>
+    flux bootstrap github \
+        --token-auth \
+        --owner=janesser \
+        --repository=fleet-infra \
+        --branch=main \
+        --path=clusters/qnap-k3s \
+        --personal
+
 ## Social Tools
 
 ### Signal Desktop
@@ -321,5 +357,5 @@ Installation instructions here: <https://www.linuxcapable.com/install-vscodium-o
 
 ### Steam on Linux
 
-    FIXME steamwebhelper sends nonsense ev_events
+    XMonad.Util.Hacks.fixSteamFlicker
     https://github.com/ValveSoftware/steam-for-linux/issues/10544

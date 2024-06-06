@@ -192,7 +192,7 @@ myStartupHook = do
   spawnOnOnce "1:htop" "x-terminal-emulator -e watch df -h"
   spawnOnOnce "3:web" "x-www-browser --restore-last-session"
   -- height needs to be explicit, check ToggleStruts
-  spawnOnce "trayer --align right --transparent true --alpha 150 --widthtype request --height 26 --SetPartialStrut true"
+  spawnOnce "gtk-sni-tray-standalone --bottom --beginning --watcher"
 
 myFadeHook =
   composeAll
