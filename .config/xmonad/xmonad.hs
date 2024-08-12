@@ -8,6 +8,7 @@ import Network.HostName
 
 import XMonad
 import XMonad.Config
+import XMonad.Prelude (toLower)
 
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.UpdateFocus
@@ -138,7 +139,7 @@ myConfig =
       { modMask = mod4Mask -- left windows super
       , focusFollowsMouse = False
       , workspaces =
-          [ "1:htop"
+          [ "1:top"
           , "2:comm"
           , "3:web"
           , "4:ide"
@@ -175,7 +176,7 @@ myManageHook =
 
 myLayoutHook =
   avoidStruts $
-    onWorkspace "1:htop" full $
+    onWorkspace "1:top" full $
       onWorkspace "2:comm" tabbed $
         onWorkspace "3:web" accordion $
           smartBorders (tall ||| tallM ||| full ||| tabbed ||| accordion)
@@ -188,8 +189,8 @@ myLayoutHook =
 
 myStartupHook :: X ()
 myStartupHook = do
-  spawnOnOnce "1:htop" "x-terminal-emulator -e htop"
-  spawnOnOnce "1:htop" "x-terminal-emulator -e watch df -h"
+  spawnOnOnce "1:top" "x-terminal-emulator -e btop"
+  spawnOnOnce "1:top" "x-terminal-emulator -e watch df -h"
   spawnOnOnce "3:web" "x-www-browser --restore-last-session"
   -- height needs to be explicit, check ToggleStruts
   spawnOnce "gtk-sni-tray-standalone --bottom --beginning --watcher"

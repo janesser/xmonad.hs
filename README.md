@@ -27,7 +27,8 @@ Installation of xmonad xmonad-contrib can be superceded by git-based installatio
         pipewire-audio \
         hw-probe \
         etckeeper \
-        xpdf
+        xpdf \
+        btop
 
 ### Optional requirements
 
@@ -97,12 +98,22 @@ Applications now deprecated and uninstalled
 
 ### fast terminal and console
 
+#### fish
+
     sudo apt install fish
     chsh -s $(which fish)
     ln -sf ~/projs/xmonad.hs/.config/fish/conf.d/ssh-env.fish ~/.config/fish/conf.d/ssh-env.fish
     fish_config theme choose Tomorrow
     fish_config theme save
 
+#### zutty
+
+<https://tomscii.sig7.se/2020/12/A-totally-biased-comparison-of-Zutty>
+
+    sudo apt install zutty
+    sudo update-alternatives --config x-terminal-emulator
+
+#### kitty
 
     # latest version of kitty
     mkdir -p ~/projs; cd ~/projs
@@ -359,3 +370,8 @@ Installation instructions here: <https://www.linuxcapable.com/install-vscodium-o
 
     XMonad.Util.Hacks.fixSteamFlicker
     https://github.com/ValveSoftware/steam-for-linux/issues/10544
+
+### Lutris
+
+    apt install lutris
+    # wip
