@@ -18,5 +18,7 @@
     "git.rebaseWhenSync": true,
     "[haskell]": {
       "editor.defaultFormatter": "haskell.haskell"
-    }
+    },
+    "explorer.confirmDelete": false,
+    "svg.preview.mode": "svg"
 }

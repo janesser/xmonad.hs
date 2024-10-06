@@ -82,7 +82,7 @@ myBasicKeyMap =
     )
   , ("M-b", addName "sendMessage ToggleStruts" $ sendMessage ToggleStruts)
   , ("M-C-k", spawn' "xkill")
-  , ("M-C-p", addName "xprops" $ spawn "x-terminal-emulator --hold -e xprop")
+  , ("M-C-p", addName "xprops" $ spawn "x-terminal-emulator -e bash -c \"xprop && read -n 1 -p 'Press any key to continue..'\"")
   , ("M-m", addName "manPrompt" $ manPrompt def)
   ]
 myBasicKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
@@ -176,10 +176,11 @@ myManageHook =
 
 myLayoutHook =
   avoidStruts $
-    onWorkspace "1:top" full $
+    onWorkspace "1:top" tall $
       onWorkspace "2:comm" tabbed $
         onWorkspace "3:web" accordion $
-          smartBorders (tall ||| tallM ||| full ||| tabbed ||| accordion)
+          onWorkspace "7:games" full $
+            smartBorders (tall ||| tallM ||| full ||| tabbed ||| accordion)
  where
   full = renamed [Replace "Full"] $ noBorders Full
   tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset
@@ -190,7 +191,6 @@ myLayoutHook =
 myStartupHook :: X ()
 myStartupHook = do
   spawnOnOnce "1:top" "x-terminal-emulator -e btop"
-  spawnOnOnce "1:top" "x-terminal-emulator -e watch df -h"
   spawnOnOnce "3:web" "x-www-browser --restore-last-session"
   -- height needs to be explicit, check ToggleStruts
   spawnOnce "gtk-sni-tray-standalone --bottom --beginning --watcher"

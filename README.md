@@ -28,7 +28,7 @@ Installation of xmonad xmonad-contrib can be superceded by git-based installatio
         hw-probe \
         etckeeper \
         xpdf \
-        btop
+        btop rocm-smi
 
 ### Optional requirements
 
@@ -221,6 +221,9 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
 
 Installation instructions here: <https://librewolf.net/installation/debian/>
 
+    sudo nala install extrepo
+    sudo extrepo enable librewolf
+    sudo nala install librewolf
     sudo update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/librewolf 250
 
 Allow history storage and whitelist a few cookies.
