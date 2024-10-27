@@ -232,7 +232,7 @@ NOTE There is no Single-Site-Browsing / Progressive-Web-App in FF-Desktop and de
 
 #### search engines
 
-* <https://searx.be>
+* <https://paulgo.io>
 * <https://ecosia.helpscoutdocs.com/article/406-about-ecosia>
 * <https://stract.com/about>
 * <https://about.qwant.com/en/>

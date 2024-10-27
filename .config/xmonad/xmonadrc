@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-#  /etc/xdg/autostart/light-locker.desktop
-#  /etc/xdg/autostart/xscreensaver.desktop
-
 start_once() {
    LINK=`which $1`
    PRG=`readlink -f $LINK` # dive behind x-www-browser etc.
@@ -11,6 +8,12 @@ start_once() {
       exec $PRG $ARGS &
    fi
 }
+
+#  /etc/xdg/autostart/light-locker.desktop
+start_once light-locker
+
+#  /etc/xdg/autostart/xscreensaver.desktop
+start_once xsreensaver --no-splash
 
 xsetroot -solid black # feh for background image
 
