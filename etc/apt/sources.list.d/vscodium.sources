@@ -1,6 +1,0 @@
-Types: deb
-URIs: https://download.vscodium.com/debs
-Suites: vscodium
-Components: main
-Signed-By: /etc/apt/keyrings/vscodium.gpg
-Enabled: yes

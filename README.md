@@ -259,19 +259,27 @@ Used for haskell-language-server. <https://www.haskell.org/ghcup/>
 
 VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
 
-Installation instructions here: <https://www.linuxcapable.com/install-vscodium-on-ubuntu-linux/>
-
+    sudo apt install extrepo
+    sudo extrepo --offlinedata enable vscodium
     ln -sf ~/projs/xmonad.hs/.config/VSCodium/User/settings.json ~/.config/VSCodium/User/settings.json
 
 #### Extensions
 
     codium --list-extensions
+        # outputs
         bmalehorn.vscode-fish
-        DavidAnson.vscode-markdownlint
+        davidanson.vscode-markdownlint
+        dawidd6.debian-vscode
         foxundermoon.shell-format
         haskell.haskell
+        jnoortheen.nix-ide
+        jock.svg
         justusadam.language-haskell
+        lkrms.inifmt
         mads-hartmann.bash-ide-vscode
+        prince781.vala
+        redhat.vscode-yaml
+        tonka3000.qtvsctools
     codium --install-extension (<extension-id> | <extension-vsix-path>)
     ln -sf ~/projs/xmonad.hs/.config/VSCodium/User/settings.json ~/.config/VSCodium/User/settings.json
 
