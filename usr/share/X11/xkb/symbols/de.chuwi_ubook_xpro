@@ -26,8 +26,8 @@ xkb_symbols "de.chuwi_ubook_xpro" {
     key <BKSL>	{[ numbersign, apostrophe, bar, dead_breve ]};
 
     key <LSGT>	{[      less,     greater,            bar, dead_belowmacron ]}; # does not exist on converted us2de geometry
-    key <AB01>	{[          y,          Y,   bar,          U203A ]}; // » ›
-    key <AB02>	{[          x,          X,    guillemotleft,          U2039 ]}; // « ‹
+    key <AB01>	{[          y,          Y,   bar,          less ]}; // », RALT + SHIFT + y = less
+    key <AB02>	{[          x,          X,    guillemotleft,          greater ]}; // «, RALT + SHIFT + x = greater
     key <AB08>	{[      comma,  semicolon,   periodcentered,       multiply ]};
     key <AB09>	{[     period,      colon,            U2026,       division ]}; // … ÷
     key <AB10>	{[      minus, underscore,           endash,         emdash ]};
