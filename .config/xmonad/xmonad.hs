@@ -168,6 +168,7 @@ myManageHook =
     , -- entertain
       className =? "vlc" --> doSideFloat CE
     , role =? "PictureInPicture" --> doSideFloat CE
+    , className =? "LibreWolf" --> doShift "3:web"
     , -- admin
       className =? "easyeffects" --> doShift "9:admin"
     ]

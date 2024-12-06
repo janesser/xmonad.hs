@@ -28,7 +28,8 @@ Installation of xmonad xmonad-contrib can be superceded by git-based installatio
         hw-probe \
         etckeeper \
         xpdf \
-        btop rocm-smi
+        btop rocm-smi \
+        clamtk
 
 ### Optional requirements
 
