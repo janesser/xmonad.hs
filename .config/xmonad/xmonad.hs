@@ -1,23 +1,29 @@
 import Control.Monad
+import Data.IORef
 import Data.List.Split
 import Data.Time
+import Network.HostName
+import System.Directory
 import System.IO (hPutStrLn)
 import System.IO.Unsafe
-import System.Directory
-import Network.HostName
 
 import XMonad
 import XMonad.Config
-import XMonad.Prelude (toLower)
+import XMonad.Prelude (All(..), toLower)
 
+import qualified XMonad.StackSet  as W
+
+import XMonad.Actions.CopyWindow
+import XMonad.Actions.CycleWS
+import XMonad.Actions.FloatSnap
 import XMonad.Actions.SpawnOn
 import XMonad.Actions.UpdateFocus
-import XMonad.Actions.CopyWindow
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeWindows
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers
+import XMonad.Hooks.ScreenCorners
 import XMonad.Hooks.UrgencyHook
 
 import XMonad.Layout.Accordion
@@ -37,7 +43,7 @@ import XMonad.Prompt.Window
 import XMonad.Prompt.XMonad
 
 import Data.List (intercalate)
-import XMonad.Util.EZConfig (mkNamedKeymap)
+import XMonad.Util.EZConfig (additionalMouseBindings, mkNamedKeymap)
 import XMonad.Util.Hacks
 import XMonad.Util.NamedActions
 import XMonad.Util.Run
@@ -47,6 +53,15 @@ import XMonad.Util.SpawnOnce
 orgToday = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y]" <$> getCurrentTime
 {-# NOINLINE orgNow #-}
 orgNow = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y %H:%M:%S]" <$> getCurrentTime
+{-# NOINLINE screenCornerRef #-}
+screenCornerRef = unsafePerformIO $ newIORef True
+
+myScreenCornerEventHook :: IORef Bool -> Event -> X All
+myScreenCornerEventHook ref e =
+  io (readIORef ref) >>= \isOn ->
+      if isOn
+        then screenCornerEventHook e
+        else return (All True)
 
 myWindowPromptConfig =
   def
@@ -81,6 +96,7 @@ myBasicKeyMap =
     , spawn' "pactl set-sink-volume @DEFAULT_SINK@ +10%"
     )
   , ("M-b", addName "sendMessage ToggleStruts" $ sendMessage ToggleStruts)
+  , ("M-f", addName "toggle screen corners" $ io $ modifyIORef screenCornerRef not)
   , ("M-C-k", spawn' "xkill")
   , ("M-C-p", addName "xprops" $ spawn "x-terminal-emulator -e bash -c \"xprop && read -n 1 -p 'Press any key to continue..'\"")
   , ("M-m", addName "manPrompt" $ manPrompt def)
@@ -150,6 +166,8 @@ myConfig =
           , "9:admin"
           ]
       }
+      `additionalMouseBindings` [ ((0, button2), \w -> focus w >> mouseMoveWindow w >> ifClick (windows $ W.sink w))
+                                ]
 
 myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
 
@@ -157,8 +175,8 @@ myManageHook =
   composeOne
     [ isDialog -?> doCenterFloat
     , isNotification -?> doSideFloat NE
-    -- comm
-    , className =? "Signal" -?> doShift "2:comm"
+    , -- comm
+      className =? "Signal" -?> doShift "2:comm"
     , className =? "Element" -?> doShift "2:comm"
     , className =? "WhatSie" -?> doShift "2:comm"
     , className =? "dev.geopjr.Tuba" -?> doShift "2:comm"
@@ -173,7 +191,7 @@ myManageHook =
     , className =? "LibreWolf" -?> doShift "3:web"
     , -- admin
       className =? "easyeffects" -?> doShift "9:admin"
-    , --games
+    , -- games
       currentWs =? "7:games" -?> doFullFloat
     ]
  where
@@ -181,12 +199,13 @@ myManageHook =
   doSideAndCopy = doSideFloat NE <+> doF copyToAll
 
 myLayoutHook =
-  avoidStruts $
-    onWorkspace "1:top" tall $
-      onWorkspace "2:comm" tabbed $
-        onWorkspace "3:web" accordion $
-          onWorkspace "7:games" full $
-            smartBorders (tabbed ||| tallM ||| full ||| tall ||| accordion)
+  screenCornerLayoutHook $
+    avoidStruts $
+      onWorkspace "1:top" tall $
+        onWorkspace "2:comm" tabbed $
+          onWorkspace "3:web" accordion $
+            onWorkspace "7:games" full $
+              smartBorders (tabbed ||| tallM ||| full ||| tall ||| accordion)
  where
   full = renamed [Replace "Full"] $ noBorders Full
   tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset
@@ -200,6 +219,10 @@ myStartupHook = do
   spawnOnOnce "3:web" "x-www-browser --restore-last-session"
   -- height needs to be explicit, check ToggleStruts
   spawnOnce "gtk-sni-tray-standalone --bottom --beginning --watcher"
+  addScreenCorners
+    [ (SCLeft, prevWS)
+    , (SCRight, nextWS)
+    ]
 
 myFadeHook =
   composeAll
@@ -216,7 +239,7 @@ main = do
   spwXMobar <-
     if xmobarrcHostspecificExists
       then spawnPipe $ "xmobar " ++ xmobarrcHostspecific
-      else spawnPipe $ "xmobar ~/.config/xmonad/xmobarrc"
+      else spawnPipe "xmobar ~/.config/xmonad/xmobarrc"
   spwXMonadRc <- spawnPipe "bash ~/.config/xmonad/xmonadrc" -- writes ~/.ssh/env
   xmonad
     $ docks
@@ -230,6 +253,6 @@ main = do
           manageDocks <+> myManageHook <+> fullscreenManageHook
       , layoutHook = myLayoutHook
       , startupHook = myStartupHook
-      , handleEventHook = fadeWindowsEventHook <+> fixSteamFlicker -- <+> focusOnMouseMove
+      , handleEventHook = fadeWindowsEventHook <+> myScreenCornerEventHook screenCornerRef <+> fixSteamFlicker -- <+> focusOnMouseMove
       , terminal = "x-terminal-emulator"
       }
