@@ -154,26 +154,31 @@ myConfig =
 myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
 
 myManageHook =
-  composeAll
-    [ -- comm
-      className =? "Signal" --> doShift "2:comm"
-    , className =? "Element" --> doShift "2:comm"
-    , className =? "WhatSie" --> doShift "2:comm"
-    , className =? "dev.geopjr.Tuba" --> doShift "2:comm"
-    , className =? "Thunderbird" --> doShift "2:comm"
-    , className =? "Evolution" --> doShift "2:comm"
-    , className =? "Claws-mail" --> doShift "2:comm"
+  composeOne
+    [ isDialog -?> doCenterFloat
+    , isNotification -?> doSideFloat NE
+    -- comm
+    , className =? "Signal" -?> doShift "2:comm"
+    , className =? "Element" -?> doShift "2:comm"
+    , className =? "WhatSie" -?> doShift "2:comm"
+    , className =? "dev.geopjr.Tuba" -?> doShift "2:comm"
+    , className =? "Thunderbird" -?> doShift "2:comm"
+    , className =? "Evolution" -?> doShift "2:comm"
+    , className =? "Claws-mail" -?> doShift "2:comm"
     , -- ide
-      className =? "vscodium" --> doShift "4:ide"
+      className =? "vscodium" -?> doShift "4:ide"
     , -- entertain
-      className =? "vlc" --> doSideFloat CE
-    , role =? "PictureInPicture" --> doSideFloat CE
-    , className =? "LibreWolf" --> doShift "3:web"
+      className =? "vlc" -?> doSideFloat C
+    , role =? "PictureInPicture" -?> doSideAndCopy
+    , className =? "LibreWolf" -?> doShift "3:web"
     , -- admin
-      className =? "easyeffects" --> doShift "9:admin"
+      className =? "easyeffects" -?> doShift "9:admin"
+    , --games
+      currentWs =? "7:games" -?> doFullFloat
     ]
  where
   role = stringProperty "WM_WINDOW_ROLE"
+  doSideAndCopy = doSideFloat NE <+> doF copyToAll
 
 myLayoutHook =
   avoidStruts $
@@ -181,7 +186,7 @@ myLayoutHook =
       onWorkspace "2:comm" tabbed $
         onWorkspace "3:web" accordion $
           onWorkspace "7:games" full $
-            smartBorders (tall ||| tallM ||| full ||| tabbed ||| accordion)
+            smartBorders (tabbed ||| tallM ||| full ||| tall ||| accordion)
  where
   full = renamed [Replace "Full"] $ noBorders Full
   tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset

@@ -20,5 +20,7 @@
       "editor.defaultFormatter": "haskell.haskell"
     },
     "explorer.confirmDelete": false,
-    "svg.preview.mode": "svg"
+    "svg.preview.mode": "svg",
+    "redhat.telemetry.enabled": true,
+    "haskell.plugin.semanticTokens.globalOn": true
 }
