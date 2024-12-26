@@ -11,7 +11,6 @@
     "[shellscript]": {
       "editor.defaultFormatter": "foxundermoon.shell-format"
     },
-    "haskell.formattingProvider": "fourmolu",
     "haskell.serverEnvironment": {
       
     },
@@ -22,5 +21,8 @@
     "explorer.confirmDelete": false,
     "svg.preview.mode": "svg",
     "redhat.telemetry.enabled": true,
-    "haskell.plugin.semanticTokens.globalOn": true
+    "haskell.plugin.semanticTokens.globalOn": true,
+    "workbench.settings.applyToAllProfiles": [
+      "haskell.formattingProvider"
+    ]
 }
