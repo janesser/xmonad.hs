@@ -51,7 +51,7 @@ orgNow = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y %H:%M:%S]" <$
 
 {-# NOINLINE screenCornerRef #-}
 screenCornerRef :: IORef Bool
-screenCornerRef = unsafePerformIO $ newIORef True
+screenCornerRef = unsafePerformIO $ newIORef False
 
 myScreenCornerEventHook :: IORef Bool -> Event -> X All
 myScreenCornerEventHook ref e =
@@ -98,8 +98,8 @@ myBasicKeyMap =
     ( "<XF86AudioRaiseVolume>",
       spawn' "pactl set-sink-volume @DEFAULT_SINK@ +10%"
     ),
-    ("M-b", addName "sendMessage ToggleStruts" $ sendMessage ToggleStruts),
-    ("M-f", addName "toggle screen corners" $ io $ modifyIORef screenCornerRef not),
+    ("M-f", addName "sendMessage ToggleStruts" $ sendMessage ToggleStruts),
+    ("M-s", addName "toggle screen corners" $ io $ modifyIORef screenCornerRef not),
     ("M-C-k", spawn' "xkill"),
     ("M-C-p", addName "xprops" $ spawn "x-terminal-emulator -e bash -c \"xprop && read -n 1 -p 'Press any key to continue..'\""),
     ("M-m", addName "manPrompt" $ manPrompt def)
@@ -154,43 +154,43 @@ myJournalKeys c =
         ("M-o S-e", spawn' "emacs ~/Dropbox/orgzly/tochter1.org")
       ]
 
-monitorWs :: String
-monitorWs = "1:top"
+monWs :: String
+monWs = "top"
 
 commWs :: String
-commWs = "2:comm"
+commWs = "comm"
 
 browseWs :: String
-browseWs = "3:web"
+browseWs = "web"
 
 devWs :: String
-devWs = "4:ide"
+devWs = "ide"
 
 leasureWs :: String
-leasureWs = "5:entertain"
+leasureWs = "entertain"
 
 privateWs :: String
-privateWs = "6:private"
+privateWs = "private"
 
 gamesWs :: String
-gamesWs = "7:games"
+gamesWs = "games"
 
 eduWs :: String
-eduWs = "8:education"
+eduWs = "education"
 
 adminWs :: String
-adminWs = "9:admin"
+adminWs = "admin"
 
 myWorkspaces :: [String]
 myWorkspaces =
-  [ monitorWs,
+  [ monWs,
     commWs,
     browseWs,
     devWs,
-    leasureWs,
+    eduWs,
     privateWs,
     gamesWs,
-    eduWs,
+    leasureWs,
     adminWs
   ]
 
@@ -239,10 +239,10 @@ myManageHook =
 myLayoutHook =
   screenCornerLayoutHook $
     avoidStruts $
-      onWorkspace "1:top" tall $
-        onWorkspace "2:comm" tabsL $
-          onWorkspace "3:web" accordion $
-            onWorkspace "7:games" full $
+      onWorkspace monWs tall $
+        onWorkspace commWs tabsL $
+          onWorkspace browseWs accordion $
+            onWorkspace gamesWs full $
               smartBorders (tabsL ||| tallM ||| full ||| tall ||| accordion)
   where
     full = renamed [Replace "Full"] $ noBorders Full
@@ -253,8 +253,8 @@ myLayoutHook =
 
 myStartupHook :: X ()
 myStartupHook = do
-  spawnOnOnce "1:top" "x-terminal-emulator -e btop"
-  spawnOnOnce "3:web" "x-www-browser --restore-last-session"
+  spawnOnOnce monWs "x-terminal-emulator -e btop"
+  spawnOnOnce browseWs "x-www-browser --restore-last-session"
   -- height needs to be explicit, check ToggleStruts
   spawnOnce "gtk-sni-tray-standalone --bottom --beginning --watcher"
   addMyScreenCorners
