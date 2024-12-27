@@ -169,8 +169,8 @@ devWs = "ide"
 leasureWs :: String
 leasureWs = "entertain"
 
-privateWs :: String
-privateWs = "private"
+privWs :: String
+privWs = "private"
 
 gamesWs :: String
 gamesWs = "games"
@@ -188,7 +188,7 @@ myWorkspaces =
     browseWs,
     devWs,
     eduWs,
-    privateWs,
+    privWs,
     gamesWs,
     leasureWs,
     adminWs
@@ -213,6 +213,9 @@ myManageHook =
   composeOne
     [ isDialog -?> doCenterFloat,
       isNotification -?> doSideFloat NE,
+      -- games & private
+      currentWs =? gamesWs -?> doFullFloat,
+      currentWs =? privWs -?> doSink,
       -- comm
       className =? "Signal" -?> doShift commWs,
       className =? "Element" -?> doShift commWs,
@@ -228,22 +231,21 @@ myManageHook =
       role =? "PictureInPicture" -?> doSideAndCopy,
       className =? "LibreWolf" -?> doShift browseWs,
       -- admin
-      className =? "easyeffects" -?> doShift adminWs,
-      -- games
-      currentWs =? gamesWs -?> doFullFloat
+      className =? "easyeffects" -?> doShift adminWs
     ]
   where
     role = stringProperty "WM_WINDOW_ROLE"
     doSideAndCopy = doSideFloat NE <+> doF copyToAll
 
 myLayoutHook =
-  screenCornerLayoutHook $
-    avoidStruts $
-      onWorkspace monWs tall $
-        onWorkspace commWs tabsL $
-          onWorkspace browseWs accordion $
-            onWorkspace gamesWs full $
+  avoidStruts $
+    onWorkspace monWs tall $
+      onWorkspace commWs tabsL $
+        onWorkspace browseWs accordion $
+          onWorkspace gamesWs full $
+            screenCornerLayoutHook $
               smartBorders (tabsL ||| tallM ||| full ||| tall ||| accordion)
+              
   where
     full = renamed [Replace "Full"] $ noBorders Full
     tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset
