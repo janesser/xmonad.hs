@@ -308,7 +308,16 @@ VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
     ./try-build.sh
     snap run eclipse-pde
 
+### nix
+
+    sudo nala install nix-bin
+    sudo nix-channel --list
+    sudo nix-channel --add  https://nixos.org/channels/nixos-24.05
+    sudo nix-channel --update
+
 ### kubernetes
+
+#### kubectl
 
     cd projs
     git clone https://github.com/kubernetes/kubernetes.git
@@ -333,6 +342,11 @@ VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
         --branch=main \
         --path=clusters/qnap-k3s \
         --personal
+
+#### k0sproject
+
+    curl -sSLf https://get.k0s.sh | sudo sh
+    k0s completion fish > ~/.config/fish/completions/k0s.fish
 
 ## Social Tools
 
