@@ -116,6 +116,10 @@ Applications now deprecated and uninstalled
 
 #### kitty
 
+    # get required fonts -- https://askubuntu.com/questions/3697/how-do-i-install-fonts
+    sudo mkdir -p /usr/local/share/fonts
+    cd /usr/local/share/fonts && sudo curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf
+
     # latest version of kitty
     mkdir -p ~/projs; cd ~/projs
     git clone https://github.com/kovidgoyal/kitty.git --depth 1 && cd kitty
