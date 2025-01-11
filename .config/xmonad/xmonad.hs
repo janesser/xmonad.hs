@@ -220,6 +220,7 @@ myManageHook =
       className =? "Signal" -?> doShift commWs,
       className =? "Element" -?> doShift commWs,
       className =? "WhatSie" -?> doShift commWs,
+      className =? "ZapZap" -?> doShift commWs,
       className =? "dev.geopjr.Tuba" -?> doShift commWs,
       className =? "Thunderbird" -?> doShift commWs,
       className =? "Evolution" -?> doShift commWs,
@@ -259,6 +260,7 @@ myStartupHook = do
   spawnOnOnce browseWs "x-www-browser --restore-last-session"
   -- height needs to be explicit, check ToggleStruts
   spawnOnce "gtk-sni-tray-standalone --bottom --beginning --watcher"
+  spawnOnce "blueman-applet"
   addMyScreenCorners
 
 myFadeHook :: FadeHook

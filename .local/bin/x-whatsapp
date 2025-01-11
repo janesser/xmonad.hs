@@ -1,0 +1,12 @@
+#!/bin/bash
+
+pushd .
+
+if [ -d ~/projs/zapzap/ ]; then
+    cd ~/projs/zapzap/
+    poetry run -- python3 _run/run.py &
+elif [ -x $(command -v whatsie) ]; then
+    whatsie &
+fi
+
+popd

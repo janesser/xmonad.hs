@@ -303,13 +303,8 @@ VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
 
 ### eclipse
 
-    sudo apt install snap
-    sudo snap install --classic snapcraft
-    mkdir -p ~/projs; cd ~/projs
-    git clone https://github.com/janesser/eclipse-snap
-    cd eclipse-snap
-    ECLIPSE_PACKAGE=eclipse-pde
-    ./try-build.sh
+<https://github.com/janesser/eclipse-snap>
+
     snap run eclipse-pde
 
 ### nix
@@ -360,7 +355,23 @@ VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
 
     sudo apt install signal-desktop
 
-### WhatSie (Whatsapp Client)
+### Whatsapp Client
+
+#### zapzap
+
+    sudo apt install libxcb-cursor0
+    git clone https://github.com/rafatosta/zapzap.git
+    cd zapzap
+    poetry init
+    poerty add PyQt6 PyQt6-WebEngine dbus-python python-gettext
+    chmod +x _run/run.py
+    poetry run -- python3 _run/run.py
+    ln -sf $(pwd)/.local/bin/x-whatsapp ~/.local/bin/x-whatsapp 
+
+#### WhatSie (deprecated)
+
+CPU thrashing remained high througout several versions
+<https://github.com/keshavbhatt/whatsie/issues/190>
 
     sudo apt install qtbase5-dev qtwebengine5-dev qtwebengine5-dev-tools
     mkdir -p ~/projs; cd ~/projs
