@@ -9,6 +9,7 @@ packages:
 extra-deps:
   - hostname-1.0
   - split-0.2.5
+  - containers-0.6.8
 
 system-ghc: true
 

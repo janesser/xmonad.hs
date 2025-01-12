@@ -2,6 +2,7 @@ import Control.Monad
 import Data.IORef
 import Data.List (intercalate)
 import Data.List.Split
+import Data.Map (fromList)
 import Data.Semigroup (Endo)
 import Data.Time
 import GHC.IO.Handle (Handle)
@@ -12,11 +13,14 @@ import XMonad
 import XMonad.Actions.CopyWindow
 import XMonad.Actions.CycleWS
 import XMonad.Actions.FloatSnap
+import XMonad.Actions.MouseGestures
+import XMonad.Actions.MouseResize
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeWindows
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers
+import XMonad.Hooks.Modal
 import XMonad.Hooks.ScreenCorners
 import XMonad.Hooks.UrgencyHook
 import XMonad.Layout.Accordion
@@ -27,6 +31,7 @@ import XMonad.Layout.NoBorders
 import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Renamed
 import XMonad.Layout.Tabbed
+import XMonad.Layout.WindowArranger
 import XMonad.Prelude (All (..))
 import XMonad.Prompt
 import XMonad.Prompt.FuzzyMatch
@@ -34,8 +39,11 @@ import XMonad.Prompt.Man
 import XMonad.Prompt.OrgMode
 import XMonad.Prompt.Window
 import XMonad.Prompt.XMonad
-import XMonad.StackSet (sink)
-import XMonad.Util.EZConfig (additionalMouseBindings, mkNamedKeymap)
+import XMonad.StackSet (shiftMaster, sink)
+import XMonad.Util.EZConfig (
+  additionalMouseBindings,
+  mkNamedKeymap,
+ )
 import XMonad.Util.Hacks
 import XMonad.Util.NamedActions
 import XMonad.Util.Run
@@ -53,25 +61,42 @@ orgNow = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y %H:%M:%S]" <$
 screenCornerRef :: IORef Bool
 screenCornerRef = unsafePerformIO $ newIORef False
 
-myScreenCornerEventHook :: IORef Bool -> Event -> X All
-myScreenCornerEventHook ref e =
-  io (readIORef ref) >>= \isOn ->
-    if isOn
-      then screenCornerEventHook e
-      else return (All True)
+mouseGestureHook :: Window -> X ()
+mouseGestureHook = mouseGesture gestures
+ where
+  gestures =
+    fromList
+      [ ([], focus)
+      , ([U], const prevWS)
+      , ([D], const nextWS)
+      ]
 
-addMyScreenCorners :: X ()
-addMyScreenCorners =
-  addScreenCorners
-    [ (SCTop, prevWS),
-      (SCBottom, nextWS)
-    ]
+mouseMoveHook :: Window -> X ()
+mouseMoveHook w = focus w >> mouseMoveWindow w >> ifClick (windows $ sink w)
+
+myMouseOnlyModeLabel = noModModeLabel -- "myMouseOnlyMode"
+
+myMouseOnlyMode :: Mode
+myMouseOnlyMode = noModMode
+
+--   mode myMouseOnlyModeLabel $
+--     mkKeysEz
+--       [ ((0, button1), mouseMoveWindow)
+--       , ((0, button2), mouseGestureHook)
+--       , ((0, button3), mouseResize)
+--       ]
+--  where
+--   mouseResize :: Window -> X ()
+--   mouseResize w =
+--     focus w
+--       >> mouseResizeWindow w
+--       >> windows shiftMaster
 
 myWindowPromptConfig :: XPConfig
 myWindowPromptConfig =
   def
-    { searchPredicate = fuzzyMatch,
-      sorter = fuzzySort
+    { searchPredicate = fuzzyMatch
+    , sorter = fuzzySort
     }
 
 myKeysConfig :: XConfig l -> XConfig l
@@ -82,27 +107,29 @@ myKeysConfig =
 
 myBasicKeyMap :: [(String, NamedAction)]
 myBasicKeyMap =
-  [ ("M-x", noName $ xmonadPrompt def),
-    ("M-e", spawn' "pcmanfm"),
-    ("C-ö", spawn' "copyq toggle"),
-    ("<Print>", spawn' "shutter -s"),
-    ("M-S-l", spawn' "light-locker-command -l"),
-    ("<XF86MonBrightnessUp>", spawn' "brightness.sh +"),
-    ("<XF86MonBrightnessDown>", spawn' "brightness.sh -"),
-    ( "<XF86AudioMute>",
-      spawn' "pactl set-sink-mute @DEFAULT_SINK@ toggle"
-    ),
-    ( "<XF86AudioLowerVolume>",
-      spawn' "pactl set-sink-volume @DEFAULT_SINK@ -10%"
-    ),
-    ( "<XF86AudioRaiseVolume>",
-      spawn' "pactl set-sink-volume @DEFAULT_SINK@ +10%"
-    ),
-    ("M-f", addName "sendMessage ToggleStruts" $ sendMessage ToggleStruts),
-    ("M-s", addName "toggle screen corners" $ io $ modifyIORef screenCornerRef not),
-    ("M-C-k", spawn' "xkill"),
-    ("M-C-p", addName "xprops" $ spawn "x-terminal-emulator -e bash -c \"xprop && read -n 1 -p 'Press any key to continue..'\""),
-    ("M-m", addName "manPrompt" $ manPrompt def)
+  [ ("M-x", noName $ xmonadPrompt def)
+  , ("M-e", spawn' "pcmanfm")
+  , ("C-ö", spawn' "copyq toggle")
+  , ("<Print>", spawn' "shutter -s")
+  , ("M-S-l", spawn' "light-locker-command -l")
+  , ("<XF86MonBrightnessUp>", spawn' "brightness.sh +")
+  , ("<XF86MonBrightnessDown>", spawn' "brightness.sh -")
+  ,
+    ( "<XF86AudioMute>"
+    , spawn' "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+    )
+  ,
+    ( "<XF86AudioLowerVolume>"
+    , spawn' "pactl set-sink-volume @DEFAULT_SINK@ -10%"
+    )
+  ,
+    ( "<XF86AudioRaiseVolume>"
+    , spawn' "pactl set-sink-volume @DEFAULT_SINK@ +10%"
+    )
+  , ("M-f", addName "sendMessage ToggleStruts" $ sendMessage ToggleStruts)
+  , ("M-C-k", spawn' "xkill")
+  , ("M-C-p", addName "xprops" $ spawn "x-terminal-emulator -e bash -c \"xprop && read -n 1 -p 'Press any key to continue..'\"")
+  , ("M-m", addName "manPrompt" $ manPrompt def)
   ]
 
 myBasicKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
@@ -113,13 +140,13 @@ myBasicKeys c =
 xKeysPrompt :: XPConfig -> [((KeyMask, KeySym), NamedAction)] -> X ()
 xKeysPrompt c keylist = do
   mkXPrompt Bindings c (mkComplFunFromList' c $ showKmSimple keylist) doIt
-  where
-    doIt k = spawn $ "xdotool key " ++ doToolKey k
-    doToolKey = intercalate "+" . map doControlKey . splitOn "-"
-    doControlKey "C" = "Control_L"
-    doControlKey "S" = "Shift_L"
-    doControlKey "M4" = "Super_L"
-    doControlKey k = filter (/= '>') $ filter (/= '<') k
+ where
+  doIt k = spawn $ "xdotool key " ++ doToolKey k
+  doToolKey = intercalate "+" . map doControlKey . splitOn "-"
+  doControlKey "C" = "Control_L"
+  doControlKey "S" = "Shift_L"
+  doControlKey "M4" = "Super_L"
+  doControlKey k = filter (/= '>') $ filter (/= '<') k
 
 data Bindings = Bindings
 
@@ -131,14 +158,15 @@ myWindowKeys c =
   subtitle "My Window Keys"
     : mkNamedKeymap
       c
-      [ ("M-C-ä", spawn' "killall xcompmgr; xcompmgr -cCfF"),
-        ("M-C-S-ä", spawn' "killall xcompmgr"),
-        ("M-C-g", addName "windowPrompt goto" $ windowPrompt myWindowPromptConfig Goto allWindows),
-        ("M-C-b", addName "windowPrompt bring" $ windowPrompt myWindowPromptConfig Bring allWindows),
-        ("M-C-<Space>", addName "layoutScreens 4 Grid" $ layoutScreens 4 Grid),
-        ("M-C-S-<Space>", addName "rescreen" rescreen),
-        ("M-C-a", addName "copy window to all workspaces" $ windows copyToAll),
-        ("M-C-S-a", addName "kill all other window copies" $ killAllOtherCopies)
+      [ ("M-C-ä", spawn' "killall xcompmgr; xcompmgr -cCfF")
+      , ("M-C-S-ä", spawn' "killall xcompmgr")
+      , ("M-C-g", addName "windowPrompt goto" $ windowPrompt myWindowPromptConfig Goto allWindows)
+      , ("M-C-b", addName "windowPrompt bring" $ windowPrompt myWindowPromptConfig Bring allWindows)
+      , ("M-C-<Space>", addName "layoutScreens 4 Grid" $ layoutScreens 4 Grid)
+      , ("M-C-S-<Space>", addName "rescreen" rescreen)
+      , ("M-C-a", addName "copy window to all workspaces" $ windows copyToAll)
+      , ("M-C-S-a", addName "kill all other window copies" killAllOtherCopies)
+      , ("M-s", addName "no modMasks" $ setMode myMouseOnlyModeLabel)
       ]
 
 myJournalKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
@@ -146,12 +174,12 @@ myJournalKeys c =
   subtitle "My Keys"
     : mkNamedKeymap
       c
-      [ ("M-o j", addName "add TODO to journal" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/journal.org"),
-        ("M-o t", addName "add TODO to family todos" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/orgzly/todos.org"),
-        ("M-o e", addName "add entry to tochter1" $ orgPrompt def orgToday "~/Dropbox/orgzly/tochter1.org"),
-        ("M-o S-j", spawn' "emacs ~/Dropbox/journal.org"),
-        ("M-o S-t", spawn' "emacs ~/Dropbox/orgzly/todos.org"),
-        ("M-o S-e", spawn' "emacs ~/Dropbox/orgzly/tochter1.org")
+      [ ("M-o j", addName "add TODO to journal" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/journal.org")
+      , ("M-o t", addName "add TODO to family todos" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/orgzly/todos.org")
+      , ("M-o e", addName "add entry to tochter1" $ orgPrompt def orgToday "~/Dropbox/orgzly/tochter1.org")
+      , ("M-o S-j", spawn' "emacs ~/Dropbox/journal.org")
+      , ("M-o S-t", spawn' "emacs ~/Dropbox/orgzly/todos.org")
+      , ("M-o S-e", spawn' "emacs ~/Dropbox/orgzly/tochter1.org")
       ]
 
 monWs :: String
@@ -183,76 +211,79 @@ adminWs = "admin"
 
 myWorkspaces :: [String]
 myWorkspaces =
-  [ monWs,
-    commWs,
-    browseWs,
-    devWs,
-    eduWs,
-    privWs,
-    gamesWs,
-    leasureWs,
-    adminWs
+  [ monWs
+  , commWs
+  , browseWs
+  , devWs
+  , eduWs
+  , privWs
+  , gamesWs
+  , leasureWs
+  , adminWs
   ]
 
 myConfig :: XConfig (Choose Tall (Choose (Mirror Tall) Full))
 myConfig =
   myKeysConfig $
     def
-      { modMask = mod4Mask, -- left windows super
-        focusFollowsMouse = False,
-        workspaces = myWorkspaces
+      { modMask = mod4Mask -- left windows super
+      , focusFollowsMouse = False
+      , workspaces = myWorkspaces
       }
-      `additionalMouseBindings` [ ((0, button2), \w -> focus w >> mouseMoveWindow w >> ifClick (windows $ sink w))
+      `additionalMouseBindings` [ ((mod4Mask .|. shiftMask, button1), mouseMoveHook)
+                                , ((mod4Mask .|. shiftMask, button3), mouseGestureHook)
                                 ]
 
 myLogHook :: Handle -> X ()
-myLogHook spw = dynamicLogWithPP xmobarPP {ppOutput = hPutStrLn spw}
+myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
 
 myManageHook :: Query (Endo WindowSet)
 myManageHook =
   composeOne
-    [ isDialog -?> doCenterFloat,
-      isNotification -?> doSideFloat NE,
-      -- games & private
-      currentWs =? gamesWs -?> doFullFloat,
-      currentWs =? privWs -?> doSink,
-      -- comm
-      className =? "Signal" -?> doShift commWs,
-      className =? "Element" -?> doShift commWs,
-      className =? "WhatSie" -?> doShift commWs,
-      className =? "ZapZap" -?> doShift commWs,
-      className =? "dev.geopjr.Tuba" -?> doShift commWs,
-      className =? "Thunderbird" -?> doShift commWs,
-      className =? "Evolution" -?> doShift commWs,
-      className =? "Claws-mail" -?> doShift commWs,
-      -- ide
-      className =? "vscodium" -?> doShift devWs,
-      -- entertain
-      className =? "vlc" -?> doSideFloat C,
-      role =? "PictureInPicture" -?> doSideAndCopy,
-      className =? "LibreWolf" -?> doShift browseWs,
-      -- admin
+    [ isDialog -?> doCenterFloat
+    , isNotification -?> doSideFloat NE
+    , isNotification -?> doSideFloat NE
+    , -- games & private
+      currentWs =? gamesWs -?> doFullFloat
+    , currentWs =? privWs -?> doSink
+    , -- comm
+      className =? "Signal" -?> doShift commWs
+    , className =? "Element" -?> doShift commWs
+    , className =? "WhatSie" -?> doShift commWs
+    , className =? "ZapZap" -?> doShift commWs
+    , className =? "dev.geopjr.Tuba" -?> doShift commWs
+    , className =? "Thunderbird" -?> doShift commWs
+    , className =? "Evolution" -?> doShift commWs
+    , className =? "Claws-mail" -?> doShift commWs
+    , -- ide
+      className =? "vscodium" -?> doShift devWs
+    , -- entertain
+      className =? "vlc" -?> doSideFloat C
+    , role =? "PictureInPicture" -?> doSideAndCopy
+    , className =? "LibreWolf" -?> doShift browseWs
+    , -- admin
       className =? "easyeffects" -?> doShift adminWs
     ]
-  where
-    role = stringProperty "WM_WINDOW_ROLE"
-    doSideAndCopy = doSideFloat NE <+> doF copyToAll
+ where
+  role = stringProperty "WM_WINDOW_ROLE"
+  doSideAndCopy = doSideFloat NE <+> doF copyToAll
 
 myLayoutHook =
   avoidStruts $
-    onWorkspace monWs tall $
-      onWorkspace commWs tabsL $
-        onWorkspace browseWs accordion $
-          onWorkspace gamesWs full $
-            screenCornerLayoutHook $
-              smartBorders (tabsL ||| tallM ||| full ||| tall ||| accordion)
-              
-  where
-    full = renamed [Replace "Full"] $ noBorders Full
-    tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset
-    tallM = renamed [Replace "Mirror Tall"] $ Mirror tall
-    tabsL = renamed [Replace "Tabbed"] simpleTabbed
-    accordion = Accordion
+    mouseResize $
+      windowArrange $
+        onWorkspace monWs tall $
+          onWorkspace commWs tabsL $
+            onWorkspace browseWs accordion $
+              onWorkspace gamesWs full $
+                screenCornerLayoutHook $
+                  smartBorders (tabsL ||| tallM ||| full ||| tall ||| accordion)
+ where
+  full = renamed [Replace "Full"] $ noBorders Full
+  tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset
+  tallM = renamed [Replace "Mirror Tall"] $ Mirror tall
+  tabsL = renamed [Replace "Tabbed"] simpleTabbed
+  accordion = Accordion
 
 myStartupHook :: X ()
 myStartupHook = do
@@ -261,15 +292,14 @@ myStartupHook = do
   -- height needs to be explicit, check ToggleStruts
   spawnOnce "gtk-sni-tray-standalone --bottom --beginning --watcher"
   spawnOnce "blueman-applet"
-  addMyScreenCorners
 
 myFadeHook :: FadeHook
 myFadeHook =
   composeAll
-    [ opaque,
-      isUnfocused --> opacity (8 / 10),
-      liftM2 (&&) isFloating isUnfocused --> opacity (4 / 10),
-      className =? "vlc" --> opaque
+    [ opaque
+    , isUnfocused --> opacity (8 / 10)
+    , liftM2 (&&) isFloating isUnfocused --> opacity (4 / 10)
+    , className =? "vlc" --> opaque
     ]
 
 main :: IO ()
@@ -287,12 +317,13 @@ main = do
       . ewmh
       . withUrgencyHook NoUrgencyHook
       . javaHack
+    $ modal [myMouseOnlyMode]
     $ myConfig
-      { logHook = myLogHook spwXMobar <+> fadeWindowsLogHook myFadeHook,
-        manageHook =
-          manageDocks <+> myManageHook <+> fullscreenManageHook,
-        layoutHook = myLayoutHook,
-        startupHook = myStartupHook,
-        handleEventHook = fadeWindowsEventHook <+> myScreenCornerEventHook screenCornerRef <+> fixSteamFlicker, -- <+> focusOnMouseMove
-        terminal = "x-terminal-emulator"
+      { logHook = myLogHook spwXMobar <+> fadeWindowsLogHook myFadeHook
+      , manageHook =
+          manageDocks <+> myManageHook <+> fullscreenManageHook
+      , layoutHook = myLayoutHook
+      , startupHook = myStartupHook
+      , handleEventHook = fadeWindowsEventHook <+> fixSteamFlicker -- <+> focusOnMouseMove
+      , terminal = "x-terminal-emulator"
       }

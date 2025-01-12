@@ -24,5 +24,6 @@
     "haskell.plugin.semanticTokens.globalOn": true,
     "workbench.settings.applyToAllProfiles": [
       "haskell.formattingProvider"
-    ]
+    ],
+    "haskell.formattingProvider": "fourmolu"
 }
