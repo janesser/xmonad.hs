@@ -1,5 +1,4 @@
 import Control.Monad
-import Data.IORef
 import Data.List (intercalate)
 import Data.List.Split
 import Data.Map (fromList)
@@ -20,7 +19,6 @@ import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeWindows
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers
-import XMonad.Hooks.Modal
 import XMonad.Hooks.ScreenCorners
 import XMonad.Hooks.UrgencyHook
 import XMonad.Layout.Accordion
@@ -32,14 +30,13 @@ import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Renamed
 import XMonad.Layout.Tabbed
 import XMonad.Layout.WindowArranger
-import XMonad.Prelude (All (..))
 import XMonad.Prompt
 import XMonad.Prompt.FuzzyMatch
 import XMonad.Prompt.Man
 import XMonad.Prompt.OrgMode
 import XMonad.Prompt.Window
 import XMonad.Prompt.XMonad
-import XMonad.StackSet (shiftMaster, sink)
+import XMonad.StackSet (sink)
 import XMonad.Util.EZConfig (
   additionalMouseBindings,
   mkNamedKeymap,
@@ -57,10 +54,6 @@ orgToday = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y]" <$> getCu
 orgNow :: String
 orgNow = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y %H:%M:%S]" <$> getCurrentTime
 
-{-# NOINLINE screenCornerRef #-}
-screenCornerRef :: IORef Bool
-screenCornerRef = unsafePerformIO $ newIORef False
-
 mouseGestureHook :: Window -> X ()
 mouseGestureHook = mouseGesture gestures
  where
@@ -73,24 +66,6 @@ mouseGestureHook = mouseGesture gestures
 
 mouseMoveHook :: Window -> X ()
 mouseMoveHook w = focus w >> mouseMoveWindow w >> ifClick (windows $ sink w)
-
-myMouseOnlyModeLabel = noModModeLabel -- "myMouseOnlyMode"
-
-myMouseOnlyMode :: Mode
-myMouseOnlyMode = noModMode
-
---   mode myMouseOnlyModeLabel $
---     mkKeysEz
---       [ ((0, button1), mouseMoveWindow)
---       , ((0, button2), mouseGestureHook)
---       , ((0, button3), mouseResize)
---       ]
---  where
---   mouseResize :: Window -> X ()
---   mouseResize w =
---     focus w
---       >> mouseResizeWindow w
---       >> windows shiftMaster
 
 myWindowPromptConfig :: XPConfig
 myWindowPromptConfig =
@@ -166,7 +141,6 @@ myWindowKeys c =
       , ("M-C-S-<Space>", addName "rescreen" rescreen)
       , ("M-C-a", addName "copy window to all workspaces" $ windows copyToAll)
       , ("M-C-S-a", addName "kill all other window copies" killAllOtherCopies)
-      , ("M-s", addName "no modMasks" $ setMode myMouseOnlyModeLabel)
       ]
 
 myJournalKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
@@ -317,7 +291,6 @@ main = do
       . ewmh
       . withUrgencyHook NoUrgencyHook
       . javaHack
-    $ modal [myMouseOnlyMode]
     $ myConfig
       { logHook = myLogHook spwXMobar <+> fadeWindowsLogHook myFadeHook
       , manageHook =
