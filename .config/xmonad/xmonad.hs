@@ -262,7 +262,6 @@ myLayoutHook =
 myStartupHook :: X ()
 myStartupHook = do
   spawnOnOnce monWs "x-terminal-emulator -e btop"
-  spawnOnOnce browseWs "x-www-browser --restore-last-session"
   -- height needs to be explicit, check ToggleStruts
   spawnOnce "gtk-sni-tray-standalone --bottom --beginning --watcher"
   spawnOnce "blueman-applet"
