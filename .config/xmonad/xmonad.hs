@@ -218,7 +218,8 @@ myManageHook =
     , isNotification -?> doSideFloat NE
     , isNotification -?> doSideFloat NE
     , -- games & private
-      currentWs =? gamesWs -?> doFullFloat
+      className =? "Lutris" -?> doSink <+> doShift gamesWs
+    , currentWs =? gamesWs -?> doFullFloat
     , currentWs =? privWs -?> doSink
     , -- comm
       className =? "Signal" -?> doShift commWs
