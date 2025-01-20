@@ -216,20 +216,19 @@ myManageHook =
   composeOne
     [ isDialog -?> doCenterFloat
     , isNotification -?> doSideFloat NE
-    , isNotification -?> doSideFloat NE
     , -- games & private
       className =? "Lutris" -?> doSink <+> doShift gamesWs
     , currentWs =? gamesWs -?> doFullFloat
     , currentWs =? privWs -?> doSink
     , -- comm
-      className =? "Signal" -?> doShift commWs
-    , className =? "Element" -?> doShift commWs
-    , className =? "WhatSie" -?> doShift commWs
-    , className =? "ZapZap" -?> doShift commWs
-    , className =? "dev.geopjr.Tuba" -?> doShift commWs
-    , className =? "Thunderbird" -?> doShift commWs
-    , className =? "Evolution" -?> doShift commWs
-    , className =? "Claws-mail" -?> doShift commWs
+      className =? "Signal" 
+      <||> className =? "Element" 
+      <||> className =? "WhatSie" 
+      <||> className =? "ZapZap" 
+      <||> className =? "dev.geopjr.Tuba"
+      <||> className =? "Thunderbird" 
+      <||> className =? "Evolution"
+      <||> className =? "Claws-mail" -?> doShift commWs
     , -- ide
       className =? "vscodium" -?> doShift devWs
     , -- entertain
@@ -237,7 +236,9 @@ myManageHook =
     , role =? "PictureInPicture" -?> doSideAndCopy
     , className =? "LibreWolf" -?> doShift browseWs
     , -- admin
-      className =? "easyeffects" -?> doShift adminWs
+      className =? "easyeffects" 
+      <||> className =? "Pavucontrol" 
+      <||> className =? "KeePassXC" -?> doShift adminWs
     ]
  where
   role = stringProperty "WM_WINDOW_ROLE"
@@ -265,7 +266,7 @@ myStartupHook = do
   spawnOnOnce monWs "x-terminal-emulator -e btop"
   -- height needs to be explicit, check ToggleStruts
   spawnOnce "gtk-sni-tray-standalone --bottom --beginning --watcher"
-  spawnOnce "blueman-applet"
+  spawnOnce "blueman-applet" -- requires tray activated
 
 myFadeHook :: FadeHook
 myFadeHook =

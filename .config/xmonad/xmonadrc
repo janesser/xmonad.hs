@@ -34,7 +34,9 @@ start_once x-whatsapp
 start_once dev.geopjr.Tuba # compiled from github
 
 ## ADMIN
-start_once easyeffects
+# start_once easyeffects
+start_once keepassxc
+start_once pavucontrol
 
 ## ssh-agent
 echo "# GENERATED FILE" >~/.ssh/env
