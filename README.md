@@ -386,9 +386,10 @@ CPU thrashing remained high througout several versions
     mkdir -p ~/projs; cd ~/projs
     git clone https://github.com/GeopJr/Tuba.git
     cd Tuba
-    git checkout v0.6.3
-    sudo apt install meson valac libjson-glib-dev libxml2-dev libgee-0.8-dev libsoup-3.0-dev libadwaita-1-dev libsecret-1-dev libgtksourceview-5-dev
+    git checkout v0.8.4
+    sudo apt install meson valac libjson-glib-dev libxml2-dev libgee-0.8-dev libsoup-3.0-dev libadwaita-1-dev libsecret-1-dev libgtksourceview-5-dev appstream-util
     meson setup --prefix /usr/local --reconfigure builddir/
+    meson compile -C builddir/
     sudo make install
 
 ### Element Desktop (Matrix.org Client)
