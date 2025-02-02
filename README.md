@@ -413,7 +413,12 @@ CPU thrashing remained high througout several versions
     XMonad.Util.Hacks.fixSteamFlicker
     https://github.com/ValveSoftware/steam-for-linux/issues/10544
 
+    # to offload on nvidia
+    __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME="nvidia" __VK_LAYER_NV_optimus="NVIDIA_only" %command% 
+
 ### Lutris
 
     apt install lutris
     # wip
+
+
