@@ -81,19 +81,6 @@ Check systemd-logind
 * clementine
 * shotcut
 
-### Dismissed / Deprecated
-
-Applications now deprecated and uninstalled
-
-* stalonetray / trayer
-* diodon
-* snap
-  * vscode
-  * firefox, thunderbird
-  * chromium
-* flatpak
-* whatsapp-for-linux
-
 ## System utilities
 
     sudo apt install bumblebee-nvidia
@@ -197,29 +184,16 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
 * x2goserver-x2goagent
 * lightdm-remote-session-x2go
 
-### bitseater meteo
+### my-weather-indicator
 
-    git clone https://github.com/SkyMaverick/statusnotifier.git
-    cd statusnotifier
-    diff --git a/src/meson.build b/src/meson.build
-        index f457fc3..46fd5d1 100644
-        --- a/src/meson.build
-        +++ b/src/meson.build
-        @@ -59,7 +59,7 @@ if get_option('enable_introspection')
-            sni_vapi_deps = '''
-                gobject-2.0
-                -        gtk+-3.0
-                +        gdk-pixbuf-2.0
-    meson setup --reconfigure --prefix /usr/local --clearcache -D enable_introspection=true -D enable_vala=true -D enable_dbusmenu=false build/
-    meson compile -C build/
-    meson install -C build/
+<https://github.com/atareao/my-weather-indicator/blob/main/bin/my-weather-indicator>
 
-    sudo apt install build-essential git meson ninja-build valac desktop-file-utils gettext libgtk-4-dev libadwaita-1-dev libsoup-3.0-dev libjson-glib-dev libwebkitgtk-6.0-dev
-    git clone --branch meteo-1.0 https://gitlab.com/janesser1/meteo.git
-    cd meteo
-    meson setup --prefix /usr/local build/
-    cd build
-    meson install
+    sudo add-apt-repository ppa:atareao/atareao
+    sudo apt update
+    sudo apt install my-weather-indicator
+
+    rm -fR ~/.config/my-weather-indicator
+    ln -sf ~/projs/xmonad.hs/.config/my-weather-indicator ~/.config/my-weather-indicator
 
 ## Office applications
 
@@ -413,20 +387,7 @@ VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
         """ import os
 
     poetry run -- python3 _run/run.py
-    ln -sf $(pwd)/.local/bin/x-whatsapp ~/.local/bin/x-whatsapp 
-
-#### WhatSie (deprecated)
-
-CPU thrashing remained high througout several versions
-<https://github.com/keshavbhatt/whatsie/issues/190>
-
-    sudo apt install qtbase5-dev qtwebengine5-dev qtwebengine5-dev-tools
-    mkdir -p ~/projs; cd ~/projs
-    git clone https://github.com/keshavbhatt/whatsie.git
-    cd whatsie/src
-    qmake PREFIX=/usr/local
-    make -j4
-    sudo make install
+    ln -sf $(pwd)/.local/bin/x-whatsapp ~/.local/bin/x-whatsapp
 
 ### Tuba (Mastodon Client)
 
@@ -474,4 +435,54 @@ CPU thrashing remained high througout several versions
     apt install lutris
     # wip
 
+## Deprecations
 
+### Dismissed
+
+Applications now deprecated and uninstalled
+
+* stalonetray / trayer
+* diodon
+* snap
+  * vscode
+  * firefox, thunderbird
+  * chromium
+* flatpak
+* whatsapp-for-linux
+
+### bitseater meteo (deprecated)
+
+    git clone https://github.com/SkyMaverick/statusnotifier.git
+    cd statusnotifier
+    diff --git a/src/meson.build b/src/meson.build
+        index f457fc3..46fd5d1 100644
+        --- a/src/meson.build
+        +++ b/src/meson.build
+        @@ -59,7 +59,7 @@ if get_option('enable_introspection')
+            sni_vapi_deps = '''
+                gobject-2.0
+                -        gtk+-3.0
+                +        gdk-pixbuf-2.0
+    meson setup --reconfigure --prefix /usr/local --clearcache -D enable_introspection=true -D enable_vala=true -D enable_dbusmenu=false build/
+    meson compile -C build/
+    meson install -C build/
+
+    sudo apt install build-essential git meson ninja-build valac desktop-file-utils gettext libgtk-4-dev libadwaita-1-dev libsoup-3.0-dev libjson-glib-dev libwebkitgtk-6.0-dev
+    git clone --branch meteo-1.0 https://gitlab.com/janesser1/meteo.git
+    cd meteo
+    meson setup --prefix /usr/local build/
+    cd build
+    meson install
+
+#### WhatSie (deprecated)
+
+CPU thrashing remained high througout several versions
+<https://github.com/keshavbhatt/whatsie/issues/190>
+
+    sudo apt install qtbase5-dev qtwebengine5-dev qtwebengine5-dev-tools
+    mkdir -p ~/projs; cd ~/projs
+    git clone https://github.com/keshavbhatt/whatsie.git
+    cd whatsie/src
+    qmake PREFIX=/usr/local
+    make -j4
+    sudo make install

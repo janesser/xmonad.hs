@@ -22,7 +22,7 @@ start_once copyq
 start_once syndaemon "-i 2 -d -K"
 start_once dropbox start
 # sudo add-apt-repository ppa:bitseater/ppa
-start_once com.gitlab.bitseater.meteo
+start_once /opt/extras.ubuntu.com/my-weather-indicator/bin/my-weather-indicator
 start_once nm-applet
 
 ### COMM ###

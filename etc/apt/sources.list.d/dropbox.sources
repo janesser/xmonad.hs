@@ -1,5 +1,0 @@
-Types: deb
-URIs: http://linux.dropbox.com/ubuntu
-Suites: noble
-Components: main
-Signed-By: /etc/apt/keyrings/dropbox.asc
