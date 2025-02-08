@@ -29,7 +29,8 @@ Installation of xmonad xmonad-contrib can be superceded by git-based installatio
         etckeeper \
         xpdf \
         btop rocm-smi \
-        clamtk
+        clamtk \
+        system-config-printer
 
 ### Optional requirements
 
@@ -359,12 +360,41 @@ VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
 
 #### zapzap
 
-    sudo apt install libxcb-cursor0
+    sudo apt install libxcb-cursor0 python3-poetry
     git clone https://github.com/rafatosta/zapzap.git
     cd zapzap
     poetry init
-    poerty add PyQt6 PyQt6-WebEngine dbus-python python-gettext
+    poetry add PyQt6 PyQt6-WebEngine dbus-python python-gettext
     chmod +x _run/run.py
+    nano _run/run.py # comment in start app
+
+        diff --git a/_run/run.py b/_run/run.py
+        old mode 100644
+        new mode 100755
+        index 82f6cc4..b07daf8
+        --- a/_run/run.py
+        +++ b/_run/run.py
+        @@ -1,17 +1,17 @@
+        import os
+        
+        # Build the windows from the .ui file
+        -#os.system('./_scripts/build-windows.sh')
+        +os.system('./_scripts/build-windows.sh')
+        
+        # Build the translations
+        os.system('./_scripts/build-translations.sh')
+        
+        # Activate Custom Debug Settings
+        -# debug = False
+        +debug = False
+        
+        # Run the app
+        -# os.system('python -m zapzap ' + ('--zapDebug' if debug ==
+        -#          True else ''))
+        +os.system('python -m zapzap ' + ('--zapDebug' if debug ==
+        +          True else ''))
+        """ import os
+
     poetry run -- python3 _run/run.py
     ln -sf $(pwd)/.local/bin/x-whatsapp ~/.local/bin/x-whatsapp 
 
