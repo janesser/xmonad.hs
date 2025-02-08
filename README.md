@@ -266,6 +266,23 @@ Used for haskell-language-server. <https://www.haskell.org/ghcup/>
 VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
 
     sudo apt install extrepo
+    sudo cp  /usr/share/extrepo/offline-data/debian/sid/vscodium.asc /usr/share/extrepo/offline-data/debian/trixie/
+    sudo nano /usr/share/extrepo/offline-data/debian/trixie/index.yaml
+
+        # taken from /usr/share/extrepo/offline-data/debian/sid/index.yaml
+        vscodium:
+        description: VS Codium repository - FLOSS binaries of VS code.
+        gpg-key-checksum:
+            sha256: 880957c1310498fcf1f91025fbcdf5dfb5b41832919e1f0646bcbafdb7101bd7
+        gpg-key-file: vscodium.asc
+        policy: main
+        source:
+            Architectures: amd64 i386 arm64 armhf
+            Components: main
+            Suites: vscodium
+            Types: deb
+            URIs: https://paulcarroty.gitlab.io/vscodium-deb-rpm-repo/debs/
+
     sudo extrepo --offlinedata enable vscodium
     ln -sf ~/projs/xmonad.hs/.config/VSCodium/User/settings.json ~/.config/VSCodium/User/settings.json
 
@@ -435,6 +452,12 @@ CPU thrashing remained high througout several versions
 
     sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/evolution 50
     sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/claws-mail 50
+
+### Skype 4 Linux
+
+    sudo apt remove --purge skypeforlinux
+    sudo apt install snapd
+    sudo snap install skype
 
 ## Games
 
