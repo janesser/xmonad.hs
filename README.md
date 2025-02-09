@@ -287,6 +287,14 @@ VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
     jupyter-lab &
     # jupyter-lab stop
 
+#### ollama & deepseek
+
+<https://www.tecmint.com/run-deepseek-locally-on-linux/>
+
+    curl -fsSL https://ollama.com/install.sh | sh
+    ollama --version # 0.5.7
+    ollama run deepseek-r1:7
+
 ### glow (shell markdown viewer)
 
     sudo apt install golang-go
