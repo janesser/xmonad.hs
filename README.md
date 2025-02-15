@@ -189,7 +189,6 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
 <https://github.com/atareao/my-weather-indicator/blob/main/bin/my-weather-indicator>
 
     sudo add-apt-repository ppa:atareao/atareao
-    sudo apt update
     sudo apt install my-weather-indicator
 
     rm -fR ~/.config/my-weather-indicator

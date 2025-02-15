@@ -50,3 +50,6 @@ fi
 if [ -f "$HOME/$(hostname).xkb" ]; then
    xkbcomp "$HOME/$(hostname).xkb" $DISPLAY
 fi
+
+# no over-gain mic
+pactl set-source-volume @DEFAULT_SOURCE@ 20%

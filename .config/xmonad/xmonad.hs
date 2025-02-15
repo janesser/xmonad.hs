@@ -217,8 +217,8 @@ myManageHook =
     [ isDialog -?> doCenterFloat
     , isNotification -?> doSideFloat NE
     , -- games & private
-      className =? "Lutris" -?> doShift gamesWs <+> doSink
-    , currentWs =? gamesWs -?> doFullFloat <+> doSink
+      className =? "Lutris" -?> doSink <+> doShift gamesWs
+    , currentWs =? gamesWs -?> doSink <+> doFullFloat
     , currentWs =? privWs -?> doSink
     , -- comm
       className =? "Signal" 
