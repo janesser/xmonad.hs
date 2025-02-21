@@ -294,6 +294,18 @@ VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
     ollama --version # 0.5.7
     ollama run deepseek-r1:7
 
+### StabilityMatrix
+
+Multi-Platform Package Manager for Stable Diffusion.
+
+<https://github.com/LykosAI/StabilityMatrix>
+
+    sudo nala install nvidia-modprobe nvidia-cuda-toolkit
+    # Download linux binary
+    chmod +x StabilityMatrix.AppImage
+    ## ./StabilityMatrix.AppImage --appimage-extract
+    sudo mv StabilityMatrix.AppImage /usr/local/bin/
+
 ### glow (shell markdown viewer)
 
     sudo apt install golang-go
