@@ -38,7 +38,7 @@ More recommended less mandatory
 
     sudo apt install \
         podman-compose \
-        texworks \
+        texworks texlive-humanities \
         pandoc \
         multimedia-graphics \
         geeqie \
@@ -375,36 +375,8 @@ Multi-Platform Package Manager for Stable Diffusion.
     cd zapzap
     poetry init
     poetry add PyQt6 PyQt6-WebEngine dbus-python python-gettext
-    chmod +x _run/run.py
-    nano _run/run.py # comment in start app
-
-        diff --git a/_run/run.py b/_run/run.py
-        old mode 100644
-        new mode 100755
-        index 82f6cc4..b07daf8
-        --- a/_run/run.py
-        +++ b/_run/run.py
-        @@ -1,17 +1,17 @@
-        import os
-        
-        # Build the windows from the .ui file
-        -#os.system('./_scripts/build-windows.sh')
-        +os.system('./_scripts/build-windows.sh')
-        
-        # Build the translations
-        os.system('./_scripts/build-translations.sh')
-        
-        # Activate Custom Debug Settings
-        -# debug = False
-        +debug = False
-        
-        # Run the app
-        -# os.system('python -m zapzap ' + ('--zapDebug' if debug ==
-        -#          True else ''))
-        +os.system('python -m zapzap ' + ('--zapDebug' if debug ==
-        +          True else ''))
-        """ import os
-
+    chmod +x run.py
+    
     poetry run -- python3 _run/run.py
     ln -sf $(pwd)/.local/bin/x-whatsapp ~/.local/bin/x-whatsapp
 

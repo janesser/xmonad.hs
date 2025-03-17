@@ -4,7 +4,7 @@ pushd .
 
 if [ -d ~/projs/zapzap/ ]; then
     cd ~/projs/zapzap/
-    poetry run -- python3 _run/run.py &
+    poetry run -- python3 run.py dev &
 elif [ -x $(command -v whatsie) ]; then
     whatsie &
 fi

@@ -242,7 +242,7 @@ myManageHook =
     ]
  where
   role = stringProperty "WM_WINDOW_ROLE"
-  doSideAndCopy = doSideFloat NE <+> doF copyToAll
+  doSideAndCopy = doSideFloat SE <+> doF copyToAll
 
 myLayoutHook =
   avoidStruts $
