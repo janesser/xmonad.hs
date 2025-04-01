@@ -10,7 +10,7 @@ start_once() {
 }
 
 #  /etc/xdg/autostart/light-locker.desktop
-start_once light-locker
+start_once light-locker --idle-hint
 
 #  /etc/xdg/autostart/xscreensaver.desktop
 start_once xsreensaver --no-splash

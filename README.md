@@ -71,6 +71,12 @@ Check systemd-logind
 
     sudo systemctl restart systemd-logind
 
+Check idleHint
+
+    loginctl show-seat -p IdleHint
+    # probably "idleHint=no" while not idle
+    light-locker-command -l && sleep 5 && light-locker-command -t
+
 ## Candidates & Experiments
 
 * scrot
