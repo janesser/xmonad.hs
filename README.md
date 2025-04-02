@@ -75,7 +75,12 @@ Check idleHint
 
     loginctl show-seat -p IdleHint
     # probably "idleHint=no" while not idle
-    light-locker-command -l && sleep 5 && light-locker-command -t
+    # won't work see https://github.com/the-cavalry/light-locker/issues/52
+
+Use `xautolock`
+
+    sudo nala install xautolock
+    xautolock -time 1 -locker "systemctl suspend"
 
 ## Candidates & Experiments
 

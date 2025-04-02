@@ -10,7 +10,8 @@ start_once() {
 }
 
 #  /etc/xdg/autostart/light-locker.desktop
-start_once light-locker --idle-hint
+start_once light-locker
+start_once xautolock -time 30 -locker "systemctl suspend"
 
 #  /etc/xdg/autostart/xscreensaver.desktop
 start_once xsreensaver --no-splash
