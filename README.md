@@ -124,9 +124,9 @@ Use `xautolock`
     git clone https://github.com/kovidgoyal/kitty.git --depth 1 && cd kitty
     sudo apt install libdbus-1-dev libxcursor-dev libxrandr-dev libxi-dev libxinerama-dev libgl1-mesa-dev libxkbcommon-x11-dev libfontconfig-dev libx11-xcb-dev liblcms2-dev libssl-dev libpython3-dev libxxhash-dev libsimde-dev python3-sphinx-copybutton python3-sphinx-inline-tabs libxkbcommon-x11-dev golang python3-sphinxext-opengraph furo
     # ./dev.sh build
+    make clean
     make linux-package
-    cd linux-package
-    sudo rsync -rv . /usr/local
+    sudo rsync -rv linux-package /usr/local
 
     sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/local/bin/kitty 50
     sudo update-alternatives --config x-terminal-emulator
@@ -140,6 +140,19 @@ Use `xautolock`
 
     mkdir -p ~/.config/kitty
     cp ~/projs/xmonad.hs/.config/kitty/* ~/.config/kitty/
+
+#### nerd fonts
+
+<https://gist.github.com/matthewjberger/7dd7e079f282f8138a9dc3b045ebefa0>
+
+    pushd .
+    mkdir ~/.local/share/fonts
+    cd ~/.local/share/fonts
+    curl -o ~/Downloads/NerdFontsSymbolsOnly.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/NerdFontsSymbolsOnly.zip
+    unzip ~/Downloads/NerdFontsSymbolsOnly.zip
+    fc-cache -fv
+    rm ~/Downloads/NerdFontsSymbolsOnly.zip
+    popd
 
 ### nala
 
@@ -388,8 +401,33 @@ Multi-Platform Package Manager for Stable Diffusion.
     poetry add PyQt6 PyQt6-WebEngine dbus-python python-gettext
     chmod +x run.py
     
-    poetry run -- python3 _run/run.py
+    poetry run -- python3 run.py dev
     ln -sf $(pwd)/.local/bin/x-whatsapp ~/.local/bin/x-whatsapp
+
+    git checkout 6.0.1.8
+    poertry update
+
+##### pyproject.toml
+
+    > cat pyproject.toml 
+    [tool.poetry]
+    name = "zapzap"
+    version = "0.1.0"
+    description = ""
+    authors = ["Jan Esser <JEsser@gmx.de>"]
+    readme = "README.md"
+
+    [tool.poetry.dependencies]
+    python = "^3.12"
+    pyqt6 = "^6.8.1"
+    pyqt6-webengine = "^6.8.0"
+    dbus-python = "^1.3.2"
+    python-gettext = "^5.0"
+
+
+    [build-system]
+    requires = ["poetry-core"]
+    build-backend = "poetry.core.masonry.api"
 
 ### Tuba (Mastodon Client)
 
