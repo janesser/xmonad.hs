@@ -9,9 +9,7 @@ start_once() {
    fi
 }
 
-#  /etc/xdg/autostart/light-locker.desktop
-start_once light-locker
-start_once xautolock -time 30 -locker "systemctl suspend"
+xautolock -detectsleep -time 5 -locker "sflock -f fixed" -killtime 30 -killer "systemctl suspend" -notify 10
 
 #  /etc/xdg/autostart/xscreensaver.desktop
 start_once xsreensaver --no-splash

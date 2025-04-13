@@ -5,7 +5,7 @@ My opinionated xmonad setup. With all dependencies expanded.
 ## Essential requirements
 
     sudo apt install xmonad xmobar libghc-split-dev libghc-hostname-dev \
-        light-locker-settings haskell-gtk-sni-tray-utils xscreensaver \
+        haskell-gtk-sni-tray-utils xscreensaver \
         pcmanfm xarchiver
 
 Installation of xmonad xmonad-contrib can be superceded by git-based installation see COMPILE.md.
@@ -77,10 +77,19 @@ Check idleHint
     # probably "idleHint=no" while not idle
     # won't work see https://github.com/the-cavalry/light-locker/issues/52
 
+#### Screen & tty lock
+
+<https://github.com/benruijl/sflock>
+
+    git clone https://github.com/benruijl/sflock
+    cd sflock
+    sudo make clean install
+    sflock -f fixed
+
 Use `xautolock`
 
     sudo nala install xautolock
-    xautolock -time 1 -locker "systemctl suspend"
+    xautolock -detectsleep -time 5 -locker "sflock -f fixed" -killtime 30 -killer "systemctl suspend" -notify 10
 
 ## Candidates & Experiments
 

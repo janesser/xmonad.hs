@@ -1,12 +1,15 @@
+-- stack build --stack-yaml /home/jan/projs/xmonad.hs/.config/xmonad/stack.yaml
+
 import Control.Monad
 import Data.List (intercalate)
-import Data.List.Split
+import Data.List.Split (splitOn)
 import Data.Map (fromList)
 import Data.Semigroup (Endo)
 import Data.Time
+--import FloatingVideos
 import GHC.IO.Handle (Handle)
-import Network.HostName
-import System.Directory
+import Network.HostName (getHostName)
+import System.Directory (doesFileExist)
 import System.IO.Unsafe
 import XMonad
 import XMonad.Actions.CopyWindow
@@ -86,7 +89,7 @@ myBasicKeyMap =
   , ("M-e", spawn' "pcmanfm")
   , ("C-ö", spawn' "copyq toggle")
   , ("<Print>", spawn' "shutter -s")
-  , ("M-S-l", spawn' "light-locker-command -l")
+  , ("M-S-l", spawn' "xautolock -locknow")
   , ("<XF86MonBrightnessUp>", spawn' "brightness.sh +")
   , ("<XF86MonBrightnessDown>", spawn' "brightness.sh -")
   ,
@@ -135,6 +138,7 @@ myWindowKeys c =
       c
       [ ("M-C-ä", spawn' "killall xcompmgr; xcompmgr -cCfF")
       , ("M-C-S-ä", spawn' "killall xcompmgr")
+--      , ("M-ü", addName "sendMessage RotateVideoFloat" $ sendMessage RotateVideoFloat)
       , ("M-C-g", addName "windowPrompt goto" $ windowPrompt myWindowPromptConfig Goto allWindows)
       , ("M-C-b", addName "windowPrompt bring" $ windowPrompt myWindowPromptConfig Bring allWindows)
       , ("M-C-<Space>", addName "layoutScreens 4 Grid" $ layoutScreens 4 Grid)
@@ -221,28 +225,40 @@ myManageHook =
     , currentWs =? gamesWs -?> doSink <+> doFullFloat
     , currentWs =? privWs -?> doSink
     , -- comm
-      className =? "Signal" 
-      <||> className =? "Element" 
-      <||> className =? "WhatSie" 
-      <||> className =? "ZapZap" 
-      <||> className =? "dev.geopjr.Tuba"
-      <||> className =? "Thunderbird" 
-      <||> className =? "Evolution"
-      <||> className =? "Claws-mail" -?> doShift commWs
+      className
+        =? "Signal"
+        <||> className
+        =? "Element"
+        <||> className
+        =? "WhatSie"
+        <||> className
+        =? "ZapZap"
+        <||> className
+        =? "dev.geopjr.Tuba"
+        <||> className
+        =? "Thunderbird"
+        <||> className
+        =? "Evolution"
+        <||> className
+        =? "Claws-mail"
+        -?> doShift commWs
     , -- ide
       className =? "vscodium" -?> doShift devWs
     , -- entertain
       className =? "vlc" -?> doSideFloat C
-    , role =? "PictureInPicture" -?> doSideAndCopy
+    , role =? "PictureInPicture" -?> doF copyToAll
     , className =? "LibreWolf" -?> doShift browseWs
     , -- admin
-      className =? "easyeffects" 
-      <||> className =? "Pavucontrol" 
-      <||> className =? "KeePassXC" -?> doShift adminWs
+      className
+        =? "easyeffects"
+        <||> className
+        =? "Pavucontrol"
+        <||> className
+        =? "KeePassXC"
+        -?> doShift adminWs
     ]
  where
   role = stringProperty "WM_WINDOW_ROLE"
-  doSideAndCopy = doSideFloat SE <+> doF copyToAll
 
 myLayoutHook =
   avoidStruts $
@@ -252,8 +268,9 @@ myLayoutHook =
           onWorkspace commWs tabsL $
             onWorkspace browseWs accordion $
               onWorkspace gamesWs full $
-                screenCornerLayoutHook $
-                  smartBorders (tabsL ||| tallM ||| full ||| tall ||| accordion)
+--                floatingVideos $
+                  screenCornerLayoutHook $
+                    smartBorders (tabsL ||| tallM ||| full ||| tall ||| accordion)
  where
   full = renamed [Replace "Full"] $ noBorders Full
   tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset
