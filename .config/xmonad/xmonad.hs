@@ -3,26 +3,27 @@
 import Control.Monad
 import Data.List (intercalate)
 import Data.List.Split (splitOn)
-import Data.Map (fromList)
 import Data.Semigroup (Endo)
-import Data.Time
---import FloatingVideos
+import Data.Time (defaultTimeLocale, formatTime, getCurrentTime)
+import FloatingVideos (RotateVideoFloat (..), floatingVideos)
 import GHC.IO.Handle (Handle)
+import MouseGestures
 import Network.HostName (getHostName)
+import ScreenCornersToggled (
+  ToggleScreenCorner (..),
+  addVerticalScreenCorners,
+  screenCornerToggledEventHook,
+  screenCornerToggledLayoutHook,
+ )
 import System.Directory (doesFileExist)
 import System.IO.Unsafe
 import XMonad
 import XMonad.Actions.CopyWindow
-import XMonad.Actions.CycleWS
-import XMonad.Actions.FloatSnap
-import XMonad.Actions.MouseGestures
-import XMonad.Actions.MouseResize
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeWindows
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers
-import XMonad.Hooks.ScreenCorners
 import XMonad.Hooks.UrgencyHook
 import XMonad.Layout.Accordion
 import XMonad.Layout.Fullscreen
@@ -39,11 +40,7 @@ import XMonad.Prompt.Man
 import XMonad.Prompt.OrgMode
 import XMonad.Prompt.Window
 import XMonad.Prompt.XMonad
-import XMonad.StackSet (sink)
-import XMonad.Util.EZConfig (
-  additionalMouseBindings,
-  mkNamedKeymap,
- )
+import XMonad.Util.EZConfig (mkNamedKeymap)
 import XMonad.Util.Hacks
 import XMonad.Util.NamedActions
 import XMonad.Util.Run
@@ -56,19 +53,6 @@ orgToday = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y]" <$> getCu
 {-# NOINLINE orgNow #-}
 orgNow :: String
 orgNow = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y %H:%M:%S]" <$> getCurrentTime
-
-mouseGestureHook :: Window -> X ()
-mouseGestureHook = mouseGesture gestures
- where
-  gestures =
-    fromList
-      [ ([], focus)
-      , ([U], const prevWS)
-      , ([D], const nextWS)
-      ]
-
-mouseMoveHook :: Window -> X ()
-mouseMoveHook w = focus w >> mouseMoveWindow w >> ifClick (windows $ sink w)
 
 myWindowPromptConfig :: XPConfig
 myWindowPromptConfig =
@@ -138,7 +122,8 @@ myWindowKeys c =
       c
       [ ("M-C-ä", spawn' "killall xcompmgr; xcompmgr -cCfF")
       , ("M-C-S-ä", spawn' "killall xcompmgr")
---      , ("M-ü", addName "sendMessage RotateVideoFloat" $ sendMessage RotateVideoFloat)
+      , ("M-C-ü", addName "sendMessage RotateVideoFloat" $ sendMessage RotateVideoFloat)
+      , ("M-C-s", addName "sendMessage ToggleScreenCorner" $ sendMessage ToggleScreenCorner)
       , ("M-C-g", addName "windowPrompt goto" $ windowPrompt myWindowPromptConfig Goto allWindows)
       , ("M-C-b", addName "windowPrompt bring" $ windowPrompt myWindowPromptConfig Bring allWindows)
       , ("M-C-<Space>", addName "layoutScreens 4 Grid" $ layoutScreens 4 Grid)
@@ -203,18 +188,17 @@ myWorkspaces =
 myConfig :: XConfig (Choose Tall (Choose (Mirror Tall) Full))
 myConfig =
   myKeysConfig $
-    def
-      { modMask = mod4Mask -- left windows super
-      , focusFollowsMouse = False
-      , workspaces = myWorkspaces
-      }
-      `additionalMouseBindings` [ ((mod4Mask .|. shiftMask, button1), mouseMoveHook)
-                                , ((mod4Mask .|. shiftMask, button3), mouseGestureHook)
-                                ]
+    withMouseGestures $
+      def
+        { modMask = mod4Mask -- left windows super
+        , focusFollowsMouse = False
+        , workspaces = myWorkspaces
+        }
 
 myLogHook :: Handle -> X ()
 myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
 
+{- FOURMOLU_DISABLE -}
 myManageHook :: Query (Endo WindowSet)
 myManageHook =
   composeOne
@@ -225,52 +209,40 @@ myManageHook =
     , currentWs =? gamesWs -?> doSink <+> doFullFloat
     , currentWs =? privWs -?> doSink
     , -- comm
-      className
-        =? "Signal"
-        <||> className
-        =? "Element"
-        <||> className
-        =? "WhatSie"
-        <||> className
-        =? "ZapZap"
-        <||> className
-        =? "dev.geopjr.Tuba"
-        <||> className
-        =? "Thunderbird"
-        <||> className
-        =? "Evolution"
-        <||> className
-        =? "Claws-mail"
-        -?> doShift commWs
+      className =? "Signal"           <||>
+      className =? "Element"          <||>
+      className =? "WhatSie"          <||>
+      className =? "ZapZap"           <||>
+      className =? "dev.geopjr.Tuba"  <||>
+      className =? "Thunderbird"      <||>
+      className =? "Evolution"        <||>
+      className =? "Claws-mail" -?> doShift commWs
     , -- ide
       className =? "vscodium" -?> doShift devWs
     , -- entertain
       className =? "vlc" -?> doSideFloat C
-    , role =? "PictureInPicture" -?> doF copyToAll
+    , role =? "PictureInPicture" -?> doFloat <+> doF copyToAll
     , className =? "LibreWolf" -?> doShift browseWs
     , -- admin
-      className
-        =? "easyeffects"
-        <||> className
-        =? "Pavucontrol"
-        <||> className
-        =? "KeePassXC"
-        -?> doShift adminWs
+      className =? "easyeffects"      <||>
+      className =? "Pavucontrol"      <||>
+      className =? "KeePassXC" -?> doShift adminWs
+
     ]
  where
   role = stringProperty "WM_WINDOW_ROLE"
+{- FOURMOLU_ENABLE -}
 
 myLayoutHook =
   avoidStruts $
-    mouseResize $
-      windowArrange $
-        onWorkspace monWs tall $
-          onWorkspace commWs tabsL $
-            onWorkspace browseWs accordion $
-              onWorkspace gamesWs full $
---                floatingVideos $
-                  screenCornerLayoutHook $
-                    smartBorders (tabsL ||| tallM ||| full ||| tall ||| accordion)
+    windowArrange $
+      onWorkspace monWs tall $
+        onWorkspace commWs tabsL $
+          onWorkspace browseWs accordion $
+            onWorkspace gamesWs full $
+              floatingVideos $
+                screenCornerToggledLayoutHook $
+                  smartBorders (tabsL ||| tallM ||| full ||| tall ||| accordion)
  where
   full = renamed [Replace "Full"] $ noBorders Full
   tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset
@@ -284,6 +256,7 @@ myStartupHook = do
   -- height needs to be explicit, check ToggleStruts
   spawnOnce "gtk-sni-tray-standalone --bottom --beginning --watcher"
   spawnOnce "blueman-applet" -- requires tray activated
+  addVerticalScreenCorners
 
 myFadeHook :: FadeHook
 myFadeHook =
@@ -315,6 +288,6 @@ main = do
           manageDocks <+> myManageHook <+> fullscreenManageHook
       , layoutHook = myLayoutHook
       , startupHook = myStartupHook
-      , handleEventHook = fadeWindowsEventHook <+> fixSteamFlicker -- <+> focusOnMouseMove
+      , handleEventHook = screenCornerToggledEventHook <+> fadeWindowsEventHook <+> fixSteamFlicker -- <+> focusOnMouseMove
       , terminal = "x-terminal-emulator"
       }
