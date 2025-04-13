@@ -25,5 +25,6 @@
     "workbench.settings.applyToAllProfiles": [
       "haskell.formattingProvider"
     ],
-    "haskell.formattingProvider": "fourmolu"
+    "haskell.formattingProvider": "fourmolu",
+    "editor.renderWhitespace": "all"
 }
