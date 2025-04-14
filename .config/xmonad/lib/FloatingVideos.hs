@@ -14,19 +14,20 @@ import XMonad.Layout.LayoutModifier
 import XMonad.StackSet as W (
   Workspace (stack),
   filter,
-  integrate',
+  integrate', float,
  )
 import XMonad.Util.Rectangle (
   PointRectangle (PointRectangle),
   coordinatesToRectangle,
   pixelsToCoordinates,
  )
+import Data.Map (insert)
 
 -- very similar to XMonad.Layout.CenteredMaster
 data VideoFloatMode = SouthEast | NorthCenter deriving (Eq, Enum, Bounded, Read, Show)
 videoFloatRectangle :: VideoFloatMode -> PointRectangle Integer -> PointRectangle Integer
-videoFloatRectangle SouthEast (PointRectangle _ _ x2 y2) = PointRectangle (x2 - 200) (y2 - 200) x2 y2
-videoFloatRectangle NorthCenter (PointRectangle x1 y1 x2 _) = PointRectangle (xcenter - 100) y1 (xcenter + 100) (y1 + 200)
+videoFloatRectangle SouthEast (PointRectangle _ _ x2 y2) = PointRectangle (x2 - 400) (y2 - 400) x2 y2
+videoFloatRectangle NorthCenter (PointRectangle x1 y1 x2 _) = PointRectangle (xcenter - 200) y1 (xcenter + 200) (y1 + 400)
  where
   xcenter :: Integer
   xcenter = (x2 - x1) `div` 2
@@ -56,7 +57,10 @@ instance LayoutModifier VideoFloating Window where
         let nvWs = ss >>= W.filter (`notElem` vWs)
         wrs <- runLayout wk{W.stack = nvWs} sr
         let vWRs = catMaybes maybeVideos
-        return (fst wrs ++ vWRs, snd wrs) -- FIXME no effect ??
+        return (fst wrs ++ vWRs, snd wrs) 
+        -- FIXME won't work with Accordion
+        -- FIXME won't float
+        -- FIXME won't copyAll
    where
     placeVideos = mapM placeVideo
 
@@ -64,8 +68,11 @@ instance LayoutModifier VideoFloating Window where
     placeVideo w = do
       wRole <- runQuery (stringProperty "WM_WINDOW_ROLE") w
       if wRole == "PictureInPicture"
-        then
-          return $ Just (w, coordinatesToRectangle $ videoFloatRectangle vf (pixelsToCoordinates sr))
+        then do
+          -- TODO mimmick https://hackage.haskell.org/package/xmonad-contrib-0.18.1/docs/src/XMonad.Layout.Fullscreen.html#line-151
+          -- TODO set floating rectangle instead, since now needs `sink` to snap to preferred rect
+          let rect = coordinatesToRectangle $ videoFloatRectangle vf (pixelsToCoordinates sr)
+          return $ Just (w, rect)
         else
           return Nothing
 
