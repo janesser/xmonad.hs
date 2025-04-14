@@ -1,1 +1,1 @@
-deb [arch=i386,amd64 signed-by=/etc/apt/keyrings/dropbox.asc] http://linux.dropbox.com/ubuntu noble main
+deb [arch=amd64 signed-by=/etc/apt/keyrings/dropbox.asc] https://linux.dropboxstatic.com/ubuntu noble main
