@@ -1,0 +1,12 @@
+[Unit]
+Description=Lock the screen on resume from suspend
+Before=suspend.target sleep.target hibernate.target
+
+[Service]
+# https://man.archlinux.org/man/systemd.unit.5#SPECIFIERS
+User=%u
+Environment=XAUTHORITY /home/%u/.Xauthority
+ExecStart=/usr/local/bin/sflock -f fixed
+
+[Install]
+WantedBy=suspend.target sleep.target hibernate.target
