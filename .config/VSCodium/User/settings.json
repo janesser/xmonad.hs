@@ -1,12 +1,11 @@
 {
     "workbench.colorTheme": "Default High Contrast",
     "haskell.toolchain": {
-      "ghc": "recommended",
+      "ghc": "9.4.8",
       "hls": "recommended",
       "cabal": "recommended",
       "stack": "recommended"
     },
-    "haskell.manageHLS": "GHCup",
     "git.autofetch": true,
     "[shellscript]": {
       "editor.defaultFormatter": "foxundermoon.shell-format"
@@ -26,5 +25,6 @@
       "haskell.formattingProvider"
     ],
     "haskell.formattingProvider": "fourmolu",
-    "editor.renderWhitespace": "all"
+    "editor.renderWhitespace": "all",
+    "haskell.manageHLS": "GHCup"
 }

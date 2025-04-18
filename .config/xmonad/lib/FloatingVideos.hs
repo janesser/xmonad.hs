@@ -10,18 +10,26 @@ module FloatingVideos (
 import Data.Enum.Circular (csucc)
 import Data.Maybe (catMaybes, fromJust, isJust)
 import XMonad
+    ( fromMessage,
+      runQuery,
+      stringProperty,
+      float,
+      Window,
+      Rectangle,
+      LayoutClass(runLayout),
+      Message,
+      SomeMessage,
+      X )
 import XMonad.Layout.LayoutModifier
-import XMonad.StackSet as W (
-  Workspace (stack),
-  filter,
-  integrate', float,
- )
+    ( LayoutModifier(modifierDescription, modifyLayout, pureMess),
+      ModifiedLayout(..) )
+import XMonad.StackSet as W
+    ( Workspace(stack), filter, integrate' )
 import XMonad.Util.Rectangle (
   PointRectangle (PointRectangle),
   coordinatesToRectangle,
   pixelsToCoordinates,
  )
-import Data.Map (insert)
 
 -- very similar to XMonad.Layout.CenteredMaster
 data VideoFloatMode = SouthEast | NorthCenter deriving (Eq, Enum, Bounded, Read, Show)
@@ -72,6 +80,7 @@ instance LayoutModifier VideoFloating Window where
           -- TODO mimmick https://hackage.haskell.org/package/xmonad-contrib-0.18.1/docs/src/XMonad.Layout.Fullscreen.html#line-151
           -- TODO set floating rectangle instead, since now needs `sink` to snap to preferred rect
           let rect = coordinatesToRectangle $ videoFloatRectangle vf (pixelsToCoordinates sr)
+          _ <- float w
           return $ Just (w, rect)
         else
           return Nothing

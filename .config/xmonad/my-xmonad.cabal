@@ -70,7 +70,7 @@ executable my-xmonad
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.17.2.1, 
+    build-depends:    base ^>=4.17.2.0, 
         xmonad, xmonad-contrib,
         time, directory, hostname, split, containers, circular-enum,
         mtl

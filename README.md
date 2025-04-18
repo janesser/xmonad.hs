@@ -98,7 +98,7 @@ Use `xautolock`
 * <https://github.com/davatorium/rofi>
 * <https://hackage.haskell.org/package/xmonad-contrib-0.13/docs/XMonad-Actions-TreeSelect.html>
 * xcompmgr
-* clementine
+* clementine, streamtuner2
 * shotcut
 
 ## System utilities
@@ -266,6 +266,12 @@ Used for haskell-language-server. <https://www.haskell.org/ghcup/>
     sudo apt install build-essential curl libffi-dev libffi8ubuntu1 libgmp-dev libgmp10 libncurses-dev
     # answer Y to haskell-language-server
     curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+
+#### Troubleshooting
+
+* Check `ps axu|grep haskell-language-server`. Is that the version you are expecting ?
+* Check `stack.yaml`. Does the version fit your ghc preferences ? Available stackages here: <https://www.stackage.org/lts>
+* Check `which ghc`. Is it properly pointing to a version managed by ghcup ?
 
 ### Codium
 
