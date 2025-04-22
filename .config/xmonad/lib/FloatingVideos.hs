@@ -2,6 +2,18 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
+-- ManagementHooks apply on WindowSets of xmonad.Core
+-- ManagementHooks apply in xmonad.Main
+-- LayoutModifiers apply to runLayout before/after in xmonad.Core
+-- layoutHooks are part of xmonad.Core
+-- layoutHooks are triggered event-based
+
+-- where is the post-layout rendering ?
+-- can Workspace and WindowSet be translated into eachother ?
+--- are subsets of WindowSet supported
+
+-- https://stackoverflow.com/questions/59315118/how-can-i-modify-the-windowset-in-xmonad
+
 module FloatingVideos (
   floatingVideos,
   RotateVideoFloat (..),
@@ -10,35 +22,15 @@ module FloatingVideos (
 import Data.Enum.Circular (csucc)
 import Data.Maybe (catMaybes, fromJust, isJust)
 import XMonad
-    ( fromMessage,
-      runQuery,
-      stringProperty,
-      float,
-      Window,
-      Rectangle,
-      LayoutClass(runLayout),
-      Message,
-      SomeMessage,
-      X )
 import XMonad.Layout.LayoutModifier
-    ( LayoutModifier(modifierDescription, modifyLayout, pureMess),
-      ModifiedLayout(..) )
 import XMonad.StackSet as W
-    ( Workspace(stack), filter, integrate' )
-import XMonad.Util.Rectangle (
-  PointRectangle (PointRectangle),
-  coordinatesToRectangle,
-  pixelsToCoordinates,
- )
+-- TODO import XMonad.Actions.CopyWindow
 
 -- very similar to XMonad.Layout.CenteredMaster
 data VideoFloatMode = SouthEast | NorthCenter deriving (Eq, Enum, Bounded, Read, Show)
-videoFloatRectangle :: VideoFloatMode -> PointRectangle Integer -> PointRectangle Integer
-videoFloatRectangle SouthEast (PointRectangle _ _ x2 y2) = PointRectangle (x2 - 400) (y2 - 400) x2 y2
-videoFloatRectangle NorthCenter (PointRectangle x1 y1 x2 _) = PointRectangle (xcenter - 200) y1 (xcenter + 200) (y1 + 400)
- where
-  xcenter :: Integer
-  xcenter = (x2 - x1) `div` 2
+videoFloatRectangle :: VideoFloatMode -> RationalRect
+videoFloatRectangle SouthEast = RationalRect (1 / 2) (1 / 2) (1 / 2) (1 / 2)
+videoFloatRectangle NorthCenter = RationalRect (1 / 4) 0 (1 / 2) (1 / 2)
 
 data RotateVideoFloat = RotateVideoFloat
 instance Message RotateVideoFloat
@@ -55,21 +47,21 @@ instance LayoutModifier VideoFloating Window where
     | otherwise = Nothing
 
   modifyLayout (VideoFloating vf) wk sr = do
-    let ss = W.stack wk
-    let ws = W.integrate' ss
+    let st = W.stack wk
+    let ws = W.integrate' st
     case ws of
       [] -> runLayout wk sr
       wins -> do
         maybeVideos <- placeVideos wins
         let vWs = map (fst . fromJust) (Prelude.filter isJust maybeVideos)
-        let nvWs = ss >>= W.filter (`notElem` vWs)
+        let nvWs = st >>= W.filter (`notElem` vWs)
         wrs <- runLayout wk{W.stack = nvWs} sr
         let vWRs = catMaybes maybeVideos
-        return (fst wrs ++ vWRs, snd wrs) 
-        -- FIXME won't work with Accordion
-        -- FIXME won't float
-        -- FIXME won't copyAll
+        -- FIXME requires sink to fall into position
+        return (fst wrs ++ vWRs, snd wrs)
    where
+    rect = videoFloatRectangle vf
+
     placeVideos = mapM placeVideo
 
     placeVideo :: Window -> X (Maybe (Window, Rectangle))
@@ -77,11 +69,7 @@ instance LayoutModifier VideoFloating Window where
       wRole <- runQuery (stringProperty "WM_WINDOW_ROLE") w
       if wRole == "PictureInPicture"
         then do
-          -- TODO mimmick https://hackage.haskell.org/package/xmonad-contrib-0.18.1/docs/src/XMonad.Layout.Fullscreen.html#line-151
-          -- TODO set floating rectangle instead, since now needs `sink` to snap to preferred rect
-          let rect = coordinatesToRectangle $ videoFloatRectangle vf (pixelsToCoordinates sr)
-          _ <- float w
-          return $ Just (w, rect)
+          return $ Just (w, scaleRationalRect sr rect)
         else
           return Nothing
 
