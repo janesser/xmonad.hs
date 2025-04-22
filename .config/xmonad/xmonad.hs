@@ -45,6 +45,7 @@ import XMonad.Util.Hacks
 import XMonad.Util.NamedActions
 import XMonad.Util.Run
 import XMonad.Util.SpawnOnce
+import XMonad.Hooks.Focus
 
 {-# NOINLINE orgToday #-}
 orgToday :: String
@@ -221,17 +222,21 @@ myManageHook =
       className =? "vscodium" -?> doShift devWs
     , -- entertain
       className =? "vlc" -?> doSideFloat C
-    , role =? "PictureInPicture" -?> doFloat <+> doF copyToAll
+    , className =? "Clementine" -?> doShift leasureWs
+    -- browse
     , className =? "LibreWolf" -?> doShift browseWs
     , -- admin
       className =? "easyeffects"      <||>
       className =? "Pavucontrol"      <||>
       className =? "KeePassXC" -?> doShift adminWs
-
     ]
- where
-  role = stringProperty "WM_WINDOW_ROLE"
 {- FOURMOLU_ENABLE -}
+
+myFocusHook :: Query (Endo WindowSet)
+myFocusHook = manageFocus $ composeOne [
+  newOnCur <&&> focused (currentWs =? devWs <||> currentWs =? gamesWs) -?> keepFocus,
+  return True -?> switchFocus
+  ]
 
 myLayoutHook =
   avoidStruts $
@@ -285,7 +290,7 @@ main = do
     $ myConfig
       { logHook = myLogHook spwXMobar <+> fadeWindowsLogHook myFadeHook
       , manageHook =
-          manageDocks <+> myManageHook <+> fullscreenManageHook
+          manageDocks <+> myFocusHook <> myManageHook <+> fullscreenManageHook
       , layoutHook = myLayoutHook
       , startupHook = myStartupHook
       , handleEventHook = screenCornerToggledEventHook <+> fadeWindowsEventHook <+> fixSteamFlicker -- <+> focusOnMouseMove
