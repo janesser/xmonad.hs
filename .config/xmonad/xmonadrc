@@ -17,8 +17,8 @@ start_once xsreensaver --no-splash
 xsetroot -solid black # feh for background image
 
 start_once copyq
-# suppress movement to avoid accidental mouse-focus (no -t)
-start_once syndaemon "-i 2 -d -K"
+# actually without "-t" tapping isn't blocked
+start_once syndaemon "-i 2 -d -K -t -m 50"
 start_once dropbox start
 sleep 5 && start_once /opt/extras.ubuntu.com/my-weather-indicator/bin/my-weather-indicator &
 start_once nm-applet
