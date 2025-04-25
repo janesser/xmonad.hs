@@ -1,0 +1,15 @@
+[Unit]
+Description=sflock before suspend
+Before=sleep.target
+StopWhenUnneeded=Yes
+
+[Service]
+Type=oneshot
+RemainAfterExit=Yes
+Environment=XAUTHORITY=/home/jan/.Xauthority
+Environment=DISPLAY=:0.0
+ExecStart=xautolock -locknow
+ExecStop=
+
+[Install]
+WantedBy=sleep.target

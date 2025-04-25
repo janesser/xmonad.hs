@@ -91,6 +91,19 @@ Use `xautolock`
     sudo nala install xautolock
     xautolock -detectsleep -time 5 -locker "sflock -f fixed" -killtime 30 -killer "systemctl suspend" -notify 10
 
+Lock before suspend
+
+    sudo cp etc/systemctl/system/sflock.service /etc/systemctl/system/
+    sudo systemctl daemon-reload
+    sudo systemctl enable sflock
+    
+    # to debug 
+    env -i xautolock -locknow
+
+<https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Combined_sleep/resume_unit>
+
+<https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Specifiers>
+
 ## Candidates & Experiments
 
 * scrot
@@ -256,6 +269,19 @@ Used e.g. by thunderbird
     ls ~/.local/share/applications/*
     ls /usr/share/applications/*
     xdg-settings set default-web-browser librewolf.desktop
+
+### pCloud
+
+EU-based replacement for US-based dropbox.
+
+<https://www.pcloud.com/>
+
+    # download binary from https://www.pcloud.com/how-to-install-pcloud-drive-linux.html?download=electron-64
+    chmod +x ./pcloud
+    sudo mv ./pcloud /usr/local/bin
+    sudo apt install libfuse2t64
+    pcloud # sign into account
+    # find ~/pCloudDrive
 
 ## Developer Tools
 
