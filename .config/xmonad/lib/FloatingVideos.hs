@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- ManagementHooks apply on WindowSets of xmonad.Core
 -- ManagementHooks apply in xmonad.Main
@@ -20,11 +21,13 @@ module FloatingVideos (
 ) where
 
 import Data.Enum.Circular (csucc)
-import Data.Maybe (catMaybes, fromJust, isJust)
+import Data.Maybe (catMaybes, fromJust, fromMaybe, isJust, mapMaybe)
+import Data.Monoid
 import XMonad
+import XMonad.Actions.CopyWindow
+import XMonad.Hooks.ManageHelpers
 import XMonad.Layout.LayoutModifier
 import XMonad.StackSet as W
--- TODO import XMonad.Actions.CopyWindow
 
 -- very similar to XMonad.Layout.CenteredMaster
 data VideoFloatMode = SouthEast | NorthCenter deriving (Eq, Enum, Bounded, Read, Show)
@@ -52,6 +55,7 @@ instance LayoutModifier VideoFloating Window where
     case ws of
       [] -> runLayout wk sr
       wins -> do
+        _ <- manageVideos wins
         maybeVideos <- placeVideos wins
         let vWs = map (fst . fromJust) (Prelude.filter isJust maybeVideos)
         let nvWs = st >>= W.filter (`notElem` vWs)
@@ -62,7 +66,18 @@ instance LayoutModifier VideoFloating Window where
    where
     rect = videoFloatRectangle vf
 
+    placeVideos :: [Window] -> X [Maybe (Window, Rectangle)]
     placeVideos = mapM placeVideo
+
+    mapW l f = mapM f l
+    
+    manageVideos :: [Window] -> X [()]
+    manageVideos ws = do
+      let q = runQuery (stringProperty "WM_WINDOW_ROLE" =? "PictureInPicture" -?> doRectFloat rect <+> doF copyToAll)
+      q2 <- mapW ws q
+      let q3 = catMaybes q2
+      mapM (windows . appEndo) q3
+
 
     placeVideo :: Window -> X (Maybe (Window, Rectangle))
     placeVideo w = do
