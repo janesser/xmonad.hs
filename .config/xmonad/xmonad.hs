@@ -141,7 +141,7 @@ myJournalKeys c =
       [ ("M-o j", addName "add TODO to journal" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/journal.org")
       , ("M-o t", addName "add TODO to family todos" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/orgzly/todos.org")
       , ("M-o e", addName "add entry to tochter1" $ orgPrompt def orgToday "~/Dropbox/orgzly/tochter1.org")
-      , ("M-o S-j", spawn' "emacs ~/Dropbox/journal.org")
+      , ("M-o S-j", spawn' "emacs ~/pCloudDrive/journal.org")
       , ("M-o S-t", spawn' "emacs ~/Dropbox/orgzly/todos.org")
       , ("M-o S-e", spawn' "emacs ~/Dropbox/orgzly/tochter1.org")
       ]
@@ -205,6 +205,7 @@ myManageHook =
   composeOne
     [ isDialog -?> doCenterFloat
     , isNotification -?> doSideFloat NE
+    , className =? "Sflock" -?> doFullFloat -- FIXME is this even effective ?
     , -- games & private
       className =? "Lutris" -?> doSink <+> doShift gamesWs
     , currentWs =? gamesWs -?> doSink <+> doFullFloat
@@ -257,10 +258,12 @@ myLayoutHook =
 
 myStartupHook :: X ()
 myStartupHook = do
-  spawnOnOnce monWs "x-terminal-emulator -e btop"
   -- height needs to be explicit, check ToggleStruts
   spawnOnce "gtk-sni-tray-standalone --bottom --beginning --watcher"
   spawnOnce "blueman-applet" -- requires tray activated
+  spawnOnOnce monWs "x-terminal-emulator -e btop"
+  -- writes ~/.ssh/env
+  _ <- spawnPipe "bash ~/.config/xmonad/xmonadrc.sh" 
   addVerticalScreenCorners
 
 myFadeHook :: FadeHook
@@ -280,7 +283,6 @@ main = do
     if xmobarrcHostspecificExists
       then spawnPipe $ "xmobar " ++ xmobarrcHostspecific
       else spawnPipe "xmobar ~/.config/xmonad/xmobarrc"
-  _ <- spawnPipe "bash ~/.config/xmonad/xmonadrc" -- writes ~/.ssh/env
   xmonad
     $ docks
       . ewmhFullscreen

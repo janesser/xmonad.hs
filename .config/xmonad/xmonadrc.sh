@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 start_once() {
+   echo starting... $1
    LINK=`which $1`
    PRG=`readlink -f $LINK` # dive behind x-www-browser etc.
    ARGS=$2
@@ -9,18 +10,24 @@ start_once() {
    fi
 }
 
-xautolock -detectsleep -time 5 -locker "sflock -f fixed" -killtime 30 -killer "systemctl suspend" -notify 10
-
-#  /etc/xdg/autostart/xscreensaver.desktop
-start_once xsreensaver --no-splash
-
 xsetroot -solid black # feh for background image
 
-start_once copyq
+start_once xautolock "-detectsleep -time 5 -locker 'sflock -f fixed' -killtime 30 -killer 'systemctl suspend' -notify 10"
 # actually without "-t" tapping isn't blocked
 start_once syndaemon "-i 2 -d -K -t -m 50"
+
+## ssh-agent
+echo "# GENERATED FILE" >~/.ssh/env
+killall ssh-agent
+ssh-agent -c >>~/.ssh/env
+
+# no over-gain mic
+pactl set-source-volume @DEFAULT_SOURCE@ 20%
+
+start_once copyq
+start_once pcloud
 start_once dropbox start
-sleep 5 && start_once /opt/extras.ubuntu.com/my-weather-indicator/bin/my-weather-indicator &
+start_once /opt/extras.ubuntu.com/my-weather-indicator/bin/my-weather-indicator &
 start_once nm-applet
 
 ### COMM ###
@@ -36,18 +43,6 @@ start_once dev.geopjr.Tuba # compiled from github
 start_once keepassxc
 start_once pavucontrol
 
-## ssh-agent
-echo "# GENERATED FILE" >~/.ssh/env
-killall ssh-agent
-ssh-agent -c >>~/.ssh/env
-
 if [ -n "$(udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN)" ]; then
    start_once onboard
 fi
-
-if [ -f "$HOME/$(hostname).xkb" ]; then
-   xkbcomp "$HOME/$(hostname).xkb" $DISPLAY
-fi
-
-# no over-gain mic
-pactl set-source-volume @DEFAULT_SOURCE@ 20%
