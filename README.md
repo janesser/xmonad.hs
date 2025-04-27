@@ -200,7 +200,7 @@ Keep an eye on `grep 'Exec=' /etc/xdg/autostart/*`
     sudo cp usr/share/X11/xkb/symbols/de.chuwi_ubook_xpro /usr/share/X11/xkb/symbols/de.chuwi_ubook_xpro
     sudo cp etc/default/keyboard /etc/default/keyboard
 
-After reboot, verify
+After **reboot**, verify
 
     setxkbmap -print
         # output
@@ -214,6 +214,17 @@ After reboot, verify
 
 Good guide here:
 <https://medium.com/@damko/a-simple-humble-but-comprehensive-guide-to-xkb-for-linux-6f1ad5e13450>
+
+Chuwi specific parts
+
+    diff usr/share/X11/xkb/symbols/de.chuwi_ubook_xpro /usr/share/X11/xkb/symbols/de
+        29,30c29,30
+        <     key <AB01>        {[          y,          Y,              bar,          less ]}; // » › CHUWI MODIF
+        <     key <AB02>        {[          x,          X,    guillemotleft,          greater ]}; // « ‹ CHUWI MODIF
+        ---
+        >     key <AB01>        {[          y,          Y,   guillemotright,          U203A ]}; // » ›
+        >     key <AB02>        {[          x,          X,    guillemotleft,          U2039 ]}; // « ‹
+
 
 ### audio setup
 
