@@ -2,8 +2,8 @@
 
 start_once() {
    echo starting... $1
-   LINK=`which $1`
-   PRG=`readlink -f $LINK` # dive behind x-www-browser etc.
+   LINK=$(which $1)
+   PRG=$(readlink -f $LINK) # dive behind x-www-browser etc.
    ARGS=$2
    if [ -x $(command -v $PRG) ] && [ ! "$(pidof $PRG)" ]; then
       exec $PRG $ARGS &

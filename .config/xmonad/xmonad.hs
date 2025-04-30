@@ -237,7 +237,8 @@ myFocusHook :: Query (Endo WindowSet)
 myFocusHook =
   manageFocus $
     composeOne
-      [ newOnCur <&&> focused (currentWs =? devWs <||> currentWs =? gamesWs) -?> keepFocus
+      [ new (className =? "copyq") -?> switchFocus
+      , newOnCur <&&> focused (currentWs =? devWs <||> currentWs =? gamesWs)-?> keepFocus
       , return True -?> switchFocus
       ]
 
