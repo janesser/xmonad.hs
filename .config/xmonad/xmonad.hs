@@ -1,14 +1,15 @@
 -- stack build --stack-yaml /home/jan/projs/xmonad.hs/.config/xmonad/stack.yaml
 
+{-# LANGUAGE ScopedTypeVariables #-}
+
 import Control.Monad
 import Data.List (intercalate)
 import Data.List.Split (splitOn)
 import Data.Semigroup (Endo)
 import Data.Time (defaultTimeLocale, formatTime, getCurrentTime)
 import FloatingVideos (RotateVideoFloat (..), floatingVideos)
-import GHC.IO.Handle (Handle)
 import MouseGestures
-import Network.HostName (getHostName)
+import Network.HostName
 import ScreenCornersToggled (
   ToggleScreenCorner (..),
   addVerticalScreenCorners,
@@ -19,11 +20,13 @@ import System.Directory (doesFileExist)
 import System.IO.Unsafe
 import XMonad
 import XMonad.Actions.CopyWindow
-import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.FadeWindows
+import XMonad.Hooks.Focus
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.ManageHelpers
+import XMonad.Hooks.StatusBar
+import XMonad.Hooks.StatusBar.PP
 import XMonad.Hooks.UrgencyHook
 import XMonad.Layout.Accordion
 import XMonad.Layout.Fullscreen
@@ -40,12 +43,12 @@ import XMonad.Prompt.Man
 import XMonad.Prompt.OrgMode
 import XMonad.Prompt.Window
 import XMonad.Prompt.XMonad
+import XMonad.Util.ClickableWorkspaces
 import XMonad.Util.EZConfig (mkNamedKeymap)
 import XMonad.Util.Hacks
 import XMonad.Util.NamedActions
 import XMonad.Util.Run
 import XMonad.Util.SpawnOnce
-import XMonad.Hooks.Focus
 
 {-# NOINLINE orgToday #-}
 orgToday :: String
@@ -196,9 +199,6 @@ myConfig =
         , workspaces = myWorkspaces
         }
 
-myLogHook :: Handle -> X ()
-myLogHook spw = dynamicLogWithPP xmobarPP{ppOutput = hPutStrLn spw}
-
 {- FOURMOLU_DISABLE -}
 myManageHook :: Query (Endo WindowSet)
 myManageHook =
@@ -234,10 +234,12 @@ myManageHook =
 {- FOURMOLU_ENABLE -}
 
 myFocusHook :: Query (Endo WindowSet)
-myFocusHook = manageFocus $ composeOne [
-  newOnCur <&&> focused (currentWs =? devWs <||> currentWs =? gamesWs) -?> keepFocus,
-  return True -?> switchFocus
-  ]
+myFocusHook =
+  manageFocus $
+    composeOne
+      [ newOnCur <&&> focused (currentWs =? devWs <||> currentWs =? gamesWs) -?> keepFocus
+      , return True -?> switchFocus
+      ]
 
 myLayoutHook =
   avoidStruts $
@@ -263,7 +265,7 @@ myStartupHook = do
   spawnOnce "blueman-applet" -- requires tray activated
   spawnOnOnce monWs "x-terminal-emulator -e btop"
   -- writes ~/.ssh/env
-  _ <- spawnPipe "bash ~/.config/xmonad/xmonadrc.sh" 
+  _ <- spawnPipe "bash ~/.config/xmonad/xmonadrc.sh"
   addVerticalScreenCorners
 
 myFadeHook :: FadeHook
@@ -275,22 +277,33 @@ myFadeHook =
     , className =? "vlc" --> opaque
     ]
 
+myStatusBar :: StatusBarConfig
+{-# NOINLINE myStatusBar #-}
+myStatusBar = do
+  statusBarProp determineStartUp (clickablePP xmobarPP)
+ where
+  determineStartUp :: String
+  determineStartUp = do
+    let xmobarrcHostspecificExists = unsafePerformIO $ doesFileExist xmobarrcHostspecific
+    "xmobar "
+      ++ if xmobarrcHostspecificExists
+        then xmobarrcHostspecific
+        else xmobarrcDefault
+  hostname = unsafePerformIO getHostName
+  xmobarrcDefault = "~/.config/xmonad/xmobarrc"
+  xmobarrcHostspecific = "~/.config/xmonad/xmobarrc." ++ hostname
+
 main :: IO ()
 main = do
-  xmobarrcHostspecific <- ("~/.config/xmonad/xmobarrc." ++) <$> getHostName
-  xmobarrcHostspecificExists <- doesFileExist xmobarrcHostspecific
-  spwXMobar <-
-    if xmobarrcHostspecificExists
-      then spawnPipe $ "xmobar " ++ xmobarrcHostspecific
-      else spawnPipe "xmobar ~/.config/xmonad/xmobarrc"
   xmonad
-    $ docks
-      . ewmhFullscreen
-      . ewmh
-      . withUrgencyHook NoUrgencyHook
-      . javaHack
+    . withSB myStatusBar
+    . docks
+    . ewmhFullscreen
+    . ewmh
+    . withUrgencyHook NoUrgencyHook
+    . javaHack
     $ myConfig
-      { logHook = myLogHook spwXMobar <+> fadeWindowsLogHook myFadeHook
+      { logHook = fadeWindowsLogHook myFadeHook
       , manageHook =
           manageDocks <+> myFocusHook <> myManageHook <+> fullscreenManageHook
       , layoutHook = myLayoutHook

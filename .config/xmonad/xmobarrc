@@ -7,7 +7,8 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
   , persistent = True
   , position = Top
   , lowerOnStart = True
-  , commands = [ Run MultiCpu ["-t", "<total>%"] 20
+  , commands = [ Run UnsafeXMonadLog
+               , Run MultiCpu ["-t", "<total>%"] 20
                , Run ThermalZone 0 ["-t", "<temp>°C"] 20
                , Run Battery [ "-t", "<acstatus>"
                , "--"
@@ -27,5 +28,5 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
                ]
   , sepChar = "%"
   , alignSep = "}{"
-  , template = " %StdinReader% } %date% { CPU: %multicpu% | TMP: %thermal0% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
+  , template = " %UnsafeXMonadLog% } %date% { CPU: %multicpu% | TMP: %thermal0% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
 }
