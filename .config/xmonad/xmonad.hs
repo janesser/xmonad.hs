@@ -50,14 +50,6 @@ import XMonad.Util.NamedActions
 import XMonad.Util.Run
 import XMonad.Util.SpawnOnce
 
-{-# NOINLINE orgToday #-}
-orgToday :: String
-orgToday = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y]" <$> getCurrentTime
-
-{-# NOINLINE orgNow #-}
-orgNow :: String
-orgNow = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y %H:%M:%S]" <$> getCurrentTime
-
 myWindowPromptConfig :: XPConfig
 myWindowPromptConfig =
   def
@@ -136,17 +128,25 @@ myWindowKeys c =
       , ("M-C-S-a", addName "kill all other window copies" killAllOtherCopies)
       ]
 
+{-# NOINLINE orgToday #-}
+orgToday :: String
+orgToday = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y]" <$> getCurrentTime
+
+{-# NOINLINE orgNow #-}
+orgNow :: String
+orgNow = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y %H:%M:%S]" <$> getCurrentTime
+
 myJournalKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
 myJournalKeys c =
   subtitle "My Keys"
     : mkNamedKeymap
       c
-      [ ("M-o j", addName "add TODO to journal" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/journal.org")
-      , ("M-o t", addName "add TODO to family todos" $ orgPrompt def ("TODO " ++ orgNow) "~/Dropbox/orgzly/todos.org")
-      , ("M-o e", addName "add entry to tochter1" $ orgPrompt def orgToday "~/Dropbox/orgzly/tochter1.org")
+      [ ("M-o j", addName "add TODO to journal" $ orgPrompt def ("TODO " ++ orgNow) "~/pCloudDrive/journal.org")
+      , ("M-o t", addName "add TODO to family todos" $ orgPrompt def ("TODO " ++ orgNow) "~/pCloudDrive/orgzly/todos.org")
+      , ("M-o e", addName "add entry to tochter1" $ orgPrompt def orgToday "~/pCloudDrive/orgzly/tochter1.org")
       , ("M-o S-j", spawn' "emacs ~/pCloudDrive/journal.org")
-      , ("M-o S-t", spawn' "emacs ~/Dropbox/orgzly/todos.org")
-      , ("M-o S-e", spawn' "emacs ~/Dropbox/orgzly/tochter1.org")
+      , ("M-o S-t", spawn' "emacs ~/pCloudDrive/orgzly/todos.org")
+      , ("M-o S-e", spawn' "emacs ~/pCloudDrive/orgzly/tochter1.org")
       ]
 
 monWs :: String

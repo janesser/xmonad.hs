@@ -26,7 +26,8 @@ pactl set-source-volume @DEFAULT_SOURCE@ 20%
 
 start_once copyq
 start_once pcloud
-start_once dropbox start
+# account deleted 2025-05-01
+# start_once dropbox start
 start_once /opt/extras.ubuntu.com/my-weather-indicator/bin/my-weather-indicator &
 start_once nm-applet
 

@@ -20,9 +20,9 @@ module FloatingVideos (
   RotateVideoFloat (..),
 ) where
 
-import Data.Enum.Circular (csucc)
-import Data.Maybe (catMaybes, fromJust, fromMaybe, isJust, mapMaybe)
-import Data.Monoid
+import Control.Monad (filterM)
+import Data.Enum.Circular
+import Data.Monoid (Endo (appEndo))
 import XMonad
 import XMonad.Actions.CopyWindow
 import XMonad.Hooks.ManageHelpers
@@ -49,44 +49,29 @@ instance LayoutModifier VideoFloating Window where
     | Just RotateVideoFloat <- fromMessage m = Just $ VideoFloating $ csucc vf
     | otherwise = Nothing
 
+  -- https://hackage.haskell.org/package/xmonad-contrib-0.18.1/docs/src/XMonad.Layout.Fullscreen.html
   modifyLayout (VideoFloating vf) wk sr = do
     let st = W.stack wk
     let ws = W.integrate' st
-    case ws of
-      [] -> runLayout wk sr
-      wins -> do
-        _ <- manageVideos wins
-        maybeVideos <- placeVideos wins
-        let vWs = map (fst . fromJust) (Prelude.filter isJust maybeVideos)
-        let nvWs = st >>= W.filter (`notElem` vWs)
-        wrs <- runLayout wk{W.stack = nvWs} sr
-        let vWRs = catMaybes maybeVideos
-        -- FIXME requires sink to fall into position
-        return (fst wrs ++ vWRs, snd wrs)
+    vws <- videoWindowsF ws
+    --q <- mapW vws $ runQuery videoHook
+    --let e = fmap appEndo q
+    --mapM_ windows e -- FIXME no effect, runs runLayout inside
+    (wrs, _) <- runLayout wk{W.stack = st >>= W.filter (`notElem` vws)} sr
+    return (wrs, Nothing)
    where
     rect = videoFloatRectangle vf
 
-    placeVideos :: [Window] -> X [Maybe (Window, Rectangle)]
-    placeVideos = mapM placeVideo
+    videoHook :: ManageHook
+    videoHook = doRectFloat rect <+> doF copyToAll
+    videoWindowsF :: [Window] -> X [Window]
+    videoWindowsF = filterM isVideoX
+    isVideoX :: Window -> X Bool
+    isVideoX w = do
+      role <- runQuery (stringProperty "WM_WINDOW_ROLE") w
+      return $ role == "PictureInPicture"
 
     mapW l f = mapM f l
-    
-    manageVideos :: [Window] -> X [()]
-    manageVideos ws = do
-      let q = runQuery (stringProperty "WM_WINDOW_ROLE" =? "PictureInPicture" -?> doRectFloat rect <+> doF copyToAll)
-      q2 <- mapW ws q
-      let q3 = catMaybes q2
-      mapM (windows . appEndo) q3
-
-
-    placeVideo :: Window -> X (Maybe (Window, Rectangle))
-    placeVideo w = do
-      wRole <- runQuery (stringProperty "WM_WINDOW_ROLE") w
-      if wRole == "PictureInPicture"
-        then do
-          return $ Just (w, scaleRationalRect sr rect)
-        else
-          return Nothing
 
 floatingVideos :: l a -> ModifiedLayout VideoFloating l a
 floatingVideos = ModifiedLayout $ VideoFloating SouthEast
