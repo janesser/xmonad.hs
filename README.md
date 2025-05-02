@@ -93,7 +93,7 @@ Use `xautolock`
 
 Lock before suspend
 
-    sudo cp etc/systemctl/system/sflock.service /etc/systemctl/system/
+    sudo cp etc/systemd/system/sflock.service /etc/systemd/system/
     sudo systemctl daemon-reload
     sudo systemctl enable sflock
     
