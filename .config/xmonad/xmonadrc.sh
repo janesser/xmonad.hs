@@ -4,7 +4,7 @@ start_once() {
    echo starting... $1
    LINK=$(which $1)
    PRG=$(readlink -f $LINK) # dive behind x-www-browser etc.
-   ARGS=$2
+   ARGS="${*:2}"
    if [ -x $(command -v $PRG) ] && [ ! "$(pidof $PRG)" ]; then
       exec $PRG $ARGS &
    fi
@@ -12,7 +12,9 @@ start_once() {
 
 xsetroot -solid black # feh for background image
 
-start_once xautolock "-detectsleep -time 5 -locker 'sflock -f fixed' -killtime 30 -killer 'systemctl suspend' -notify 10"
+xautolock -exit
+xautolock -time 5 -locker 'sflock -f fixed' -killtime 30 -killer 'systemctl suspend' -notify 10 -detectsleep &
+
 # actually without "-t" tapping isn't blocked
 start_once syndaemon "-i 2 -d -K -t -m 50"
 
