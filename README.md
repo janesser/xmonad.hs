@@ -45,11 +45,12 @@ More recommended less mandatory
         dex \
         dict
 
-### Extend PATH variable
+## Dotfiles via chezmoi
 
-For e.g. dmenu and others.
-
-    ln -s ~/projs/xmonad.hs/.profile ~/.profile
+    chezmoi init https://github.com/janesser/dotfiles.git
+    # once ssh is in place
+    ## git@github.com:janesser/dotfiles.git
+    chezmoi apply
 
 ### apt sources.list.d
 
@@ -113,6 +114,7 @@ Lock before suspend
 * xcompmgr
 * clementine, streamtuner2
 * shotcut
+* picom
 
 ## System utilities
 

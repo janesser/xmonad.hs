@@ -24,7 +24,7 @@ import XMonad.Prelude (All (..))
 screenCornerToggle :: IORef Bool
 screenCornerToggle = unsafePerformIO $ newIORef False
 
-data ToggleScreenCorner = ToggleScreenCorner
+data ToggleScreenCorner = ToggleScreenCorner deriving (Show)
 instance Message ToggleScreenCorner
 
 data ScreenCornerToggledLayout a = ScreenCornerToggledLayout deriving (Show, Read)

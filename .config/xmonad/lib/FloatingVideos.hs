@@ -18,60 +18,87 @@
 module FloatingVideos (
   floatingVideos,
   RotateVideoFloat (..),
+  ToggleSizeVideoFloat (..),
 ) where
 
-import Control.Monad (filterM)
+import Control.Monad
 import Data.Enum.Circular
-import Data.Monoid (Endo (appEndo))
+import Data.Map as M
 import XMonad
-import XMonad.Actions.CopyWindow
-import XMonad.Hooks.ManageHelpers
 import XMonad.Layout.LayoutModifier
 import XMonad.StackSet as W
+import Data.Maybe
 
 -- very similar to XMonad.Layout.CenteredMaster
 data VideoFloatMode = SouthEast | NorthCenter deriving (Eq, Enum, Bounded, Read, Show)
-videoFloatRectangle :: VideoFloatMode -> RationalRect
-videoFloatRectangle SouthEast = RationalRect (1 / 2) (1 / 2) (1 / 2) (1 / 2)
-videoFloatRectangle NorthCenter = RationalRect (1 / 4) 0 (1 / 2) (1 / 2)
 
-data RotateVideoFloat = RotateVideoFloat
+videoFloatRectangle :: Rational -> VideoFloatMode -> RationalRect
+videoFloatRectangle r SouthEast = RationalRect (1 - r) (1 - r) r r
+videoFloatRectangle r NorthCenter = RationalRect ((1 - r) / 2) 0 r r
+
+data RotateVideoFloat = RotateVideoFloat deriving (Show)
 instance Message RotateVideoFloat
+data ToggleSizeVideoFloat = ToggleSizeVideoFloat deriving (Show)
+instance Message ToggleSizeVideoFloat
 
-newtype VideoFloating a = VideoFloating VideoFloatMode deriving (Read, Show)
+data VideoFloating a = VideoFloating Rational VideoFloatMode deriving (Read, Show)
 
 instance LayoutModifier VideoFloating Window where
   modifierDescription :: VideoFloating Window -> String
-  modifierDescription (VideoFloating vf) = show vf -- FIXME applies only on certain workspaces
+  modifierDescription (VideoFloating _ vf) = show vf -- FIXME applies only on certain workspaces
 
-  pureMess :: VideoFloating Window -> SomeMessage -> Maybe (VideoFloating Window)
-  pureMess (VideoFloating vf) m
-    | Just RotateVideoFloat <- fromMessage m = Just $ VideoFloating $ csucc vf
+  pureMess (VideoFloating r vf) m
+    | Just RotateVideoFloat <- fromMessage m = Just $ VideoFloating r $ csucc vf
+    | Just ToggleSizeVideoFloat <- fromMessage m = Just $ VideoFloating (if r == (1 / 2) then 1 / 4 else 1 / 2) vf
     | otherwise = Nothing
 
   -- https://hackage.haskell.org/package/xmonad-contrib-0.18.1/docs/src/XMonad.Layout.Fullscreen.html
-  modifyLayout (VideoFloating vf) wk sr = do
-    let st = W.stack wk
-    let ws = W.integrate' st
-    vws <- videoWindowsF ws
-    --q <- mapW vws $ runQuery videoHook
-    --let e = fmap appEndo q
-    --mapM_ windows e -- FIXME no effect, runs runLayout inside
-    (wrs, _) <- runLayout wk{W.stack = st >>= W.filter (`notElem` vws)} sr
-    return (wrs, Nothing)
+  -- \| given any situation
+  --- split normal windows and forward to underlying `runLayout`
+  --- put video windows to floating layer
+  modifyLayout (VideoFloating r vf) wk sr = do
+    -- st <- get
+    -- let ws = windowset st
+    -- flt = W.floating ws
+    -- flt' <- videoWindowsR
+    vws <- videoWindowsW
+    --mapM_ placeVideo vws
+    -- put st{windowset = ws{W.floating = M.union flt flt'}}
+    layoutNonVideos vws
    where
-    rect = videoFloatRectangle vf
+    rect = videoFloatRectangle r vf
 
-    videoHook :: ManageHook
-    videoHook = doRectFloat rect <+> doF copyToAll
+    placeVideo w = do return ()
+      --windows $ W.float w rect
+
+    layoutNonVideos vws = do
+      --let st = W.stack wk
+      --if isJust st
+      --  then runLayout wk{W.stack = W.filter (`notElem` vws) (fromJust st)} sr
+      --  else 
+      runLayout wk sr
+
+    videoWindowsR :: X (Map Window RationalRect)
+    videoWindowsR = do
+      vws <- videoWindowsW
+      let wrs = zip vws (repeat rect)
+      return $ M.fromList wrs
+
+    videoWindowsW :: X [Window]
+    videoWindowsW = do
+      let tiled_wins = W.integrate' . W.stack $ wk
+      
+      sts <- get
+      let floating_wins = M.keys . W.floating . windowset $ sts
+      videoWindowsF (tiled_wins ++ floating_wins)
+
     videoWindowsF :: [Window] -> X [Window]
     videoWindowsF = filterM isVideoX
+
     isVideoX :: Window -> X Bool
     isVideoX w = do
       role <- runQuery (stringProperty "WM_WINDOW_ROLE") w
       return $ role == "PictureInPicture"
 
-    mapW l f = mapM f l
-
 floatingVideos :: l a -> ModifiedLayout VideoFloating l a
-floatingVideos = ModifiedLayout $ VideoFloating SouthEast
+floatingVideos = ModifiedLayout $ VideoFloating (1 / 4) SouthEast

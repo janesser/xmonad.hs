@@ -6,8 +6,11 @@ import Control.Monad
 import Data.List (intercalate)
 import Data.List.Split (splitOn)
 import Data.Semigroup (Endo)
-import Data.Time (defaultTimeLocale, formatTime, getCurrentTime)
-import FloatingVideos (RotateVideoFloat (..), floatingVideos)
+import FloatingVideos (
+  RotateVideoFloat (RotateVideoFloat),
+  ToggleSizeVideoFloat (ToggleSizeVideoFloat),
+  floatingVideos,
+ )
 import MouseGestures
 import Network.HostName
 import ScreenCornersToggled (
@@ -40,14 +43,12 @@ import XMonad.Layout.WindowArranger
 import XMonad.Prompt
 import XMonad.Prompt.FuzzyMatch
 import XMonad.Prompt.Man
-import XMonad.Prompt.OrgMode
 import XMonad.Prompt.Window
 import XMonad.Prompt.XMonad
 import XMonad.Util.ClickableWorkspaces
 import XMonad.Util.EZConfig (mkNamedKeymap)
 import XMonad.Util.Hacks
 import XMonad.Util.NamedActions
-import XMonad.Util.Run
 import XMonad.Util.SpawnOnce
 
 myWindowPromptConfig :: XPConfig
@@ -116,10 +117,11 @@ myWindowKeys c =
   subtitle "My Window Keys"
     : mkNamedKeymap
       c
-      [ ("M-C-ä", spawn' "killall xcompmgr; xcompmgr -cCfF")
-      , ("M-C-S-ä", spawn' "killall xcompmgr")
-      , ("M-C-ü", addName "sendMessage RotateVideoFloat" $ sendMessage RotateVideoFloat)
-      , ("M-C-s", addName "sendMessage ToggleScreenCorner" $ sendMessage ToggleScreenCorner)
+      [ ("M-C-ä", spawn' compositorRestart)
+      , ("M-C-S-ä", spawn' compositorStop)
+      , ("M-C-ü", sendMessage' RotateVideoFloat)
+      , ("M-C-S-ü", sendMessage' ToggleSizeVideoFloat)
+      , ("M-C-s", sendMessage' ToggleScreenCorner)
       , ("M-C-g", addName "windowPrompt goto" $ windowPrompt myWindowPromptConfig Goto allWindows)
       , ("M-C-b", addName "windowPrompt bring" $ windowPrompt myWindowPromptConfig Bring allWindows)
       , ("M-C-<Space>", addName "layoutScreens 4 Grid" $ layoutScreens 4 Grid)
@@ -127,26 +129,19 @@ myWindowKeys c =
       , ("M-C-a", addName "copy window to all workspaces" $ windows copyToAll)
       , ("M-C-S-a", addName "kill all other window copies" killAllOtherCopies)
       ]
-
-{-# NOINLINE orgToday #-}
-orgToday :: String
-orgToday = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y]" <$> getCurrentTime
-
-{-# NOINLINE orgNow #-}
-orgNow :: String
-orgNow = unsafePerformIO $ formatTime defaultTimeLocale "[%d.%m.%Y %H:%M:%S]" <$> getCurrentTime
+ where
+  compositorRestart = compositorStop ++ " ; xcompmgr -cCfF"
+  compositorStop = "killall xcompmgr"
 
 myJournalKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
 myJournalKeys c =
   subtitle "My Keys"
     : mkNamedKeymap
       c
-      [ ("M-o j", addName "add TODO to journal" $ orgPrompt def ("TODO " ++ orgNow) "~/pCloudDrive/journal.org")
-      , ("M-o t", addName "add TODO to family todos" $ orgPrompt def ("TODO " ++ orgNow) "~/pCloudDrive/orgzly/todos.org")
-      , ("M-o e", addName "add entry to tochter1" $ orgPrompt def orgToday "~/pCloudDrive/orgzly/tochter1.org")
-      , ("M-o S-j", spawn' "emacs ~/pCloudDrive/journal.org")
+      [ ("M-o S-j", spawn' "emacs ~/pCloudDrive/journal.org")
       , ("M-o S-t", spawn' "emacs ~/pCloudDrive/orgzly/todos.org")
       , ("M-o S-e", spawn' "emacs ~/pCloudDrive/orgzly/tochter1.org")
+      , ("M-o S-a", spawn' "emacs ~/pCloudDrive/orgzly/tochter2.org")
       ]
 
 monWs :: String
@@ -238,7 +233,7 @@ myFocusHook =
   manageFocus $
     composeOne
       [ new (className =? "copyq") -?> switchFocus
-      , newOnCur <&&> focused (currentWs =? devWs <||> currentWs =? gamesWs)-?> keepFocus
+      , newOnCur <&&> focused (currentWs =? devWs <||> currentWs =? gamesWs) -?> keepFocus
       , return True -?> switchFocus
       ]
 
@@ -266,7 +261,7 @@ myStartupHook = do
   spawnOnce "blueman-applet" -- requires tray activated
   spawnOnOnce monWs "x-terminal-emulator -e btop"
   -- writes ~/.ssh/env
-  _ <- spawnPipe "bash ~/.config/xmonad/xmonadrc.sh"
+  spawnOnce "bash ~/.config/xmonad/xmonadrc.sh"
   addVerticalScreenCorners
 
 myFadeHook :: FadeHook
