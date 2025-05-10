@@ -1,0 +1,11 @@
+#!/bin/bash
+
+source /etc/bash.bashrc
+
+setenv () {
+  export $1=$2
+}
+
+if [ -f "~/.ssh/env" ]; then
+  source ~/.ssh/env
+fi

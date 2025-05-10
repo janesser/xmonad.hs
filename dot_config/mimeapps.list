@@ -1,0 +1,21 @@
+[Added Associations]
+application/pdf=xpdf.desktop;
+image/jpeg=org.xfce.ristretto.desktop;
+image/png=org.xfce.ristretto.desktop;
+inode/directory=pcmanfm.desktop;
+application/octet-stream=org.xfce.mousepad.desktop;
+application/zip=engrampa.desktop;
+video/quicktime=vlc.desktop;
+application/x-executable=engrampa.desktop;
+
+[Default Applications]
+application/pdf=xpdf.desktop
+image/jpeg=org.xfce.ristretto.desktop
+image/png=org.xfce.ristretto.desktop
+inode/directory=pcmanfm.desktop
+x-scheme-handler/discord-389176180877688832=discord-389176180877688832.desktop
+application/zip=engrampa.desktop
+video/quicktime=vlc.desktop
+x-scheme-handler/discord-402083033324322816=discord-402083033324322816.desktop
+x-scheme-handler/discord-647066573147996161=discord-647066573147996161.desktop
+x-scheme-handler/stabilitymatrix=stabilitymatrix.desktop

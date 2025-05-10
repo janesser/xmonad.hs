@@ -1,0 +1,18 @@
+resolver:
+  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/25.yaml
+
+packages:
+  - xmonad
+  - xmonad-contrib
+  - "."
+
+extra-deps:
+  - hostname-1.0
+  - split-0.2.5
+  - containers-0.6.8
+  - circular-enum-0.1.0.0
+  - mtl-2.3.1
+
+system-ghc: true
+
+notify-if-nix-on-path: false
