@@ -1,0 +1,10 @@
+#!/bin/bash
+
+## https://serverfault.com/questions/72476/clean-way-to-write-complex-multi-line-string-to-a-variable
+CODIUM_EXTENSIONS="{{- .codium_extensions | join " " }}"
+
+echo extensions: $CODIUM_EXTENSIONS
+for EXT in $CODIUM_EXTENSIONS; do
+    echo "Installing $EXT"
+    codium --install-extension $EXT
+done

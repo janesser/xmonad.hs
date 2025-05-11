@@ -60,6 +60,8 @@ Ubuntu Mantic 23 with some additional repositories
     sudo rsync -nrv --del etc/apt/keyrings/ /etc/apt/keyrings/
     # remove "n" for dry-run once assured
 
+`run_once_0_apt_sources.sh`
+
 ### power button behaviour
 
 Check systemd-logind
@@ -124,46 +126,13 @@ Lock before suspend
 
 #### fish
 
-    sudo apt install fish
-    chsh -s $(which fish)
-    ln -sf ~/projs/xmonad.hs/.config/fish/conf.d/ssh-env.fish ~/.config/fish/conf.d/ssh-env.fish
-    fish_config theme choose Tomorrow
-    fish_config theme save
+`run_once_1_fish_0_install.sh`
 
 #### zutty
 
 <https://tomscii.sig7.se/2020/12/A-totally-biased-comparison-of-Zutty>
 
-    sudo apt install zutty
-    sudo update-alternatives --config x-terminal-emulator
-
-#### kitty
-
-    # get required fonts -- https://askubuntu.com/questions/3697/how-do-i-install-fonts
-    sudo mkdir -p /usr/local/share/fonts
-    cd /usr/local/share/fonts && sudo curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf
-
-    # latest version of kitty
-    mkdir -p ~/projs; cd ~/projs
-    git clone https://github.com/kovidgoyal/kitty.git --depth 1 && cd kitty
-    sudo apt install libdbus-1-dev libxcursor-dev libxrandr-dev libxi-dev libxinerama-dev libgl1-mesa-dev libxkbcommon-x11-dev libfontconfig-dev libx11-xcb-dev liblcms2-dev libssl-dev libpython3-dev libxxhash-dev libsimde-dev python3-sphinx-copybutton python3-sphinx-inline-tabs libxkbcommon-x11-dev golang python3-sphinxext-opengraph furo
-    # ./dev.sh build
-    make clean
-    make linux-package
-    sudo rsync -rv linux-package /usr/local
-
-    sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/local/bin/kitty 50
-    sudo update-alternatives --config x-terminal-emulator
-
-    # integrate kitten with fish
-    cd ~
-    ln -s /usr/local/lib/kitty/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish .config/fish/conf.d/kitty-shell-integration.fish
-    ln -s /usr/local/lib/kitty/shell-integration/fish/vendor_completions.d/clone-in-kitty.fish .config/fish/completions/clone-in-kitty.fish
-    ln -s /usr/local/lib/kitty/shell-integration/fish/vendor_completions.d/kitten.fish .config/fish/completions/kitten.fish
-    ln -s /usr/local/lib/kitty/shell-integration/fish/vendor_completions.d/kitty.fish .config/fish/completions/kitty.fish
-
-    mkdir -p ~/.config/kitty
-    cp ~/projs/xmonad.hs/.config/kitty/* ~/.config/kitty/
+`run_once_0_zutty_0install.sh`
 
 #### nerd fonts
 
@@ -180,9 +149,7 @@ Lock before suspend
 
 ### nala
 
-    sudo apt install nala
-    sudo nala fetch # pick wisely
-    nala --install-completion=fish --show-completion=fish
+`run_once_2_nala_install.sh`
 
 ### mimeapps
 
@@ -226,7 +193,6 @@ Chuwi specific parts
         ---
         >     key <AB01>        {[          y,          Y,   guillemotright,          U203A ]}; // » ›
         >     key <AB02>        {[          x,          X,    guillemotleft,          U2039 ]}; // « ‹
-
 
 ### audio setup
 

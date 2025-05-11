@@ -2,6 +2,8 @@
 
 source /etc/bash.bashrc
 
+alias cz=chezmoi
+
 setenv () {
   export $1=$2
 }

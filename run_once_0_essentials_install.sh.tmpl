@@ -1,0 +1,33 @@
+#!/bin/bash
+sudo apt install \
+    xmonad xmobar libghc-split-dev libghc-hostname-dev \
+    haskell-gtk-sni-tray-utils xscreensaver \
+    pcmanfm xarchiver
+
+{{if .is_install_recommended}}
+sudo apt install shutter \
+        copyq \
+        x11-xserver-utils \
+        network-manager-gnome \
+        org-mode emacs-gtk \
+        onboard \
+        easyeffects \
+        pipewire-audio \
+        hw-probe \
+        etckeeper \
+        xpdf \
+        btop rocm-smi \
+        clamtk \
+        system-config-printer
+{{end}}
+
+{{if .is_install_extras}}
+sudo apt install \
+    podman-compose \
+    texworks texlive-humanities \
+    pandoc \
+    multimedia-graphics \
+    geeqie \
+    dex \
+    dict
+{{end}}

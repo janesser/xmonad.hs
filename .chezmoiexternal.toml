@@ -1,0 +1,15 @@
+[".config/xmonad/xmonad"]
+type = "git-repo"
+url = "https://github.com/xmonad/xmonad.git"
+refreshPeriod = "168h"
+
+[".config/xmonad/xmonad".clone]
+args = ["-b", "master", "--single-branch"]
+
+[".config/xmonad/xmonad-contrib"]
+type = "git-repo"
+url = "https://github.com/xmonad/xmonad-contrib.git"
+refreshPeriod = "168h"
+
+[".config/xmonad/xmonad-contrib".clone]
+args = ["-b", "master", "--single-branch"]

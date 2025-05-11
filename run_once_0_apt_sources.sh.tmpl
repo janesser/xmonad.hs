@@ -1,0 +1,9 @@
+#!/bin/bash
+
+pushd .
+cd {{ .chezmoi.sourceDir }}
+sudo cp ./etc/apt/keyrings/* /etc/apt/keyrings/
+sudo cp ./etc/apt/sources.list.d/* /etc/apt/sources.list.d/
+
+sudo apt install extrepo
+popd
