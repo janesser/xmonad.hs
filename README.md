@@ -213,11 +213,7 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
 
 <https://github.com/atareao/my-weather-indicator/blob/main/bin/my-weather-indicator>
 
-    sudo add-apt-repository ppa:atareao/atareao
-    sudo apt install my-weather-indicator
-
-    rm -fR ~/.config/my-weather-indicator
-    ln -sf ~/projs/xmonad.hs/.config/my-weather-indicator ~/.config/my-weather-indicator
+`run_once_2_my-weather-indicator_install.sh`
 
 ## Office applications
 
@@ -257,7 +253,7 @@ EU-based replacement for US-based dropbox.
 
     # download binary from https://www.pcloud.com/how-to-install-pcloud-drive-linux.html?download=electron-64
     chmod +x ./pcloud
-    sudo mv ./pcloud /usr/local/bin
+    sudo mv ./pcloud ~/.local/bin
     sudo apt install libfuse2t64
     pcloud # sign into account
     # find ~/pCloudDrive
@@ -267,6 +263,8 @@ EU-based replacement for US-based dropbox.
 ### GHCup
 
 Used for haskell-language-server. <https://www.haskell.org/ghcup/>
+
+`run_once_2_ghcup_install.sh`
 
     sudo apt install build-essential curl libffi-dev libffi8ubuntu1 libgmp-dev libgmp10 libncurses-dev
     # answer Y to haskell-language-server
@@ -281,6 +279,8 @@ Used for haskell-language-server. <https://www.haskell.org/ghcup/>
 ### Codium
 
 VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
+
+`run_once_2_codium_0install.sh`
 
     sudo apt install extrepo
     sudo cp  /usr/share/extrepo/offline-data/debian/sid/vscodium.asc /usr/share/extrepo/offline-data/debian/trixie/
@@ -304,6 +304,8 @@ VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
     ln -sf ~/projs/xmonad.hs/.config/VSCodium/User/settings.json ~/.config/VSCodium/User/settings.json
 
 #### Extensions
+
+`run_once_2_codium_1extensions.sh.tmpl`
 
     codium --list-extensions
         # outputs
