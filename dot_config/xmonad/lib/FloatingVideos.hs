@@ -19,13 +19,18 @@ import XMonad.Hooks.ManageHelpers
 import XMonad.Layout.LayoutModifier
 import XMonad.StackSet as W
 
+wmWindowRole :: Query String
+wmWindowRole = stringProperty "WM_WINDOW_ROLE"
+
+videoRole :: String
+videoRole = "PictureInPicture"
+
 data VideoFloatMode = NorthCenter | SouthEast | SouthWest deriving (Eq, Enum, Bounded, Read, Show)
 
 videoFloatRectangle :: Rational -> VideoFloatMode -> RationalRect
 videoFloatRectangle r NorthCenter = RationalRect ((1 - r) / 2) 0 r r
 videoFloatRectangle r SouthEast = RationalRect (1 - r) (1 - r) r r
 videoFloatRectangle r SouthWest = RationalRect 0 (1 - r) r r
-
 
 data RotateVideoFloat = RotateVideoFloat deriving (Show)
 instance Message RotateVideoFloat
@@ -62,13 +67,12 @@ instance LayoutModifier VideoFloating Window where
         _ <- placeVideos $ floatHook nrect
         return Nothing
     | Just PlaceVideos <- fromMessage m = do
-        let nrect = videoFloatRectangle r vf
-        _ <- placeVideos $ floatHook nrect
+        sendMessage $ PlaceVideosAltered r vf
         return Nothing
     | otherwise = return Nothing
    where
     floatHook :: RationalRect -> Query (Endo WindowSet)
-    floatHook nrect = composeOne [stringProperty "WM_WINDOW_ROLE" =? "PictureInPicture" -?> doRectFloat nrect <+> doF copyToAll]
+    floatHook nrect = composeOne [wmWindowRole =? videoRole -?> doRectFloat nrect <> doF copyToAll]
     placeVideos :: Query (Endo WindowSet) -> X ()
     placeVideos q = do
       st <- get
@@ -77,14 +81,20 @@ instance LayoutModifier VideoFloating Window where
       mapM_ (placeVideo q) wins
     placeVideo :: ManageHook -> Window -> X ()
     placeVideo q w = do
-      g <- appEndo <$> userCodeDef (Endo id) (runQuery q w)
-      windows g
+      whenX (isVideo w) $ do
+        g <- appEndo <$> userCodeDef (Endo id) (runQuery q w)
+        windows g
 
 floatingVideos :: l a -> ModifiedLayout VideoFloating l a
 floatingVideos = ModifiedLayout $ VideoFloating (1 / 4) SouthEast
 
 floatingVideosEventHook :: Event -> X All
-floatingVideosEventHook MapRequestEvent{ev_window = _} = do
-  broadcastMessage PlaceVideos
+floatingVideosEventHook MapRequestEvent{ev_window = w} = do
+  whenX (isVideo w) $ broadcastMessage PlaceVideos
   return $ All True
 floatingVideosEventHook _ = return $ All True
+
+isVideo :: Window -> X Bool
+isVideo w = do
+  role <- runQuery wmWindowRole w
+  return $ role == videoRole
