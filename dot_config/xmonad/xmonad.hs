@@ -7,9 +7,11 @@ import Data.List (intercalate)
 import Data.List.Split (splitOn)
 import Data.Semigroup (Endo)
 import FloatingVideos (
+  PlaceVideos (PlaceVideos),
   RotateVideoFloat (RotateVideoFloat),
   ToggleSizeVideoFloat (ToggleSizeVideoFloat),
   floatingVideos,
+  floatingVideosEventHook,
  )
 import MouseGestures
 import Network.HostName
@@ -32,7 +34,6 @@ import XMonad.Hooks.StatusBar
 import XMonad.Hooks.StatusBar.PP
 import XMonad.Hooks.UrgencyHook
 import XMonad.Layout.Accordion
-import XMonad.Layout.Fullscreen
 import XMonad.Layout.Grid
 import XMonad.Layout.LayoutScreens
 import XMonad.Layout.NoBorders
@@ -119,8 +120,8 @@ myWindowKeys c =
       c
       [ ("M-C-ä", spawn' compositorRestart)
       , ("M-C-S-ä", spawn' compositorStop)
-      , ("M-C-ü", sendMessage' RotateVideoFloat)
-      , ("M-C-S-ü", sendMessage' ToggleSizeVideoFloat)
+      , ("M-ü", sendMessage' RotateVideoFloat)
+      , ("M-C-ü", sendMessage' ToggleSizeVideoFloat)
       , ("M-C-s", sendMessage' ToggleScreenCorner)
       , ("M-C-g", addName "windowPrompt goto" $ windowPrompt myWindowPromptConfig Goto allWindows)
       , ("M-C-b", addName "windowPrompt bring" $ windowPrompt myWindowPromptConfig Bring allWindows)
@@ -301,9 +302,9 @@ main = do
     $ myConfig
       { logHook = fadeWindowsLogHook myFadeHook
       , manageHook =
-          manageDocks <+> myFocusHook <> myManageHook <+> fullscreenManageHook
+          manageDocks <+> myFocusHook <> myManageHook
       , layoutHook = myLayoutHook
       , startupHook = myStartupHook
-      , handleEventHook = screenCornerToggledEventHook <+> fadeWindowsEventHook <+> fixSteamFlicker -- <+> focusOnMouseMove
+      , handleEventHook = screenCornerToggledEventHook <+> fadeWindowsEventHook <+> fixSteamFlicker <+> floatingVideosEventHook -- <+> focusOnMouseMove
       , terminal = "x-terminal-emulator"
       }
