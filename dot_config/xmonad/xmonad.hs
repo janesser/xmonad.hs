@@ -201,7 +201,8 @@ myManageHook =
   composeOne
     [ isDialog -?> doCenterFloat
     , isNotification -?> doSideFloat NE
-    , className =? "Sflock" -?> doFullFloat -- FIXME is this even effective ?
+    -- requires https://github.com/benruijl/sflock/commit/6d1998b177c381baff3abe70748ed92ae6e4a262
+    , className =? "sflock" -?> doFullFloat 
     , -- games & private
       className =? "Lutris" -?> doSink <+> doShift gamesWs
     , currentWs =? gamesWs -?> doSink <+> doFullFloat

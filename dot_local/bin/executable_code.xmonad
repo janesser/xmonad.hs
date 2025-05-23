@@ -17,9 +17,9 @@ fi
 CONFIG_XMONAD=`realpath ~/.config/xmonad/`
 
 if [ -x $(command -v codium) ]; then
-    exec $GHCUP_PREFIX codium $CONFIG_XMONAD
+    $GHCUP_PREFIX codium $CONFIG_XMONAD
 else
-    exec $GHCUP_PREFIX code $CONFIG_XMONAD
+    $GHCUP_PREFIX code $CONFIG_XMONAD
 fi
 
 # auto add to chezmoi

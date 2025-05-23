@@ -84,7 +84,8 @@ Check idleHint
 
 <https://github.com/benruijl/sflock>
 
-    git clone https://github.com/benruijl/sflock
+    # git clone https://github.com/benruijl/sflock
+    git clone https://github.com/julmajustus/sflock.git
     cd sflock
     sudo make clean install
     sflock -f fixed
@@ -96,12 +97,8 @@ Use `xautolock`
 
 Lock before suspend
 
-    sudo cp etc/systemd/system/sflock.service /etc/systemd/system/
-    sudo systemctl daemon-reload
-    sudo systemctl enable sflock
-    
-    # to debug 
-    env -i xautolock -locknow
+    # xss-lock -- xautolock -locknow # crashes after suspend
+    xss-lock slock # works okay
 
 <https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Combined_sleep/resume_unit>
 
