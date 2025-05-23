@@ -25,5 +25,6 @@ fi
 # auto add to chezmoi
 if [ -x $(command -v chezmoi) ]; then
     MY_XMONAD_FILES=`find $CONFIG_XMONAD -maxdepth 1 -type f`
-    chezmoi add $MY_XMONAD_FILES
+    MY_XMONAD_LIB_FILES=`find $CONFIG_XMONAD/lib -maxdepth 1 -type f`
+    chezmoi add $MY_XMONAD_FILES $MY_XMONAD_LIB_FILES
 fi

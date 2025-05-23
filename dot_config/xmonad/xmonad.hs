@@ -240,12 +240,12 @@ myFocusHook =
 
 myLayoutHook =
   avoidStruts $
-    windowArrange $
-      onWorkspace monWs tall $
-        onWorkspace commWs tabsL $
-          onWorkspace browseWs accordion $
-            onWorkspace gamesWs full $
-              floatingVideos $
+    floatingVideos $
+      windowArrange $
+        onWorkspace monWs tall $
+          onWorkspace commWs tabsL $
+            onWorkspace browseWs accordion $
+              onWorkspace gamesWs full $
                 screenCornerToggledLayoutHook $
                   smartBorders (tabsL ||| tallM ||| full ||| tall ||| accordion)
  where
