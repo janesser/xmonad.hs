@@ -12,8 +12,8 @@ start_once() {
 
 xsetroot -solid black # feh for background image
 
-xautolock -exit
-xautolock -time 5 -locker 'sflock -f fixed' -killtime 30 -killer 'systemctl suspend' -notify 10 -detectsleep &
+start_once xautolock -time 10 -locker slock -killtime 30 -killer 'systemctl suspend' -notify 10 -detectsleep
+start_once xss-lock slock
 
 # actually without "-t" tapping isn't blocked
 start_once syndaemon "-i 2 -d -K -t -m 50"

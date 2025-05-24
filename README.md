@@ -1,8 +1,19 @@
 # xmonad.hs
 
-My opinionated xmonad setup. With all dependencies expanded.
+My opinionated xmonad & chezmoi setup. With all dependencies expanded.
 
-## Essential requirements
+## Dotfiles via chezmoi
+
+    chezmoi init https://github.com/janesser/dotfiles.git
+    # once ssh is in place
+    ## git@github.com:janesser/dotfiles.git
+    chezmoi apply
+
+## Awesome packages (ubuntu)
+
+`run_once_0_essentials_install.sh.tmpl`
+
+### essential
 
     sudo apt install xmonad xmobar libghc-split-dev libghc-hostname-dev \
         haskell-gtk-sni-tray-utils xscreensaver \
@@ -13,7 +24,7 @@ Installation of xmonad xmonad-contrib can be superceded by git-based installatio
     Keep `xmonad` installed for `/usr/share/xsession/xmonad.desktop`.
     All independent `libghc*` can be removed.
 
-### Recommended requiremends
+### recommended
 
 * Recommended requirements
 
@@ -32,7 +43,7 @@ Installation of xmonad xmonad-contrib can be superceded by git-based installatio
         clamtk \
         system-config-printer
 
-### Optional requirements
+### extras
 
 More recommended less mandatory
 
@@ -45,16 +56,9 @@ More recommended less mandatory
         dex \
         dict
 
-## Dotfiles via chezmoi
-
-    chezmoi init https://github.com/janesser/dotfiles.git
-    # once ssh is in place
-    ## git@github.com:janesser/dotfiles.git
-    chezmoi apply
-
 ### apt sources.list.d
 
-Ubuntu Mantic 23 with some additional repositories
+Ubuntu Noble 24 with some additional repositories
 
     sudo rsync -nrv --del etc/apt/sources.list.d/ /etc/apt/sources.list.d/
     sudo rsync -nrv --del etc/apt/keyrings/ /etc/apt/keyrings/
@@ -70,7 +74,6 @@ Check systemd-logind
 
         HandlePowerKey=suspend
         IdleAction=suspend
-        IdleActionSec=10min
 
     sudo systemctl restart systemd-logind
 
@@ -82,6 +85,26 @@ Check idleHint
 
 #### Screen & tty lock
 
+I want to lock screen when going somewhere, after some time and on suspend.
+
+_There is a storyline along tty-terminals left open, don't have that, aslong i use them and exit them immediately._
+
+    sudo nala install xautolock xss-lock
+
+    # contained in xmonadrc.sh
+    xautolock -exit
+    xautolock -time 10 -locker 'slock' -killtime 30 -killer 'systemctl suspend' -notify 10 -detectsleep &
+    killall xss-lock
+    xss-lock slock &
+
+<https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Combined_sleep/resume_unit>
+
+<https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Specifiers>
+
+##### sflock (deprecated)
+
+Unfortunaly I didn't get suspend work properly.
+
 <https://github.com/benruijl/sflock>
 
     # git clone https://github.com/benruijl/sflock
@@ -89,20 +112,6 @@ Check idleHint
     cd sflock
     sudo make clean install
     sflock -f fixed
-
-Use `xautolock`
-
-    sudo nala install xautolock
-    xautolock -detectsleep -time 5 -locker "sflock -f fixed" -killtime 30 -killer "systemctl suspend" -notify 10
-
-Lock before suspend
-
-    # xss-lock -- xautolock -locknow # crashes after suspend
-    xss-lock slock # works okay
-
-<https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Combined_sleep/resume_unit>
-
-<https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Specifiers>
 
 ## Candidates & Experiments
 
@@ -127,9 +136,9 @@ Lock before suspend
 
 #### zutty
 
-<https://tomscii.sig7.se/2020/12/A-totally-biased-comparison-of-Zutty>
-
 `run_once_0_zutty_0install.sh`
+
+<https://tomscii.sig7.se/2020/12/A-totally-biased-comparison-of-Zutty>
 
 #### nerd fonts
 
@@ -147,6 +156,8 @@ Lock before suspend
 ### nala
 
 `run_once_2_nala_install.sh`
+
+<https://github.com/volitank/nala>
 
 ### mimeapps
 
@@ -208,13 +219,15 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
 
 ### my-weather-indicator
 
-<https://github.com/atareao/my-weather-indicator/blob/main/bin/my-weather-indicator>
-
 `run_once_2_my-weather-indicator_install.sh`
+
+<https://github.com/atareao/my-weather-indicator/blob/main/bin/my-weather-indicator>
 
 ## Office applications
 
 ### Librewolf
+
+`run_once_2_librewolf_install.sh`
 
 Installation instructions here: <https://librewolf.net/installation/debian/>
 
@@ -473,11 +486,13 @@ Multi-Platform Package Manager for Stable Diffusion.
     sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/evolution 50
     sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/claws-mail 50
 
-### Skype 4 Linux
+### Skype 4 Linux (eol April'25)
 
     sudo apt remove --purge skypeforlinux
     sudo apt install snapd
     sudo snap install skype
+
+Temporaly using <https://www.infomaniak.com/en/ksuite/kmeet>
 
 ## Games
 
