@@ -342,7 +342,7 @@ VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
     jupyter-lab &
     # jupyter-lab stop
 
-#### ollama & deepseek
+### ollama & deepseek
 
 <https://www.tecmint.com/run-deepseek-locally-on-linux/>
 
@@ -361,6 +361,14 @@ Multi-Platform Package Manager for Stable Diffusion.
     chmod +x StabilityMatrix.AppImage
     ## ./StabilityMatrix.AppImage --appimage-extract
     sudo mv StabilityMatrix.AppImage /usr/local/bin/
+
+### n8n
+
+can use ollama above
+
+    npx n8n
+
+<https://github.com/n8n-io/n8n>
 
 ### glow (shell markdown viewer)
 
