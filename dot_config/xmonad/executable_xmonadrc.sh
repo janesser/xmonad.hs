@@ -27,7 +27,7 @@ ssh-agent -c >>~/.ssh/env
 pactl set-source-volume @DEFAULT_SOURCE@ 20%
 
 start_once copyq
-start_once pcloud
+start_once ~/.local/bin/pcloud
 # account deleted 2025-05-01
 # start_once dropbox start
 
