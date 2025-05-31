@@ -1,0 +1,29 @@
+services:
+  ollama:
+    image: docker.io/ollama/ollama:latest
+    hostname: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./models:/root/.ollama/models
+    networks:
+      - genai-network
+    # https://github.com/containers/podman/issues/19338
+    devices:
+      - nvidia.com/gpu=all
+    environment:
+    - CUDA_VISIBLE_DEVICES=GPU-1c023970-a410-ec26-9558-f08afa3fe9a8
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "3000:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - ./backend/data:/app/backend/data
+    networks:
+      - genai-network
+networks:
+  genai-network:
+    driver: bridge
+    name: genai-network

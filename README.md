@@ -335,6 +335,10 @@ VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
     codium --install-extension (<extension-id> | <extension-vsix-path>)
     ln -sf ~/projs/xmonad.hs/.config/VSCodium/User/settings.json ~/.config/VSCodium/User/settings.json
 
+#### Trouble-shooting
+
+there is no formatter for 'dockercompose' installed -> <https://github.com/redhat-developer/vscode-yaml/issues/1000>
+
 ### Jupyter
 
     pipx install jupyterlab
@@ -349,6 +353,18 @@ VSCode without telemetry & tracking, see: <https://vscodium.com/#why>
     curl -fsSL https://ollama.com/install.sh | sh
     ollama --version # 0.5.7
     ollama run deepseek-r1:7
+
+To uninstall, follow instructions here: <https://github.com/ollama/ollama/issues/986>
+
+#### alternative via docker
+
+access open-webui via <http://localhost:3000/>
+
+<https://medium.com/@srpillai/how-to-run-ollama-locally-on-gpu-with-docker-a1ebabe451e0>
+
+<https://podman-desktop.io/docs/podman/gpu>
+
+<https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html>
 
 ### StabilityMatrix
 
