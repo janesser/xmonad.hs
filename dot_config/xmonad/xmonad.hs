@@ -258,13 +258,9 @@ myLayoutHook =
 
 myStartupHook :: X ()
 myStartupHook = do
-  -- height needs to be explicit, check ToggleStruts
-  spawnOnce "gtk-sni-tray-standalone --bottom --beginning --watcher"
-  spawnOnce "blueman-applet" -- requires tray activated
-  spawnOnOnce monWs "x-terminal-emulator -e btop"
-  -- writes ~/.ssh/env
   spawnOnce "bash ~/.config/xmonad/xmonadrc.sh"
   addVerticalScreenCorners
+  spawnOnOnce monWs "x-terminal-emulator -e btop"  -- writes ~/.ssh/env
 
 myFadeHook :: FadeHook
 myFadeHook =
