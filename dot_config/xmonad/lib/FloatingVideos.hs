@@ -101,11 +101,12 @@ doPlaceVideos r vf = do
   floatHook :: RationalRect -> Query (Endo WindowSet)
   floatHook nrect =
     composeOne
-      [ wmWindowRole =? videoRole -?> doRectFloat nrect <+> doF copyToAll ]
+      [ wmWindowRole =? videoRole -?> (doRectFloat nrect <+> doF copyToAll) ]
   placeVideos :: Query (Endo WindowSet) -> X ()
   placeVideos q = do
     st <- get
     let allWins = W.allWindows $ windowset st
+    -- FIXME focused window might be affected accidentaly
     vidWins <- filterM isVideo allWins
     mapM_ (placeVideo q) vidWins
   placeVideo :: ManageHook -> Window -> X ()

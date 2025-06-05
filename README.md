@@ -360,6 +360,10 @@ To uninstall, follow instructions here: <https://github.com/ollama/ollama/issues
 
 access open-webui via <http://localhost:3000/>
 
+    sudo podman run --rm --device nvidia.com/gpu=all ubuntu nvidia-smi -L
+
+<https://github.com/ollama/ollama/blob/main/docs/troubleshooting.md>
+
 <https://medium.com/@srpillai/how-to-run-ollama-locally-on-gpu-with-docker-a1ebabe451e0>
 
 <https://podman-desktop.io/docs/podman/gpu>
