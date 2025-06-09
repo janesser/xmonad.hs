@@ -17,14 +17,15 @@ fi
 CONFIG_XMONAD=`realpath ~/.config/xmonad/`
 
 if [ -x $(command -v codium) ]; then
-    $GHCUP_PREFIX codium $CONFIG_XMONAD
+    $GHCUP_PREFIX codium -n -w $CONFIG_XMONAD
 else
-    $GHCUP_PREFIX code $CONFIG_XMONAD
+    $GHCUP_PREFIX code -n -w $CONFIG_XMONAD
 fi
 
 # auto add to chezmoi
 if [ -x $(command -v chezmoi) ]; then
     MY_XMONAD_FILES=`find $CONFIG_XMONAD -maxdepth 1 -type f`
     MY_XMONAD_LIB_FILES=`find $CONFIG_XMONAD/lib -maxdepth 1 -type f`
+    echo adding $MY_XMONAD_FILES $MY_XMONAD_LIB_FILES to chezmoi
     chezmoi add $MY_XMONAD_FILES $MY_XMONAD_LIB_FILES
 fi
