@@ -235,7 +235,7 @@ myFocusHook =
   manageFocus $
     composeOne
       [ new (className =? "copyq") -?> switchFocus
-      , newOnCur <&&> focused (currentWs =? devWs <||> currentWs =? gamesWs) -?> keepFocus
+      , newOnCur <&&> focused (currentWs =? gamesWs) -?> keepFocus
       , return True -?> switchFocus
       ]
 

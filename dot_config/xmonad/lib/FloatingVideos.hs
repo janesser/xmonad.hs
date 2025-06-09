@@ -95,13 +95,14 @@ instance LayoutModifier VideoFloating Window where
 -- | place videos using a `windows` transaction which will cause refresh
 doPlaceVideos :: Rational -> VideoFloatMode -> X ()
 doPlaceVideos r vf = do
-  placeVideos $ floatHook rect
+  wss <- asks (XMonad.workspaces . config)
+  placeVideos $ floatHook rect wss
  where
   rect = videoFloatRectangle r vf
-  floatHook :: RationalRect -> Query (Endo WindowSet)
-  floatHook nrect =
+  floatHook :: RationalRect -> [String] -> Query (Endo WindowSet)
+  floatHook nrect wss =
     composeOne
-      [wmWindowRole =? videoRole -?> (doRectFloat nrect <+> copyToAllWorkspaces)]
+      [wmWindowRole =? videoRole -?> (doRectFloat nrect <+> copyToAllWorkspaces wss)]
   placeVideos :: Query (Endo WindowSet) -> X ()
   placeVideos q = do
     -- TODO withWindowSet
@@ -113,17 +114,14 @@ doPlaceVideos r vf = do
   placeVideo q w = do
     g <- appEndo <$> runQuery q w
     windows g
-  copyToAllWorkspaces :: Query (Endo WindowSet)
-  copyToAllWorkspaces = do
-    -- foldEndo $ forM copyWindowToWorkspace wss
-    copyWindowToWorkspace "ide"
+  copyToAllWorkspaces :: [String] -> Query (Endo WindowSet)
+  copyToAllWorkspaces wss =
+    do
+      let copied :: [Query (Endo WindowSet)] = map copyWindowToWorkspace wss
+      foldr (<>) (head copied) (tail copied)
 
   copyWindowToWorkspace :: String -> Query (Endo WindowSet)
   copyWindowToWorkspace ws = ask >>= \w -> doF $ copyWindow w ws
-  wss :: X [String]
-  wss = do
-    let wks = asks (XMonad.workspaces . config)
-    wks
 
 floatingVideos :: l a -> ModifiedLayout VideoFloating l a
 floatingVideos = ModifiedLayout $ VideoFloating (1 / 4) SouthEast

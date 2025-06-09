@@ -15,7 +15,8 @@ xsetroot -solid black # feh for background image
 start_once gtk-sni-tray-standalone --bottom --beginning --watcher
 start_once blueman-applet
 
-start_once xautolock -time 10 -locker slock -killtime 30 -killer "systemctl suspend" -notify 10 -detectsleep
+# "systemctl suspend" cannot be passed through as quoting doesn't group args correctly
+xautolock -time 10 -locker slock -killtime 30 -killer "systemctl suspend" -notify 10 -detectsleep &
 start_once xss-lock slock
 
 # actually without "-t" tapping isn't blocked
