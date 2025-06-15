@@ -17,7 +17,7 @@ start_once blueman-applet
 
 # "systemctl suspend" cannot be passed through as quoting doesn't group args correctly
 xautolock -time 10 -locker slock -killtime 30 -killer "systemctl suspend" -notify 10 -detectsleep &
-start_once xss-lock slock
+xss-lock -- sh -c "pactl set-sink-mute @DEFAULT_SINK@ on; slock" &
 
 # actually without "-t" tapping isn't blocked
 start_once syndaemon "-i 2 -d -K -t -m 50"
