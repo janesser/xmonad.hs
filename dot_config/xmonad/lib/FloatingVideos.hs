@@ -19,13 +19,9 @@ import XMonad
 import XMonad.Actions.CopyWindow
 import XMonad.Hooks.ManageHelpers
 import XMonad.Layout.LayoutModifier
-import XMonad.StackSet as W
-
-wmWindowRole :: Query String
-wmWindowRole = stringProperty "WM_WINDOW_ROLE"
-
-videoRole :: String
-videoRole = "PictureInPicture"
+import XMonad.StackSet (RationalRect (..), Stack (..), Workspace (..), allWindows, integrate)
+import qualified XMonad.StackSet as W (filter)
+import XMonad.Util.WindowProperties (getProp32)
 
 data VideoFloatMode = NorthCenter | NorthEast | SouthEast | SouthWest deriving (Eq, Enum, Bounded, Read, Show)
 
@@ -64,7 +60,7 @@ instance LayoutModifier VideoFloating Window where
     if isJust st
       then do
         let st' :: Stack Window = fromJust st
-        let allWins = W.integrate st'
+        let allWins = integrate st'
         vidWins :: [Window] <- filterM isVideo allWins
         let st'' = W.filter (`notElem` vidWins) st'
         runLayout wk{stack = st''} sr
@@ -89,6 +85,7 @@ instance LayoutModifier VideoFloating Window where
         return Nothing
     | Just (PlaceVideosAltered nr nvf) <- fromMessage m = do
         doPlaceVideos nr nvf
+        clearEvents propertyChangeMask -- break loop, see `floatingVideosEventHook PropertyEvent` below
         return Nothing
     | otherwise = return Nothing
 
@@ -100,39 +97,48 @@ doPlaceVideos r vf = do
  where
   rect = videoFloatRectangle r vf
   floatHook :: RationalRect -> [String] -> Query (Endo WindowSet)
-  floatHook nrect wss =
-    composeOne
-      [wmWindowRole =? videoRole -?> (doRectFloat nrect <+> copyToAllWorkspaces wss)]
+  floatHook nrect wss = composeOne[fmap not (isNotification <||> isDialog) -?> doRectFloat nrect <+> copyToAllWorkspaces wss]
+  copyToAllWorkspaces :: [String] -> Query (Endo WindowSet)
+  copyToAllWorkspaces wss = do
+    let copied :: [Query (Endo WindowSet)] = map copyWindowToWorkspace wss
+    foldr (<>) (head copied) (tail copied)
+  copyWindowToWorkspace :: String -> Query (Endo WindowSet)
+  copyWindowToWorkspace ws = ask >>= \w -> doF $ copyWindow w ws
   placeVideos :: Query (Endo WindowSet) -> X ()
-  placeVideos q = do
-    -- TODO withWindowSet
-    st <- get
-    let allWins = W.allWindows $ windowset st
+  placeVideos q = withWindowSet $ \ws -> do
+    let allWins = allWindows ws
     vidWins <- filterM isVideo allWins
     mapM_ (placeVideo q) vidWins
   placeVideo :: ManageHook -> Window -> X ()
   placeVideo q w = do
-    g <- appEndo <$> runQuery q w
+    g <- appEndo <$> userCodeDef (Endo id) (runQuery q w)
     windows g
-  copyToAllWorkspaces :: [String] -> Query (Endo WindowSet)
-  copyToAllWorkspaces wss =
-    do
-      let copied :: [Query (Endo WindowSet)] = map copyWindowToWorkspace wss
-      foldr (<>) (head copied) (tail copied)
-
-  copyWindowToWorkspace :: String -> Query (Endo WindowSet)
-  copyWindowToWorkspace ws = ask >>= \w -> doF $ copyWindow w ws
 
 floatingVideos :: l a -> ModifiedLayout VideoFloating l a
 floatingVideos = ModifiedLayout $ VideoFloating (1 / 4) SouthEast
 
+{- | catch new windows or property change of "_NET_WM_STATE"
+
+_NET_WM_STATE(ATOM) = _NET_WM_STATE_ABOVE, _NET_WM_STATE_STAYS_ON_TOP
+
+built by example of https://hackage.haskell.org/package/xmonad-contrib-0.18.1/docs/src/XMonad.Hooks.OnPropertyChange.html
+-}
 floatingVideosEventHook :: Event -> X All
 floatingVideosEventHook MapRequestEvent{ev_window = w} = do
   whenX (isVideo w) $ sendMessage PlaceVideos
   return $ All True
-floatingVideosEventHook _ = return $ All True
+floatingVideosEventHook PropertyEvent{ev_window = w, ev_atom = a, ev_propstate = ps} = do
+  pa <- getAtom "_NET_WM_STATE"
+  when (ps == propertyNewValue && a == pa) $ do
+    whenX (isVideo w) $ sendMessage PlaceVideos
+  return mempty
+floatingVideosEventHook _ = return mempty
 
+-- | built by example of https://hackage.haskell.org/package/xmonad-contrib-0.18.1/docs/src/XMonad.Hooks.EwmhDesktops.html#fullscreenEventHook.html
 isVideo :: Window -> X Bool
 isVideo w = do
-  role <- runQuery wmWindowRole w
-  return $ role == videoRole
+  -- _NET_WM_STATE(ATOM) = _NET_WM_STATE_ABOVE, _NET_WM_STATE_STAYS_ON_TOP
+  wmState <- getAtom "_NET_WM_STATE"
+  aboveAtom <- getAtom "_NET_WM_STATE_ABOVE"
+  wState <- fromMaybe [] <$> getProp32 wmState w
+  return $ fromIntegral aboveAtom `elem` wState

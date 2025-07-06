@@ -1,4 +1,4 @@
--- stack build --stack-yaml /home/jan/projs/xmonad.hs/.config/xmonad/stack.yaml
+-- stack build --stack-yaml /home/jan/.config/xmonad/stack.yaml
 
 {-# LANGUAGE ScopedTypeVariables #-}
 
