@@ -54,7 +54,8 @@ More recommended less mandatory
         multimedia-graphics \
         geeqie \
         dex \
-        dict
+        dict \
+        apt-listchanges
 
 ### apt sources.list.d
 
