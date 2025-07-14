@@ -25,10 +25,15 @@ sudo apt install shutter \
 {{if .is_install_extras}}
 sudo apt install \
     podman-compose \
-    texworks texlive-humanities \
     pandoc \
     multimedia-graphics \
     geeqie \
     dex \
     dict
+{{end}}
+
+{{if .is_install_tex}}
+sudo apt install \
+    texworks texlive-humanities \
+    texlive-lang-german
 {{end}}
