@@ -215,7 +215,8 @@ myManageHook =
       className =? "dev.geopjr.Tuba"  <||>
       className =? "Thunderbird"      <||>
       className =? "Evolution"        <||>
-      className =? "Claws-mail" -?> doShift commWs
+      className =? "Claws-mail"       <||>
+      className =? "Geary"            -?> doShift commWs
     , -- ide
       className =? "vscodium" -?> doShift devWs
     , -- entertain
@@ -260,7 +261,7 @@ myStartupHook :: X ()
 myStartupHook = do
   spawnOnce "bash ~/.config/xmonad/xmonadrc.sh"
   addVerticalScreenCorners
-  spawnOnOnce monWs "x-terminal-emulator -e btop"  -- writes ~/.ssh/env
+  spawnOnOnce monWs "x-terminal-emulator -e btop" -- writes ~/.ssh/env
 
 myFadeHook :: FadeHook
 myFadeHook =

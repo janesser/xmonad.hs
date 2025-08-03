@@ -10,9 +10,12 @@ start_once() {
    fi
 }
 
+killall btop # kill dangling instances
+
 xsetroot -solid black # feh for background image
 
 start_once gtk-sni-tray-standalone --bottom --beginning --watcher
+sleep 2
 start_once blueman-applet
 
 # "systemctl suspend" cannot be passed through as quoting doesn't group args correctly

@@ -513,7 +513,8 @@ can use ollama above
     sudo apt install claws-mail claws-mail-vcalendar-plugin
 
     sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/evolution 50
-    sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/claws-mail 50
+    # sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/claws-mail 50
+    sudo update-alternatives --install /usr/bin/x-mail-client x-mail-client /usr/bin/geary 50
 
 ### Skype 4 Linux (eol April'25)
 
