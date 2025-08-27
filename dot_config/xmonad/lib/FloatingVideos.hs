@@ -30,6 +30,10 @@ videoFloatRectangle r NorthCenter = RationalRect ((1 - r) / 2) 0 r r
 videoFloatRectangle r NorthEast = RationalRect (1 - r) 0 r r
 videoFloatRectangle r SouthEast = RationalRect (1 - r) (1 - r) r r
 videoFloatRectangle r SouthWest = RationalRect 0 (1 - r) r r
+smallR :: Rational
+smallR = 2 / 7
+largeR :: Rational
+largeR = 2 / 5
 
 data RotateVideoFloat = RotateVideoFloat deriving (Show)
 instance Message RotateVideoFloat
@@ -77,7 +81,7 @@ instance LayoutModifier VideoFloating Window where
         sendMessage $ PlaceVideosAltered r nvf
         return $ Just $ VideoFloating r nvf
     | Just ToggleSizeVideoFloat <- fromMessage m = do
-        let nr = if r == (1 / 2) then 1 / 4 else 1 / 2
+        let nr = if r == largeR then smallR else largeR
         sendMessage $ PlaceVideosAltered nr vf
         return $ Just $ VideoFloating nr vf
     | Just PlaceVideos <- fromMessage m = do
@@ -97,7 +101,7 @@ doPlaceVideos r vf = do
  where
   rect = videoFloatRectangle r vf
   floatHook :: RationalRect -> [String] -> Query (Endo WindowSet)
-  floatHook nrect wss = composeOne[fmap not (isNotification <||> isDialog) -?> doRectFloat nrect <+> copyToAllWorkspaces wss]
+  floatHook nrect wss = composeOne [fmap not (isNotification <||> isDialog) -?> doRectFloat nrect <+> copyToAllWorkspaces wss]
   copyToAllWorkspaces :: [String] -> Query (Endo WindowSet)
   copyToAllWorkspaces wss = do
     let copied :: [Query (Endo WindowSet)] = map copyWindowToWorkspace wss
@@ -115,7 +119,7 @@ doPlaceVideos r vf = do
     windows g
 
 floatingVideos :: l a -> ModifiedLayout VideoFloating l a
-floatingVideos = ModifiedLayout $ VideoFloating (1 / 4) SouthEast
+floatingVideos = ModifiedLayout $ VideoFloating smallR SouthEast
 
 {- | catch new windows or property change of "_NET_WM_STATE"
 

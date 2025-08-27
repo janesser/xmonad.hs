@@ -267,8 +267,8 @@ myFadeHook :: FadeHook
 myFadeHook =
   composeAll
     [ opaque
-    , isUnfocused --> opacity (8 / 10)
-    , liftM2 (&&) isFloating isUnfocused --> opacity (4 / 10)
+    , liftM2 (&&) isFloating isUnfocused --> opacity (3 / 5)
+    , isUnfocused --> opacity (4 / 5)
     , className =? "vlc" --> opaque
     ]
 
