@@ -67,6 +67,12 @@ Ubuntu Noble 24 with some additional repositories
 
 `run_once_0_apt_sources.sh`
 
+### ssh x11forwarding
+
+    ssh -X ...
+    export XAUTHORITY=$HOME/.Xauthority
+    ...
+
 ### power button behaviour
 
 Check systemd-logind
@@ -593,8 +599,8 @@ CPU thrashing remained high througout several versions
 
 ## Chuwi Camera Fixing
 
-Front and backcamera work in windows 10.
-In vanilla linux ov2680 is loaded, but won't result in any camera that e.g. `cheese` will detect.
+Chuwi Ubook Xpro has an (back, over screen) ov2680 and (front) ov5648.
+Both work in windows 10. In vanilla linux ubuntu ov2680 is loaded, but won't result in any camera that e.g. `cheese` will detect.
 
 <https://github.com/torvalds/linux/blob/master/drivers/media/i2c/ov2680.c>
 
