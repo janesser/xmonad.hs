@@ -21,7 +21,7 @@ import ScreenCornersToggled (
   screenCornerToggledEventHook,
   screenCornerToggledLayoutHook,
  )
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist, getHomeDirectory)
 import System.IO.Unsafe
 import XMonad
 import XMonad.Actions.CopyWindow
@@ -272,6 +272,7 @@ myFadeHook =
     , className =? "vlc" --> opaque
     ]
 
+-- requires xdotool
 myStatusBar :: StatusBarConfig
 {-# NOINLINE myStatusBar #-}
 myStatusBar = do
@@ -284,10 +285,13 @@ myStatusBar = do
       ++ if xmobarrcHostspecificExists
         then xmobarrcHostspecific
         else xmobarrcDefault
-  hostname = unsafePerformIO getHostName
   xmobarrcDefault = "~/.config/xmonad/xmobarrc"
-  xmobarrcHostspecific = "~/.config/xmonad/xmobarrc." ++ hostname
-
+  xmobarrcHostspecific = unsafePerformIO $ do 
+    hostname <- getHostName
+    homedir <- getHomeDirectory
+    return $ homedir ++ "/.config/xmonad/xmobarrc." ++ hostname
+  
+  
 main :: IO ()
 main = do
   xmonad
