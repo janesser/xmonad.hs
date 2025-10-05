@@ -6,5 +6,6 @@ sudo apt install snap
 sudo snap install kubectl --classic
 sudo snap install helm --classic
 
-git config --global user.name "Jan Esser"
-git config --global user.email "jesser@gmx.de"
+# TODO https://sdkman.io/install/
+# sdkman is stronly bash based and requires a wrapper like this: https://github.com/reitzig/sdkman-for-fish
+# curl -s "https://get.sdkman.io" | bash
