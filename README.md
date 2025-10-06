@@ -4,11 +4,11 @@ My opinionated xmonad & chezmoi setup. With all dependencies expanded.
 
 ## Dotfiles via chezmoi
 
-    # https://www.chezmoi.io/install/ (snap or pre-compiled deb package)
+    sh -c "$(curl -fsLS get.chezmoi.io)" -- -b $HOME/.local/bin # https://www.chezmoi.io/install/ (snap or pre-compiled deb package)
     ssh-keygen # add pubkey to github settings
     sudo apt install git git-lfs
-    chezmoi init --git-lfs git@github.com:janesser/xmonad.hs.git
-    chezmoi apply
+    ~/.local/bin/chezmoi init --git-lfs git@github.com:janesser/xmonad.hs.git
+    ~/.local/bin/chezmoi apply
 
 ## Awesome packages (ubuntu)
 
