@@ -6,10 +6,12 @@
 # signal
 # teamviewer
 
+{{ if eq .chezmoi.arch "amd64" }}
 pushd .
 cd {{ .chezmoi.sourceDir }}
 sudo cp ./etc/apt/keyrings/* /etc/apt/keyrings/
 sudo cp ./etc/apt/sources.list.d/* /etc/apt/sources.list.d/
+popd
+{{ end }}
 
 sudo apt install extrepo
-popd
