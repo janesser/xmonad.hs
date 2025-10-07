@@ -1,7 +1,7 @@
 #!/bin/bash
 sudo apt install \
     xmonad xmobar libghc-split-dev libghc-hostname-dev suckless-tools \
-    haskell-gtk-sni-tray-utils xscreensaver \
+    haskell-gtk-sni-tray-utils \
     pcmanfm xarchiver \
     xdotool
 
@@ -13,9 +13,6 @@ sudo apt install shutter \
         elpa-org \
         onboard \
         easyeffects \
-        {{ if eq .chezmoi.arch "amd64" }}
-        pipewire-audio \
-        {{ end }}
         hw-probe \
         etckeeper \
         xpdf \
@@ -43,6 +40,7 @@ sudo apt install \
     texlive-lang-german
 {{end}}
 
+# TODO move elsewhere
 {{ if eq .chezmoi.arch "arm64" }}
 sudo apt install rpd-wayland-all
 sudo apt remove --purge rpd-x-all

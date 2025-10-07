@@ -9,8 +9,8 @@ for HDMI in $(find /sys/class/drm -name "*HDMI*"); do
         pushd .
         cd {{ .chezmoi.sourceDir }}
         sudo cp raspberry/hpv28.bin /usr/lib/firmware/
-        {{ if eq .chezmoi.arch "arm64" }}
+        if [ -f /boot/firmware/cmdline.txt ]; then
             echo -n " drm.edid_firmware=HDMI-A-1:hpv28.bin" | sudo tee -a /boot/firmware/cmdline.txt
-        {{ end }}
+        fi
     fi
 done

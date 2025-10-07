@@ -2,7 +2,6 @@
 
 # https://codeberg.org/librewolf/issues/issues/2409
 
-{{ if eq .chezmoi.arch "amd64" }}
 echo """# This profile allows everything and only exists to give the
 # application a name instead of having the label "unconfined"
 abi <abi/4.0>,
@@ -14,5 +13,7 @@ profile librewolf /usr/share/librewolf/{librewolf,librewolf-bin} flags=(unconfin
 }
 """ | sudo tee /etc/apparmor.d/librewolf
 
-sudo systemctl reload apparmor
-{{ end }}
+if systemctl list-unit-files apparmor.service >/dev/null 2>&1
+then
+    sudo systemctl reload apparmor
+fi
