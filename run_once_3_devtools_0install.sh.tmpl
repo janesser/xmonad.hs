@@ -2,6 +2,8 @@
 
 sudo apt install git gitk git-lfs
 
+{{ if eq .chezmoi.arch "amd64" }}
 sudo apt install snap
 sudo snap install kubectl --classic
 sudo snap install helm --classic
+{{ end }}

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+{{ if eq .chezmoi.arch "amd64" }}
+sudo add-apt-repository ppa:atareao/atareao
+sudo apt install my-weather-indicator
+{{ end }}
