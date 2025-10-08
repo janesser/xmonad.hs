@@ -39,9 +39,3 @@ sudo apt install \
     texworks texlive-humanities \
     texlive-lang-german
 {{end}}
-
-# TODO move elsewhere
-{{ if eq .chezmoi.arch "arm64" }}
-sudo apt install rpd-wayland-all
-sudo apt remove --purge rpd-x-all
-{{ end }}
