@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# https://github.com/canonical/lightdm/blob/main/debian/lightdm-session
+
+[ -f "$HOME/.profile" ] && . "$HOME/.profile"
