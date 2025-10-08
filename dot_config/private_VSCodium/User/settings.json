@@ -1,7 +1,7 @@
 {
   "workbench.colorTheme": "Default High Contrast",
   "haskell.toolchain": {
-    "ghc": "9.4.8",
+    "ghc": "recommended",
     "hls": "recommended",
     "cabal": "recommended",
     "stack": "recommended"
