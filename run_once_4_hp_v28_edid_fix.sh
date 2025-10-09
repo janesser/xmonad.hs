@@ -6,10 +6,10 @@ for HDMI in $(find /sys/class/drm -name "*HDMI*"); do
     if [ "$HDMI_STATUS" = "connected" ] && [ -z "$HDMI_EDID" ]
     then
         echo on $HDMI: forcing hp-v28 edid into kernel parameters
-        pushd .
         cd {{ .chezmoi.sourceDir }}
         sudo cp raspberry/hpv28.bin /usr/lib/firmware/
-        if [ -f /boot/firmware/cmdline.txt ]; then
+        if [ -f /boot/firmware/cmdline.txt ] && ! grep drm.edid_firmware /boot/firmware/cmdline.txt
+        then
             echo -n " drm.edid_firmware=HDMI-A-1:hpv28.bin" | sudo tee -a /boot/firmware/cmdline.txt
         fi
     fi
