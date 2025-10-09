@@ -13,7 +13,7 @@ profile librewolf /usr/share/librewolf/{librewolf,librewolf-bin} flags=(unconfin
 }
 """ | sudo tee /etc/apparmor.d/librewolf
 
-if systemctl list-unit-files apparmor.service >/dev/null 2>&1
+if sudo systemctl is-active apparmor >/dev/null 2>&1
 then
     sudo systemctl reload apparmor
 fi
