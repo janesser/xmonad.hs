@@ -7,11 +7,9 @@
 # teamviewer
 
 if [ $CHEZMOI_ARCH = "amd64" ]; then
-    pushd .
-    cd {{ .chezmoi.sourceDir }}
+    cd $CHEZMOI_SOURCE_DIR
     sudo cp ./etc/apt/keyrings/* /etc/apt/keyrings/
     sudo cp ./etc/apt/sources.list.d/* /etc/apt/sources.list.d/
-    popd
 else
     echo $CHEZMOI_ARCH not supported for additional apt sources.
 fi
