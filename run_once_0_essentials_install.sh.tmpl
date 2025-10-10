@@ -9,7 +9,11 @@ sudo apt install \
 sudo apt install shutter \
         copyq \
         x11-xserver-utils \
+        {{ if eq .chezmoi.arch "amd64" }}
         network-manager-gnome \
+        {{ else if eq .chezmoi.arch "arm64" }}
+        network-manager-applet \
+        {{ end }}
         elpa-org \
         onboard \
         easyeffects \
@@ -22,7 +26,6 @@ sudo apt install shutter \
         apt-listchanges \
         ncdu \
         xss-lock \
-        network-manager-applet \
         pavucontrol \
         xfce4-power-manager
 # FIXME xautolock for arm64 missing
