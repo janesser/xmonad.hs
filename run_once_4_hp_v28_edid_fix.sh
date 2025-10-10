@@ -10,7 +10,7 @@ for HDMI in $(find /sys/class/drm -name "*HDMI*"); do
         sudo cp raspberry/hpv28.bin /usr/lib/firmware/
         if [ -f /boot/firmware/cmdline.txt ] && ! grep drm.edid_firmware /boot/firmware/cmdline.txt
         then
-            echo -n " drm.edid_firmware=HDMI-A-1:hpv28.bin" | sudo tee -a /boot/firmware/cmdline.txt
+            sudo sed -i 's/$/ drm.edid_firmware=HDMI-A-1:hpv28.bin/' /boot/firmware/cmdline.txt
         fi
     fi
 done
