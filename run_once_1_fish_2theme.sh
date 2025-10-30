@@ -1,3 +1,3 @@
 #!/usr/bin/fish
 fish_config theme choose Tomorrow
-fish_config theme save
+echo y\n | fish_config theme save Tomorrow

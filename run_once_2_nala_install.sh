@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo apt install nala
+sudo apt install -y nala
 #sudo nala fetch
 sudo nala update
 

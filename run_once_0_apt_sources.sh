@@ -14,6 +14,6 @@ else
     echo $CHEZMOI_ARCH not supported for additional apt sources.
 fi
 
-sudo apt install extrepo
+sudo apt install -y extrepo
 
 # TODO find signal for arm64, e.g. https://github.com/dennisameling/Signal-Desktop

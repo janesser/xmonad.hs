@@ -2,4 +2,4 @@
 
 sudo extrepo enable vscodium
 sudo apt update
-sudo apt install codium
+sudo apt install -y codium

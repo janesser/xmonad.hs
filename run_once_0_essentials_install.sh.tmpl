@@ -1,20 +1,16 @@
 #!/bin/bash
-sudo apt install \
+sudo apt install -y \
     xmonad xmobar libghc-split-dev libghc-hostname-dev suckless-tools \
     haskell-gtk-sni-tray-utils \
     pcmanfm xarchiver \
-    xdotool
+    xdotool curl
 
 {{if .is_install_recommended}}
-sudo apt install shutter \
+sudo apt install -y aptitude \
+        shutter \
         copyq \
         x11-xserver-utils \
-        {{ if eq .chezmoi.arch "amd64" }}
-        network-manager-gnome \
-        {{ else if eq .chezmoi.arch "arm64" }}
-        network-manager-applet \
-        {{ end }}
-        elpa-org \
+        {{ if eq .chezmoi.arch "amd64" }} network-manager-gnome {{ else if eq .chezmoi.arch "arm64" }} network-manager-applet {{ end }} \
         onboard \
         easyeffects \
         hw-probe \
@@ -27,12 +23,16 @@ sudo apt install shutter \
         ncdu \
         xss-lock \
         pavucontrol \
-        xfce4-power-manager
-# FIXME xautolock for arm64 missing
+        xfce4-power-manager \
+        {{ if eq .chezmoi.arch "amd64" }} xautolock {{ end }}
+        # FIXME xautolock for arm64 missing
+
+sudo apt install -y elpa-org --without default-mta mail-transport-agent
+
 {{end}}
 
 {{if .is_install_extras}}
-sudo apt install \
+sudo apt install -y \
     podman-compose \
     pandoc \
     multimedia-graphics \

@@ -1,4 +1,4 @@
 #!/bin/bash
 
-sudo apt install fish
+sudo apt install -y fish
 chsh -s $(which fish)
