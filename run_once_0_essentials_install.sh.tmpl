@@ -27,7 +27,8 @@ sudo apt install -y aptitude \
         {{ if eq .chezmoi.arch "amd64" }} xautolock {{ end }}
         # FIXME xautolock for arm64 missing
 
-sudo apt install -y elpa-org --without default-mta mail-transport-agent
+# https://askubuntu.com/questions/622031/how-do-i-exclude-specific-packages-from-installation-with-apt-get
+sudo apt install -y elpa-org default-mta- mail-transport-agent-
 
 {{end}}
 
