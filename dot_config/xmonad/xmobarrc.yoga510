@@ -1,0 +1,31 @@
+Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
+  , bgColor = "#002b36"
+  , fgColor = "#657b83"
+  , border = NoBorder
+  , borderColor = "black"
+  , hideOnStart = False
+  , persistent = True
+  , position = Top
+  , lowerOnStart = True
+  , commands = [ Run UnsafeXMonadLog
+               , Run MultiCpu ["-t", "<total>%"] 20
+               , Run Battery [ "-t", "<acstatus>"
+               , "--"
+               , "-O", "<fc=white><left>%</fc>"
+               , "-o", "<fc=red><timeleft>h</fc>"
+               ] 60
+               , Run Date "<fc=#93a1a1>%a %b %_d %Y %H:%M:%S</fc>" "date" 10
+               , Run Com "/bin/bash" ["-c",
+                    "pactl -n xmobar get-sink-volume $(pactl get-default-sink) | grep -Po \"[0-9]{1,3}%\" | head -1"] 
+                    "volume" 20
+               , Run Com "/bin/bash" ["-c",
+                    "pactl -n xmobar get-sink-mute $(pactl get-default-sink) | grep -Po \"M?(?=ute: j)\" & exit 0"] 
+                    "volume-mute" 20
+               , Run Com "/bin/bash" ["-c",
+                    "sensors|grep temp1|awk '{print $2;}'" ] "temp1" 10
+               , Run StdinReader
+               ]
+  , sepChar = "%"
+  , alignSep = "}{"
+  , template = " %UnsafeXMonadLog% } %date% { CPU: %multicpu% | TMP: %temp1% | VOL: <fc=orange>%volume%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
+}
