@@ -3,4 +3,4 @@ URIs: https://packages.element.io/debian/
 Suites: default
 Components: main
 Signed-By: /etc/apt/keyrings/element-io-archive-keyring.gpg
-Enabled: no
+Enabled: yes

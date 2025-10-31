@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# charm glow {{ include "./etc/apt/sources.list.d/charm.sources" | sha256sum }} {{ include "./etc/apt/keyrings/charm.gpg" | sha256sum }}
+# element.io {{ include "./etc/apt/sources.list.d/element-io.sources" | sha256sum }} {{ include "./etc/apt/keyrings/element-io-archive-keyring.gpg" | sha256sum }}
+# signal {{ include "./etc/apt/sources.list.d/signal-xenial.sources" | sha256sum }} {{ include "./etc/apt/keyrings/signal-desktop-keyring.gpg" | sha256sum }}
+# teamviewer {{ include "./etc/apt/sources.list.d/teamviewer.list" | sha256sum }} {{ include "./etc/apt/keyrings/teamviewer-keyring.gpg" | sha256sum }}
+
+if [ $CHEZMOI_ARCH = "amd64" ]; then
+    cd $CHEZMOI_SOURCE_DIR
+    sudo cp ./etc/apt/keyrings/* /etc/apt/keyrings/
+    sudo cp ./etc/apt/sources.list.d/* /etc/apt/sources.list.d/
+else
+    echo $CHEZMOI_ARCH not supported for additional apt sources.
+fi
+
+sudo apt install -y extrepo
+
+# TODO find signal for arm64, e.g. https://github.com/dennisameling/Signal-Desktop
