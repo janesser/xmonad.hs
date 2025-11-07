@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ $CHEZMOI_ARCH = "amd64" ]; then
+if [ "$CHEZMOI_ARCH" = "amd64" ]; then
     sudo apt install -y pipewire-audio easyeffects blueman
     sudo mkdir -p /etc/pipewire
     sudo cp /usr/share/pipewire/pipewire.conf /etc/pipewire/pipewire.conf

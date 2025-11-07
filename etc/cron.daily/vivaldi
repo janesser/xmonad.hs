@@ -20,9 +20,11 @@
 # System-wide package configuration.
 DEFAULTS_FILE="/etc/default/vivaldi"
 
+DEFAULT_ARCH=`dpkg-architecture -c 'echo $DEB_HOST_ARCH')`
+
 # sources.list setting for vivaldi updates.
-REPOCONFIG="deb [arch=arm64] https://repo.vivaldi.com/stable/deb/ stable main"
-REPOCONFIGREGEX="deb (\[arch=[^]]*\barm64\b[^]]*\][[:space:]]*) https?://repo.vivaldi.com/stable/deb/ stable main"
+REPOCONFIG="deb [arch=$DEFAULT_ARCH] https://repo.vivaldi.com/stable/deb/ stable main"
+REPOCONFIGREGEX="deb (\[arch=[^]]*\b$DEFAULT_ARCH\b[^]]*\][[:space:]]*) https?://repo.vivaldi.com/stable/deb/ stable main"
 
 APT_GET="`command -v apt-get 2> /dev/null`"
 APT_CONFIG="`command -v apt-config 2> /dev/null`"
@@ -284,8 +286,6 @@ handle_distro_upgrade() {
     fi
   fi
 }
-
-DEFAULT_ARCH="arm64"
 
 get_lib_dir() {
   if [ "$DEFAULT_ARCH" = "i386" ]; then

@@ -5,7 +5,7 @@
 # signal {{ include "./etc/apt/sources.list.d/signal-xenial.sources" | sha256sum }} {{ include "./etc/apt/keyrings/signal-desktop-keyring.gpg" | sha256sum }}
 # teamviewer {{ include "./etc/apt/sources.list.d/teamviewer.list" | sha256sum }} {{ include "./etc/apt/keyrings/teamviewer-keyring.gpg" | sha256sum }}
 
-if [ $CHEZMOI_ARCH = "amd64" ]; then
+if [ "$CHEZMOI_ARCH" = "amd64" ]; then
     cd $CHEZMOI_SOURCE_DIR
     sudo cp ./etc/apt/keyrings/* /etc/apt/keyrings/
     sudo cp ./etc/apt/sources.list.d/* /etc/apt/sources.list.d/
