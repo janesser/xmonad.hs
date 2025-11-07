@@ -598,7 +598,7 @@ CPU thrashing remained high througout several versions
     make -j4
     sudo make install
 
-## Chuwi Camera Fixing
+## Chuwi Camera Fixing WIP
 
 Chuwi Ubook Xpro has an (back, over screen) ov2680 and (front) ov5648.
 Both work in windows 10. In vanilla linux ubuntu ov2680 is loaded, but won't result in any camera that e.g. `cheese` will detect.
@@ -624,3 +624,11 @@ WORK IN PROGRESS
 
 * blacklisted premature ov2680 loading
 * trying to figure the i2c address for poweron
+
+## Homeassistant WIP
+
+    pipx install homeassistant
+    hass
+    # browser access via localhost:8123
+
+<https://community.home-assistant.io/t/device-online-offline-alert-automation/741072>
