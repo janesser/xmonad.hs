@@ -38,8 +38,6 @@ start_once ~/.local/bin/pcloud
 start_once ~/.koofr-dist/storagegui
 # account deleted 2025-05-01
 # start_once dropbox start
-
-start_once easyeffects
 start_once /opt/extras.ubuntu.com/my-weather-indicator/bin/my-weather-indicator
 start_once nm-applet
 
@@ -55,6 +53,9 @@ start_once dev.geopjr.Tuba # compiled from github
 # start_once easyeffects
 start_once keepassxc
 start_once pavucontrol
+
+## BACKGROUND
+~/.local/bin/check_host_online.sh airRohr-505856 &
 
 if [ -n "$(udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN)" ]; then
    start_once onboard

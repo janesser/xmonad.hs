@@ -20,7 +20,7 @@ fi
 
 sudo update-alternatives --auto x-www-browser
 
-if command -v xdg-settings > /dev/null &2>1
+if command -v xdg-settings >/dev/null
 then
     xdg-settings set default-web-browser "$XDG_DEFAULT"
 else
