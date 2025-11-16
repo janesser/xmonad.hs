@@ -6,7 +6,7 @@ HOST=$1
 LAST_SEEN_ONLINE=never
 
 while true; do
-    if ping -q -c 1 $HOST >/dev/null
+    if ping -q -c 2 $HOST >/dev/null
     then
         #echo $HOST responds to ping.
         LAST_SEEN_ONLINE=`date`
