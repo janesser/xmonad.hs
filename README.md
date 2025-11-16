@@ -44,6 +44,8 @@ Installation of xmonad xmonad-contrib can be superceded by git-based installatio
         clamtk \
         system-config-printer
 
+About btop migrating from rocm-smi to amd-smi: <https://github.com/aristocratos/btop/issues/1196>
+
 ### extras
 
 More recommended less mandatory

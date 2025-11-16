@@ -58,5 +58,5 @@ start_once pavucontrol
 ~/.local/bin/check_host_online.sh airRohr-505856 &
 
 if [ -n "$(udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN)" ]; then
-   start_once onboard
+   start_once onboard -e # FIXME rendering onboard in xmonad won't reliably work
 fi
