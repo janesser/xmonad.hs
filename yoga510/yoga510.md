@@ -25,6 +25,9 @@ rcm-smi won't recognize this hardware.
 In `sudo dmesg|grep amdgpu` unclear if firmware is loaded or not.
 "stoney not supported by kfd" is a very famous search term.
 
+Even if amdgpu boots, screen will turn black before X startup.
+There is a specific firmware for lenovo socs here: <https://support.lenovo.com/de/de/downloads/ds543603-firmware-update-for-psoc-on-lenovo-amd-system-for-linux>
+
     [   19.300548] [drm] amdgpu kernel modesetting enabled.
     [   19.317811] amdgpu: Virtual CRAT table created for CPU
     [   19.319449] amdgpu: Topology: Add CPU node
