@@ -2,12 +2,16 @@
 # by this fix lightdm sources $HOME/.profile and adopts adjusted PATH variables etc.
 # https://github.com/canonical/lightdm/issues/96
 
+# lightdm changed, so reapply: {{ include "/etc/lightdm/lightdm.conf" | sha256sum }}
+
 if [ "$CHEZMOI_ARCH" = "arm64" ]
 then
     curl -sL https://raw.githubusercontent.com/canonical/lightdm/refs/heads/main/debian/lightdm-session | sudo tee /usr/local/sbin/lightdm-session
     sudo chmod +x /usr/local/sbin/lightdm-session
     # enable lightdm-session as wrapper
     sudo sed -i 's/#session-wrapper=lightdm-session/session-wrapper=lightdm-session/' /etc/lightdm/lightdm.conf
+    # disable user-session
+    sudo sed -i 's/^user-session/#user-session/' /etc/lightdm/lightdm.conf
     # disable autologin-user
     sudo sed -i 's/^autologin-user/#autologin-user/' /etc/lightdm/lightdm.conf
     if [ -n "$DISPLAY" ];
