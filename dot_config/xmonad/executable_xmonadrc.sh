@@ -47,7 +47,7 @@ start_once x-mail-client
 start_once signal-desktop
 start_once x-whatsapp
 # start_once element-desktop
-start_once dev.geopjr.Tuba # compiled from github
+# INSUFFICIENT_USE start_once dev.geopjr.Tuba # compiled from github
 
 ## ADMIN
 # start_once easyeffects
