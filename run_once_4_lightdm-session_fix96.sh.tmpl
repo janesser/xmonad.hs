@@ -2,7 +2,7 @@
 # by this fix lightdm sources $HOME/.profile and adopts adjusted PATH variables etc.
 # https://github.com/canonical/lightdm/issues/96
 
-# lightdm changed, so reapply: {{ include "/etc/lightdm/lightdm.conf" | sha256sum }}
+# lightdm changed, so reapply: {{ if eq .chezmoi.arch "arm64" }}{{ include "/etc/lightdm/lightdm.conf" | sha256sum }}{{ end }}
 
 if [ "$CHEZMOI_ARCH" = "arm64" ]
 then
