@@ -262,6 +262,7 @@ myStartupHook = do
   spawnOnce "bash ~/.config/xmonad/xmonadrc.sh"
   addVerticalScreenCorners
   spawnOnOnce monWs "x-terminal-emulator -e btop" -- writes ~/.ssh/env
+  spawnOnOnce monWs "x-terminal-emulator -e amdgpu_top"
 
 myFadeHook :: FadeHook
 myFadeHook =
