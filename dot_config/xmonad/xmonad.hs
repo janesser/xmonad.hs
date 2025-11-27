@@ -227,6 +227,7 @@ myManageHook =
     , -- admin
       className =? "easyeffects"      <||>
       className =? "Pavucontrol"      <||>
+      className =? "pavucontrol"      <||>
       className =? "KeePassXC" -?> doShift adminWs
     ]
 {- FOURMOLU_ENABLE -}

@@ -8,7 +8,7 @@
 #dtparam=spi=on
 
 # Enable audio (loads snd_bcm2835)
-dtoverlay=vc4-kms-v3d,noaudio
+dtoverlay=vc4-kms-v3d
 
 # Additional overlays and parameters are documented
 # /boot/firmware/overlays/README
@@ -46,6 +46,7 @@ arm_boost=1
 otg_mode=1
 
 [all]
-
 #hdmi_enable_4kp60=1
+#gpu_mem=512
+#disable_overlay=0
 core_freq=550

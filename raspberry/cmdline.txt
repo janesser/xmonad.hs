@@ -1,2 +1,1 @@
-console=serial0,115200 console=tty1 root=PARTUUID=3dd71584-02 rootfstype=ext4 fsck.repair=yes rootwait plymouth.ignore-serial-consoles cfg80211.ieee80211_regdom=DE drm.edid_firmware=HDMI-A-1:hpv28.bin
-
+console=tty1 root=PARTUUID=96465cda-02 rootfstype=ext4 fsck.repair=yes rootwait cfg80211.ieee80211_regdom=DE drm.edid_firmware=HDMI-A-1:hpv28.bin
