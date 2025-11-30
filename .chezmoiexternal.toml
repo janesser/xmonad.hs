@@ -1,3 +1,5 @@
+# chezmoi --refresh-externals apply
+
 [".config/xmonad/xmonad"]
 type = "git-repo"
 url = "https://github.com/xmonad/xmonad.git"
@@ -13,3 +15,5 @@ refreshPeriod = "168h"
 
 [".config/xmonad/xmonad-contrib".clone]
 args = ["-b", "master", "--single-branch"]
+
+# TODO anchor ~/labs from https://github.com/janesser/jetson_tweaks
