@@ -171,7 +171,7 @@ Unfortunaly I didn't get suspend work properly.
 
 ### mimeapps
 
-    _now managed by chezmoi_
+`mimeapps.list.tmpl`
 
     ln -Pfv ~/projs/xmonad.hs/.config/mimeapps.list ~/.config/mimeapps.list
 
@@ -353,9 +353,11 @@ there is no formatter for 'dockercompose' installed -> <https://github.com/redha
 
 ### Jupyter
 
+`run_once_3_devtools_4jupyterlab.sh`
+
     pipx install jupyterlab
     pipx inject jupyterlab jupyterlab-git
-    jupyter-lab &
+    jupyter-lab &;diswon
     # jupyter-lab stop
 
 ### ollama & deepseek
