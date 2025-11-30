@@ -218,7 +218,8 @@ myManageHook =
       className =? "Claws-mail"       <||>
       className =? "Geary"            -?> doShift commWs
     , -- ide
-      className =? "vscodium" -?> doShift devWs
+      className =? "vscodium" <||> -- TODO add caseinsensitive classname matching
+      className =? "VSCodium" -?> doShift devWs
     , -- entertain
       className =? "vlc" -?> doSideFloat C
     , className =? "Clementine" -?> doShift leasureWs
@@ -226,8 +227,8 @@ myManageHook =
     , className =? "LibreWolf" -?> doShift browseWs
     , -- admin
       className =? "easyeffects"      <||>
-      className =? "Pavucontrol"      <||>
       className =? "pavucontrol"      <||>
+      className =? "Pavucontrol"      <||>
       className =? "KeePassXC" -?> doShift adminWs
     ]
 {- FOURMOLU_ENABLE -}
@@ -288,12 +289,11 @@ myStatusBar = do
         then xmobarrcHostspecific
         else xmobarrcDefault
   xmobarrcDefault = "~/.config/xmonad/xmobarrc"
-  xmobarrcHostspecific = unsafePerformIO $ do 
+  xmobarrcHostspecific = unsafePerformIO $ do
     hostname <- getHostName
     homedir <- getHomeDirectory
     return $ homedir ++ "/.config/xmonad/xmobarrc." ++ hostname
-  
-  
+
 main :: IO ()
 main = do
   xmonad

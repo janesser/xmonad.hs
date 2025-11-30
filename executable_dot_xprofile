@@ -1,5 +1,5 @@
 #!/bin/bash
 
-if [ `hostname` = "raspberrypi"]; then
+if [ `hostname` = "raspberrypi" ]; then
     xrandr --output HDMI-1 --mode 2560x1600
 fi
