@@ -171,6 +171,8 @@ Unfortunaly I didn't get suspend work properly.
 
 ### mimeapps
 
+    _now managed by chezmoi_
+
     ln -Pfv ~/projs/xmonad.hs/.config/mimeapps.list ~/.config/mimeapps.list
 
 ### us keyboard fix
