@@ -39,7 +39,10 @@ start_once ~/.koofr-dist/storagegui
 # account deleted 2025-05-01
 # start_once dropbox start
 start_once /opt/extras.ubuntu.com/my-weather-indicator/bin/my-weather-indicator
+
+# either will work on amd64 and arm64
 start_once nm-applet
+start_once nm-tray
 
 ### COMM ###
 

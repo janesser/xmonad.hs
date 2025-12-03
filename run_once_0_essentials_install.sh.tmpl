@@ -10,7 +10,7 @@ sudo apt install -y aptitude \
         shutter \
         copyq \
         x11-xserver-utils \
-        {{ if eq .chezmoi.arch "amd64" }} network-manager-gnome {{ else if eq .chezmoi.arch "arm64" }} network-manager-applet {{ end }} \
+        {{ if eq .chezmoi.arch "amd64" }} network-manager-gnome {{ else if eq .chezmoi.arch "arm64" }} nm-tray {{ end }} \
         onboard \
         easyeffects \
         hw-probe \
