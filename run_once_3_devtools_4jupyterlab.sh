@@ -1,10 +1,9 @@
 #!/bin/bash
+## FIXME https://github.com/pypa/pipx/issues/1069 pipx progressbar
 
 sudo apt install -y pipx python3-opengl
+register-python-argcomplete --shell fish pipx >~/.config/fish/completions/pipx.fish
 
-# jupyter-lab stop
-# pipx uninstall jupyterlab
-
-pipx install poetry
-pipx install jupyterlab
-pipx inject jupyterlab jupyterlab-git jupyterlab_latex poetry-kernel
+pipx install -f poetry
+pipx install -f jupyterlab
+pipx inject -f jupyterlab jupyterlab-git jupyterlab_latex poetry-kernel
