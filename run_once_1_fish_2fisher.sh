@@ -4,3 +4,5 @@ curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fi
 
 sudo apt install -y fzf fdclone
 fisher install PatrickF1/fzf.fish
+
+fisher install halostatue/fish-chezmoi@v1
