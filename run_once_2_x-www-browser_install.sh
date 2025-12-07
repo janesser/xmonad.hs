@@ -6,6 +6,9 @@ if [ "$CHEZMOI_ARCH" = "amd64" ]; then
     sudo apt install -y librewolf
     sudo update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/librewolf 250
     XDG_DEFAULT=librewolf.desktop
+
+    curl -o /tmp/keepassxc_browser.xpi https://addons.mozilla.org/firefox/downloads/file/4628286/keepassxc_browser-1.9.11.xpi
+    librewolf /tmp/keepassxc_browser.xpi &
 elif [ "$CHEZMOI_ARCH" = "arm64" ]; then
     cd "$CHEZMOI_SOURCE_DIR"
     sudo cp etc/cron.daily/vivaldi /etc/cron.daily/
