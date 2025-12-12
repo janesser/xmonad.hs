@@ -3,6 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 import Control.Monad
+import Data.Char (toLower)
 import Data.List (intercalate)
 import Data.List.Split (splitOn)
 import Data.Semigroup (Endo)
@@ -98,8 +99,7 @@ myBasicKeys c =
     : mkNamedKeymap c myBasicKeyMap
 
 xKeysPrompt :: XPConfig -> [((KeyMask, KeySym), NamedAction)] -> X ()
-xKeysPrompt c keylist = do
-  mkXPrompt Bindings c (mkComplFunFromList' c $ showKmSimple keylist) doIt
+xKeysPrompt c keylist = mkXPrompt Bindings c (mkComplFunFromList' c $ showKmSimple keylist) doIt
  where
   doIt k = spawn $ "xdotool key " ++ doToolKey k
   doToolKey = intercalate "+" . map doControlKey . splitOn "-"
@@ -202,7 +202,7 @@ myManageHook =
     [ isDialog -?> doCenterFloat
     , isNotification -?> doSideFloat NE
     -- requires https://github.com/benruijl/sflock/commit/6d1998b177c381baff3abe70748ed92ae6e4a262
-    , className =? "sflock" -?> doFullFloat 
+    , className =? "sflock" -?> doFullFloat
     , -- games & private
       className =? "Lutris" -?> doSink <+> doShift gamesWs
     , currentWs =? gamesWs -?> doSink <+> doFullFloat
@@ -218,20 +218,27 @@ myManageHook =
       className =? "Claws-mail"       <||>
       className =? "Geary"            -?> doShift commWs
     , -- ide
-      className =? "vscodium" <||> -- TODO add caseinsensitive classname matching
-      className =? "VSCodium" -?> doShift devWs
+      className =?? "vscodium"        -?> doShift devWs
     , -- entertain
-      className =? "vlc" -?> doSideFloat C
-    , className =? "Clementine" -?> doShift leasureWs
+      className =? "vlc"              -?> doSideFloat C
+    , className =? "Clementine"       -?> doShift leasureWs
     -- browse
-    , className =? "LibreWolf" -?> doShift browseWs
+    , className =? "LibreWolf"        <||>
+      className =? "Navigator"        -?> doShift browseWs
     , -- admin
       className =? "easyeffects"      <||>
-      className =? "pavucontrol"      <||>
-      className =? "Pavucontrol"      <||>
-      className =? "KeePassXC" -?> doShift adminWs
+      className =?? "pavucontrol"     <||>
+      className =? "KeePassXC"        -?> doShift adminWs
     ]
 {- FOURMOLU_ENABLE -}
+  where
+    eqCI :: String -> String -> Bool
+    x `eqCI` y =
+      map toLower x == map toLower y
+
+    (=??) :: Query String -> String -> Query Bool
+    q =?? x = fmap (x `eqCI`) q
+
 
 myFocusHook :: Query (Endo WindowSet)
 myFocusHook =
@@ -278,8 +285,7 @@ myFadeHook =
 -- requires xdotool
 myStatusBar :: StatusBarConfig
 {-# NOINLINE myStatusBar #-}
-myStatusBar = do
-  statusBarProp determineStartUp (clickablePP xmobarPP)
+myStatusBar = statusBarProp determineStartUp (clickablePP xmobarPP)
  where
   determineStartUp :: String
   determineStartUp = do
@@ -295,20 +301,19 @@ myStatusBar = do
     return $ homedir ++ "/.config/xmonad/xmobarrc." ++ hostname
 
 main :: IO ()
-main = do
-  xmonad
-    . withSB myStatusBar
-    . docks
-    . ewmhFullscreen
-    . ewmh
-    . withUrgencyHook NoUrgencyHook
-    . javaHack
-    $ myConfig
-      { logHook = fadeWindowsLogHook myFadeHook
-      , manageHook =
-          manageDocks <+> myFocusHook <> myManageHook
-      , layoutHook = myLayoutHook
-      , startupHook = myStartupHook
-      , handleEventHook = screenCornerToggledEventHook <+> fadeWindowsEventHook <+> fixSteamFlicker <+> floatingVideosEventHook -- <+> focusOnMouseMove
-      , terminal = "x-terminal-emulator"
-      }
+main = xmonad
+  . withSB myStatusBar
+  . docks
+  . ewmhFullscreen
+  . ewmh
+  . withUrgencyHook NoUrgencyHook
+  . javaHack
+  $ myConfig
+    { logHook = fadeWindowsLogHook myFadeHook
+    , manageHook =
+        manageDocks <+> myFocusHook <> myManageHook
+    , layoutHook = myLayoutHook
+    , startupHook = myStartupHook
+    , handleEventHook = screenCornerToggledEventHook <+> fadeWindowsEventHook <+> fixSteamFlicker <+> floatingVideosEventHook -- <+> focusOnMouseMove
+    , terminal = "x-terminal-emulator"
+    }
