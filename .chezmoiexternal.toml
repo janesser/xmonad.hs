@@ -16,4 +16,13 @@ refreshPeriod = "168h"
 [".config/xmonad/xmonad-contrib".clone]
 args = ["-b", "master", "--single-branch"]
 
+["projs/zapzap"]
+type = "git-repo"
+url = "https://github.com/rafatosta/zapzap.git"
+refreshPeriod = "168h"
+
+["projs/zapzap".clone]
+args = ["-b", "main", "--single-branch"]
+
+
 # TODO anchor ~/labs from https://github.com/janesser/jetson_tweaks

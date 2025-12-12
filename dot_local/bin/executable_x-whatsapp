@@ -4,6 +4,9 @@ pushd .
 
 if [ -d ~/projs/zapzap/ ]; then
     cd ~/projs/zapzap/
+    poetry self sync
+    poetry install
+    poetry add dbus-python
     poetry run -- python3 run.py dev &
 elif [ -x $(command -v whatsie) ]; then
     whatsie &
