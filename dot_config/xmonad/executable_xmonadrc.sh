@@ -34,10 +34,7 @@ ssh-agent -c >>~/.ssh/env
 pactl set-source-volume @DEFAULT_SOURCE@ 20%
 
 start_once copyq
-start_once ~/.local/bin/pcloud
-start_once ~/.koofr-dist/storagegui
-# account deleted 2025-05-01
-# start_once dropbox start
+start_once nextcloud
 start_once /opt/extras.ubuntu.com/my-weather-indicator/bin/my-weather-indicator
 
 # either will work on amd64 and arm64

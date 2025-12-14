@@ -139,10 +139,10 @@ myJournalKeys c =
   subtitle "My Keys"
     : mkNamedKeymap
       c
-      [ ("M-o S-j", spawn' "emacs ~/pCloudDrive/journal.org")
-      , ("M-o S-t", spawn' "emacs ~/pCloudDrive/orgzly/todos.org")
-      , ("M-o S-e", spawn' "emacs ~/pCloudDrive/orgzly/tochter1.org")
-      , ("M-o S-a", spawn' "emacs ~/pCloudDrive/orgzly/tochter2.org")
+      [ ("M-o S-j", spawn' "emacs ~/Nextcloud/journal.org")
+      , ("M-o S-t", spawn' "emacs ~/Nextcloud/orgzly/todos.org")
+      , ("M-o S-e", spawn' "emacs ~/Nextcloud/orgzly/tochter1.org")
+      , ("M-o S-a", spawn' "emacs ~/Nextcloud/orgzly/tochter2.org")
       ]
 
 monWs :: String

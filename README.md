@@ -267,7 +267,19 @@ Used e.g. by thunderbird
     ls /usr/share/applications/*
     xdg-settings set default-web-browser librewolf.desktop
 
-### pCloud
+### Cloud Storage
+
+#### nextcloud
+
+actually trying free package at <www.hosting.de>
+
+#### koofr DISCONTINUED
+
+FIXME webdav integration gvfs was causing kernel halt problems
+
+#### pcloud DISCONTINUED
+
+FIXME had trouble with orgzly files not synced correctly
 
 EU-based replacement for US-based dropbox.
 
