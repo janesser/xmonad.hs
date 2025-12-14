@@ -1,6 +1,7 @@
 #!/bin/bash
 
-sudo apt install nextcloud-desktop
+sudo apt install -y nextcloud-desktop
+mkdir -p ~/Nextcloud
 
 ## remove pcloud and koofr
 rm -fR ~/.pcloud
