@@ -269,9 +269,18 @@ Used e.g. by thunderbird
 
 ### Cloud Storage
 
+choices
+# EU-based replacement for US-based dropbox.
+# should work on win, Linux, android (sync local file copy)
+# need to support my flows with orgzly and keepassxc
+
 #### nextcloud
 
 actually trying free package at <www.hosting.de>
+
+also trying to restore orgzly sync, i.e. https://github.com/orgzly/orgzly-android/issues/33
+
+
 
 #### koofr DISCONTINUED
 
@@ -280,8 +289,6 @@ FIXME webdav integration gvfs was causing kernel halt problems
 #### pcloud DISCONTINUED
 
 FIXME had trouble with orgzly files not synced correctly
-
-EU-based replacement for US-based dropbox.
 
 <https://www.pcloud.com/>
 
