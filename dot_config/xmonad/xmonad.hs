@@ -222,8 +222,10 @@ myManageHook =
     , -- entertain
       className =? "vlc"              -?> doSideFloat C
     , className =? "Clementine"       -?> doShift leasureWs
-    -- browse
-    , className =? "LibreWolf"        <||>
+    , -- browse
+      roleName =? "browser"           <||>
+      className =? "LibreWolf"        <||>
+      className =? "Chromium"         <||>
       className =? "Navigator"        -?> doShift browseWs
     , -- admin
       className =? "easyeffects"      <||>
@@ -232,6 +234,9 @@ myManageHook =
     ]
 {- FOURMOLU_ENABLE -}
   where
+    roleName :: Query String
+    roleName = stringProperty "WM_WINDOW_ROLE"
+
     eqCI :: String -> String -> Bool
     x `eqCI` y =
       map toLower x == map toLower y
