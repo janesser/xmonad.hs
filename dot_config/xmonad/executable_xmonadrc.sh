@@ -45,6 +45,7 @@ start_once nm-tray
 
 start_once x-mail-client
 start_once signal-desktop
+start_once signal-desktop-unofficial # arm64 packaging
 start_once x-whatsapp
 # start_once element-desktop
 # INSUFFICIENT_USE start_once dev.geopjr.Tuba # compiled from github

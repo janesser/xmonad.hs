@@ -10,13 +10,9 @@ if [ "$CHEZMOI_ARCH" = "amd64" ]; then
     curl -o /tmp/keepassxc_browser.xpi https://addons.mozilla.org/firefox/downloads/file/4628286/keepassxc_browser-1.9.11.xpi
     librewolf /tmp/keepassxc_browser.xpi &
 elif [ "$CHEZMOI_ARCH" = "arm64" ]; then
-    cd "$CHEZMOI_SOURCE_DIR"
-    sudo cp etc/cron.daily/vivaldi /etc/cron.daily/
-    sudo cp etc/default/vivaldi /etc/default/
-    sudo repo_add_once=true /etc/cron.daily/vivaldi
-    sudo apt update
-    sudo apt install -y vivaldi-stable
-    XDG_DEFAULT=vivaldi-stable.desktop
+    ~/pi-apps/manage install Chromium
+    ~/pi-apps/manage install "Better Chromium"
+    XDG_DEFAULT=chromium.desktop
 else
     echo $CHEZMOI_ARCH no default browser defined.
     exit 1

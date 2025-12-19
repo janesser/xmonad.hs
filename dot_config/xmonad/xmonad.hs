@@ -208,7 +208,7 @@ myManageHook =
     , currentWs =? gamesWs -?> doSink <+> doFullFloat
     , currentWs =? privWs -?> doSink
     , -- comm
-      className =? "Signal"           <||>
+      className ^? "Signal"           <||>
       className =? "Element"          <||>
       className =? "WhatSie"          <||>
       className =? "ZapZap"           <||>
