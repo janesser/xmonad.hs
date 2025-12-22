@@ -15,5 +15,11 @@
     sudo mount /dev/loop22 /mnt # check you have the rootfs mounted
     sudo dd if=/dev/loop22 of=/dev/mmcblk1p15 bs=4M oflag=dsync status=progress
     sudo fsck /dev/mmcblk1p15 # expand image-size to partition-size
+    unzip -p ~/Downloads/jetson-nano-jp461-sd-card-image.zip sd-blob-b01.img | sudo dd bs=8M of=/dev/mmcblk1 status=progress
 
 <https://shallowsky.com/linux/extlinux.html>
+
+<https://developer.nvidia.com/embedded/linux-tegra-r3276>
+this has potential to restore armbian
+
+upgrade ubuntu with help of update-manager towards LTS, first stop focal
