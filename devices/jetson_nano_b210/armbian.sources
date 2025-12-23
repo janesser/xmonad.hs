@@ -1,5 +1,0 @@
-Types: deb
-URIs: http://beta.armbian.com
-Suites: trixie
-Components: main trixie-utils trixie-desktop
-Signed-By: /usr/share/keyrings/armbian-archive-keyring.gpg
