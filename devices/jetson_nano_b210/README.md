@@ -52,4 +52,4 @@ There are victims of upgrade
 * (nv) tensorrt
 * (nv) opencv / visionworks
 
-Reaching ubuntu 22 jammy soon.
+Reaching ubuntu 24 noble soon.

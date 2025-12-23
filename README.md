@@ -4,11 +4,23 @@ My opinionated xmonad & chezmoi setup. With all dependencies expanded.
 
 ## Dotfiles via chezmoi
 
+### via snap
+
+    sudo snap install chezmoi --classic
+    ssh-keygen # add pubkey to github settings
+    sudo apt install git
+    chezmoi init git@github.com:janesser/xmonad.hs.git
+    chezmoi age-keygen -o ~/.config/chezmoi/age-id.txt
+    chezmoi apply -k
+
+### manual install
+
     sh -c "$(curl -fsLS get.chezmoi.io)" -- -b $HOME/.local/bin # https://www.chezmoi.io/install/ (snap or pre-compiled deb package)
     ssh-keygen # add pubkey to github settings
-    sudo apt install git git-lfs
-    ~/.local/bin/chezmoi init --git-lfs git@github.com:janesser/xmonad.hs.git
-    ~/.local/bin/chezmoi apply
+    sudo apt install git
+    ~/.local/bin/chezmoi init git@github.com:janesser/xmonad.hs.git
+    ~/.local/bin/chezmoi age-keygen -o ~/.config/chezmoi/age-id.txt
+    ~/.local/bin/chezmoi apply -k
 
 ## Awesome packages (ubuntu)
 
@@ -270,17 +282,16 @@ Used e.g. by thunderbird
 ### Cloud Storage
 
 choices
-# EU-based replacement for US-based dropbox.
-# should work on win, Linux, android (sync local file copy)
-# need to support my flows with orgzly and keepassxc
+
+* EU-based replacement for US-based dropbox.
+* should work on win, Linux, android (sync local file copy)
+* need to support my flows with orgzly and keepassxc
 
 #### nextcloud
 
 actually trying free package at <www.hosting.de>
 
-also trying to restore orgzly sync, i.e. https://github.com/orgzly/orgzly-android/issues/33
-
-
+also trying to restore orgzly sync, i.e. <https://github.com/orgzly/orgzly-android/issues/33>
 
 #### koofr DISCONTINUED
 
@@ -664,4 +675,3 @@ WORK IN PROGRESS
 
 <https://gparted.org/livecd.php>
 sudo dd bs=4M if=$HOME/Downloads/gparted-live-1.7.0-12.amd64.iso of=/dev/sdb status=progress oflag=sync
-
