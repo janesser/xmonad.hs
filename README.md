@@ -88,6 +88,18 @@ Ubuntu Noble 24 with some additional repositories
     export XAUTHORITY=$HOME/.Xauthority
     ...
 
+### mobile ssh - mosh
+
+<https://linuxhandbook.com/mosh/>
+
+### tmux and reptyr
+
+<https://github.com/nelhage/reptyr>
+
+<https://tmuxcheatsheet.com/>
+
+<https://github.com/budimanjojo/tmux.fish>
+
 ### power button behaviour
 
 Check systemd-logind
@@ -181,14 +193,6 @@ Unfortunaly I didn't get suspend work properly.
 
 <https://github.com/volitank/nala>
 
-### tmux and reptyr
-
-<https://github.com/nelhage/reptyr>
-
-<https://tmuxcheatsheet.com/>
-
-<https://github.com/budimanjojo/tmux.fish>
-
 ### mimeapps
 
 `mimeapps.list.tmpl`
@@ -248,12 +252,6 @@ pipewire supercedes pulseaudio - getting bluetooth headset working
 
 * x2goserver-x2goagent
 * lightdm-remote-session-x2go
-
-### my-weather-indicator
-
-`run_once_2_my-weather-indicator_install.sh`
-
-<https://github.com/atareao/my-weather-indicator/blob/main/bin/my-weather-indicator>
 
 ## Office applications
 
@@ -641,6 +639,12 @@ CPU thrashing remained high througout several versions
     qmake PREFIX=/usr/local
     make -j4
     sudo make install
+
+### my-weather-indicator (deprecated)
+
+`run_once_2_my-weather-indicator_install.sh`
+
+<https://github.com/atareao/my-weather-indicator/blob/main/bin/my-weather-indicator>
 
 ## related projects
 
