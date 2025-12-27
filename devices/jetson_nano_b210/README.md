@@ -1,10 +1,22 @@
 # jetson nano
 
-<https://developer.nvidia.com/embedded/linux-tegra-r3276>
-
 NVidia has dropped support for Jetson Nano since Jetson Linux R32.7.6.
 
 NOTE the driver package available may help built new kernels.
+
+<https://www.reddit.com/r/JetsonNano/comments/1eaw3a9/some_new_os_for_jetson_nano_4gb_original/>
+
+<https://developer.ridgerun.com/wiki/index.php/Jetson_Nano/Development/Building_the_Kernel_from_Source>
+<https://developer.nvidia.com/embedded/jetson-linux-archive>
+<https://developer.nvidia.com/embedded/linux-tegra-r3276>
+
+<https://github.com/pythops/jetson-image>
+<https://github.com/armbian/build/pull/2720>
+
+## Yocto kernel 4.x
+
+<https://github.com/orgs/OE4T/discussions/1593>
+<https://marcopennelli.com/embedded-linux-yocto-project-and-nvidia-jetson-nano-developer-kit-episode-1-369c079b7c15>
 
 ## No simple answers (with armbian jetson nano)
 
@@ -49,7 +61,20 @@ Set 'lts' in `/etc/update-manager/`
 
 There are victims of upgrade
 
-* (nv) tensorrt
+* (nv) tensorrt (can be restored ?)
 * (nv) opencv / visionworks
+* (nv) wayland / weston
+* unity
 
 Reaching ubuntu 24 noble soon.
+
+## jetson-stats
+
+    mkdir -p ~/projs ; cd ~/projs
+    git clone https://github.com/rbonghi/jetson_stats.git
+    cd jetson_stats
+    ./scripts/install_jtop_torun_without_sudo.sh
+    sudo jtop --install-service
+    sudo jtop
+    # eventually enable jetson-clocks
+    # eventually switch to 5W mode

@@ -24,6 +24,7 @@ sudo apt install -y aptitude \
         xss-lock \
         pavucontrol \
         xfce4-power-manager \
+        tmux reptyr \
         {{ if eq .chezmoi.arch "amd64" }} xautolock {{ end }}
         # FIXME xautolock for arm64 missing
 

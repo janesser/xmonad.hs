@@ -181,6 +181,14 @@ Unfortunaly I didn't get suspend work properly.
 
 <https://github.com/volitank/nala>
 
+### tmux and reptyr
+
+<https://github.com/nelhage/reptyr>
+
+<https://tmuxcheatsheet.com/>
+
+<https://github.com/budimanjojo/tmux.fish>
+
 ### mimeapps
 
 `mimeapps.list.tmpl`
@@ -289,7 +297,7 @@ choices
 
 #### nextcloud
 
-actually trying free package at <www.hosting.de>
+actually trying free package at <https://www.hosting.de>
 
 also trying to restore orgzly sync, i.e. <https://github.com/orgzly/orgzly-android/issues/33>
 
