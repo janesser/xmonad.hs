@@ -101,7 +101,7 @@ doPlaceVideos r vf = do
  where
   rect = videoFloatRectangle r vf
   floatHook :: RationalRect -> [String] -> Query (Endo WindowSet)
-  floatHook nrect wss = composeOne [fmap not (isNotification <||> isDialog) -?> doRectFloat nrect <+> copyToAllWorkspaces wss]
+  floatHook nrect wss = composeOne [fmap not (isNotification <||> isDialog) -?> doRectFloat nrect <+> doRaise <+> copyToAllWorkspaces wss]
   copyToAllWorkspaces :: [String] -> Query (Endo WindowSet)
   copyToAllWorkspaces wss = do
     let copied :: [Query (Endo WindowSet)] = map copyWindowToWorkspace wss

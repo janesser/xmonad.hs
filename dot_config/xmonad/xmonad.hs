@@ -205,7 +205,7 @@ myManageHook =
     , className =? "sflock" -?> doFullFloat
     , -- games & private
       className =? "Lutris" -?> doSink <+> doShift gamesWs
-    , currentWs =? gamesWs -?> doSink <+> doFullFloat
+    , currentWs =? gamesWs -?> doIgnore -- doFullFloat <+> doLower -- FIXME this covers other floating windows
     , currentWs =? privWs -?> doSink
     , -- comm
       className ^? "Signal"           <||>
@@ -243,7 +243,6 @@ myManageHook =
 
     (=??) :: Query String -> String -> Query Bool
     q =?? x = fmap (x `eqCI`) q
-
 
 myFocusHook :: Query (Endo WindowSet)
 myFocusHook =
