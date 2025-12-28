@@ -205,7 +205,7 @@ myManageHook =
     , className =? "sflock" -?> doFullFloat
     , -- games & private
       className =? "Lutris" -?> doSink <+> doShift gamesWs
-    , currentWs =? gamesWs -?> doIgnore -- doFullFloat <+> doLower -- FIXME this covers other floating windows
+    -- , currentWs =? gamesWs -?> doFullFloat <+> doLower -- FIXME this covers other floating windows
     , currentWs =? privWs -?> doSink
     , -- comm
       className ^? "Signal"           <||>
