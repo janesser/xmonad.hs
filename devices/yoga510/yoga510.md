@@ -52,7 +52,6 @@ e.g. on youtube, playback was fine, though pre-buffering fell short several time
     # echo "auto" | sudo tee /sys/devices/pci0000:00/0000:00:01.0/power_dpm_force_performance_level
     watch -n 0.5 cat /sys/devices/pci0000:00/0000:00:01.0/pp_dpm_sclk
 
-
 ### btop shows no gpu
 
 rocm-smi won't work for STONEY chipset.

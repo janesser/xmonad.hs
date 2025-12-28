@@ -434,6 +434,8 @@ Multi-Platform Package Manager for Stable Diffusion.
 
 ### n8n
 
+`run_once_3_devtools_4node.sh`
+
 can use ollama above
 
     npx n8n
@@ -449,8 +451,6 @@ can use ollama above
 ### eclipse
 
 <https://github.com/janesser/eclipse-snap>
-
-    snap run eclipse-pde
 
 ### nix
 
@@ -496,13 +496,17 @@ can use ollama above
 
 ### Signal Desktop
 
+`run_once_2_rp_pi-apps_install.sh`
+
 <https://www.signal.org/download/linux/>
 
-    sudo apt install signal-desktop
+    sudo apt install signal-desktop # signal-desktop-unofficial via pi-apps
 
 ### Whatsapp Client
 
 #### zapzap
+
+    `run_once_2_zapzap_install.sh`
 
     sudo apt install libxcb-cursor0 python3-poetry
     git clone https://github.com/rafatosta/zapzap.git
@@ -647,33 +651,6 @@ CPU thrashing remained high througout several versions
 <https://github.com/atareao/my-weather-indicator/blob/main/bin/my-weather-indicator>
 
 ## related projects
-
-### Chuwi Camera Fixing WIP
-
-Chuwi Ubook Xpro has an (back, over screen) ov2680 and (front) ov5648.
-Both work in windows 10. In vanilla linux ubuntu ov2680 is loaded, but won't result in any camera that e.g. `cheese` will detect.
-
-<https://github.com/torvalds/linux/blob/master/drivers/media/i2c/ov2680.c>
-
-From dmesg
-
-    [    6.329170] ov2680 i2c-OVTI2680:00: supply DOVDD not found, using dummy regulator
-    [    6.329230] ov2680 i2c-OVTI2680:00: supply DVDD not found, using dummy regulator
-    [    6.329244] ov2680 i2c-OVTI2680:00: supply AVDD not found, using dummy regulator
-    [    6.350631] ov2680 i2c-OVTI2680:00: sensor_revision id = 0x2680, rev= 0
-
-<https://github.com/djrscally/miix-510-cameras>
-
-this article describes a few i2ctransfer tricks, none has worked so far
-
-<https://datasheet4u.com/pdf-down/O/V/2/OV2680-OmniVision.pdf>
-
-Datasheet of the hardware vendor
-
-WORK IN PROGRESS
-
-* blacklisted premature ov2680 loading
-* trying to figure the i2c address for poweron
 
 ### Homeassistant WIP
 
