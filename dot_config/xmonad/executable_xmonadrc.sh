@@ -35,7 +35,7 @@ pactl set-source-volume @DEFAULT_SOURCE@ 20%
 
 start_once copyq
 start_once nextcloud
-start_once /opt/extras.ubuntu.com/my-weather-indicator/bin/my-weather-indicator
+start_once x-weather-client
 
 # either will work on amd64 and arm64
 start_once nm-applet
