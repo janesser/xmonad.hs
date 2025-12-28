@@ -167,6 +167,17 @@ Unfortunaly I didn't get suspend work properly.
 #### fish
 
 `run_once_1_fish_0_install.sh`
+`run_once_1_fish_1completion_chezmoi.sh`
+`run_once_1_fish_2fisher.sh`
+`run_once_1_fish_2theme.sh`
+
+#### wezterm
+
+`run_once_0_wezterm_install.sh`
+
+<https://wezterm.org/config/default-keys.html>
+
+    wezterm show-keys
 
 #### zutty
 
