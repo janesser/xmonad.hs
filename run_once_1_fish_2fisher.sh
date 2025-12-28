@@ -7,4 +7,4 @@ fisher install PatrickF1/fzf.fish
 
 fisher install halostatue/fish-chezmoi@v1
 
-fisher install budimanjojo/tmux.fish
+#fisher install budimanjojo/tmux.fish

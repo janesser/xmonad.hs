@@ -24,7 +24,6 @@ sudo apt install -y aptitude \
         xss-lock \
         pavucontrol \
         xfce4-power-manager \
-        tmux reptyr \
         {{ if eq .chezmoi.arch "amd64" }} xautolock {{ end }}
         # FIXME xautolock for arm64 missing
 
@@ -41,7 +40,8 @@ sudo apt install -y \
     geeqie \
     dex \
     dict \
-    wakeonlan
+    wakeonlan \
+    reptyr
 {{end}}
 
 {{if .is_install_tex}}

@@ -3,5 +3,5 @@ if status is-interactive
 end
 
 status is-interactive; and begin
-    set fish_tmux_autostart true
+    set fish_tmux_autostart false
 end
