@@ -8,3 +8,5 @@ then
 else
     echo add-apt-repository not found to enable my-weather-indicator PPA
 fi
+
+sudo apt install -y meteo-qt
