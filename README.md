@@ -296,6 +296,14 @@ Used e.g. by thunderbird
     ls /usr/share/applications/*
     xdg-settings set default-web-browser librewolf.desktop
 
+#### Picture-in-Picture
+
+See <https://github.com/janesser/xmonad.hs/blob/main/dot_config/xmonad/lib/FloatingVideos.hs> which allows switching floating positions by keyboard.
+
+See <https://support.mozilla.org/en-US/kb/about-picture-picture-firefox> which denotes keyboard shortcuts for Picture-in-Picture.
+
+Also see <https://windowsreport.com/firefox-finally-lets-you-customize-keyboard-shortcuts/> which announces a soon to land feature, enabling <about:keyboard> to adjust firefox (so also librewolf) keybindings. As `CTRL+SHIFT+]` won't work on DE QWERTZ-keyboards.
+
 ### Cloud Storage
 
 choices

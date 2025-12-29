@@ -10,9 +10,11 @@ if [ "$CHEZMOI_ARCH" = "amd64" ]; then
     curl -o /tmp/keepassxc_browser.xpi https://addons.mozilla.org/firefox/downloads/file/4628286/keepassxc_browser-1.9.11.xpi
     librewolf /tmp/keepassxc_browser.xpi &
 elif [ "$CHEZMOI_ARCH" = "arm64" ]; then
-    ~/pi-apps/manage install Chromium
-    ~/pi-apps/manage install "Better Chromium"
-    XDG_DEFAULT=chromium.desktop
+    ~/pi-apps/manage install Librewolf
+    XDG_DEFAULT=librewolf.desktop
+
+    ~/pi-apps/manage uninstall Chromium
+    ~/pi-apps/manage uninstall "Better Chromium"
 else
     echo $CHEZMOI_ARCH no default browser defined.
     exit 1
