@@ -1,5 +1,6 @@
 #!/bin/bash
 
-if [ "$CHEZMOI_ARCH" = "arm64" ]; then
-    ~/pi-apps/manage update-all
+if command -v ~/pi-apps/manage >/dev/null &2>1
+then
+    ~/pi-apps/manage updater
 fi
