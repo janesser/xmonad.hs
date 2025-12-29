@@ -25,15 +25,18 @@ NOTE the driver package available may help built new kernels.
 Automatic scripts maintain this, which actually won't boot.
 One will be stuck on Nvidia Logo, no visible kernel boot.
 
-Collection for commands to deal with images:
+### Apply images to sdcards
 
     unzip -p ~/Downloads/jetson-nano-jp461-sd-card-image.zip sd-blob-b01.img | sudo dd bs=8M of=/dev/mmcblk1 status=progress oflag=sync
     xzcat ~/Downloads/Armbian_community_26.2.0-trunk.44_Jetson-nano_trixie_current_6.12.60_minimal.img.xz | sudo dd of=/dev/mmcblk1 bs=8M oflag=dsync status=progress
 
-    # https://askubuntu.com/questions/69363/mount-single-partition-from-image-of-entire-disk-device
+### Mount partition from image file
+
+<https://askubuntu.com/questions/69363/mount-single-partition-from-image-of-entire-disk-device>
+
     unxz ~/Downloads/Armbian_community_26.2.0-trunk.44_Jetson-nano_trixie_current_6.12.60_minimal.img.xz
     fdisk -lu ~/Downloads/Armbian_community_26.2.0-trunk.44_Jetson-nano_trixie_current_6.12.60_minimal.img
-    
+
     # calculate offset 540672 times block-size 512 = 276824064
     losetup # check free loop-device
     sudo losetup -o 276824064 /dev/loop22 ~/Downloads/Armbian_community_26.2.0-trunk.44_Jetson-nano_trixie_current_6.12.60_minimal.img
@@ -47,6 +50,35 @@ Collection for commands to deal with images:
 
 Copied working kernel onto armbian partition.
 Still boots from L4T partition.
+
+#### Install docker
+
+    sudo apt install nvidia-docker2 docker-buildx
+
+<https://forums.developer.nvidia.com/t/docker-fail-to-start-jetson-nano-after-clean-install-of-jetpack-6-2-fix-it/324760>
+
+    sudo systemctl stop docker
+    sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
+    sudo update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+    sudo systemctl start docker
+
+<https://github.com/NVIDIA/nvidia-container-toolkit/issues/137>
+<https://github.com/docker/cli/issues/4238>
+
+Append `systemd.unified_cgroup_hierarchy=0` to `/boot/extlinux/extlinux.conf`.
+
+#### Build (custom?) armbian kernel
+
+<https://github.com/armbian/build>
+
+    cd ~/projs
+    git clone https://github.com/armbian/build.git
+    cd build
+    
+    # https://docs.armbian.com/Developer-Guide_Build-Commands/
+    ./compile.sh kernel-config BOARD=jetson-nano BRANCH=current KERNEL_BTF=no KERNEL_GIT=shallow # need around 15GB free disk space
+    ./compile.sh kernel BOARD=jetson-nano BRANCH=current KERNEL_BTF=no KERNEL_GIT=shallow
+    ./compile.sh kernel-dbt BOARD=jetson-nano BRANCH=current KERNEL_BTF=no KERNEL_GIT=shallow
 
 ### Attempt to take over armbian in apt-sources ABORTED
 
