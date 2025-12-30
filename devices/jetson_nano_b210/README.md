@@ -98,7 +98,12 @@ There are victims of upgrade
 * (nv) wayland / weston
 * unity
 
-Reaching ubuntu 24 noble soon.
+Reached ubuntu 24 noble.
+
+Some fixes after do-release-upgrade
+
+<https://askubuntu.com/questions/1445364/do-release-upgrade-results-in-error-apt-glib-critical-apstreamcli-libapps>
+<https://unix.stackexchange.com/questions/464445/problem-with-appstreamcli-when-running-apt-update>
 
 ## jetson-stats
 
