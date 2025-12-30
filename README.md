@@ -683,3 +683,7 @@ CPU thrashing remained high througout several versions
 
 <https://gparted.org/livecd.php>
 sudo dd bs=4M if=$HOME/Downloads/gparted-live-1.7.0-12.amd64.iso of=/dev/sdb status=progress oflag=sync
+
+## Inspiration Sources
+
+<https://config.phundrak.com/fish.html>
