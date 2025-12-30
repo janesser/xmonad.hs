@@ -6,10 +6,6 @@ setenv () {
   export $1=$2
 }
 
-if [ -f "~/.ssh/env" ]; then
-  source ~/.ssh/env
-fi
-
 source /home/jan/.bash_completions/nala.sh
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
