@@ -41,5 +41,8 @@
   },
   "[github-actions-workflow]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[lua]": {
+    "editor.defaultFormatter": "sumneko.lua"
   }
 }

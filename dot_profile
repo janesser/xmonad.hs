@@ -46,7 +46,7 @@ export NVM_DIR="$HOME/.nvm"
 if [ -f "~/.ssh/env" ]; then
   source ~/.ssh/env
 fi
-if ps -p $SSH_AGENT_PID >/dev/null &2>1
+if ps -p $SSH_AGENT_PID >/dev/null
 then
     echo ssh-agent $SSH_AGENT_PID alive.
 else

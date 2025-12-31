@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if command -v ~/pi-apps/manage >/dev/null &2>1
+if command -v ~/pi-apps/manage >/dev/null
 then
     ~/pi-apps/manage updater
 fi

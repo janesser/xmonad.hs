@@ -687,3 +687,4 @@ sudo dd bs=4M if=$HOME/Downloads/gparted-live-1.7.0-12.amd64.iso of=/dev/sdb sta
 ## Inspiration Sources
 
 <https://config.phundrak.com/fish.html>
+<https://mwop.net/blog/2024-07-04-how-i-use-wezterm.html>
