@@ -9,7 +9,7 @@ sudo apt install -y wezterm
 
 wezterm shell-completion --shell fish > ~/.config/fish/completions/wezterm.fish
 
-sudo update-alternatives --config x-terminal-emulator /usr/bin/open-wezterm-here
+sudo update-alternatives --set x-terminal-emulator /usr/bin/open-wezterm-here
 
 ## clean-up kitty if present
 sudo update-alternatives --remove x-terminal-emulator /usr/local/bin/kitty
