@@ -12,9 +12,8 @@ then
     git reset --hard $ZAPZAP_VERSION
     echo resetting present env.
     poetry env remove --all
-    poetry self sync
     poetry install
-    poetry update --sync dbus-python
+    poetry add dbus-python
 else
     exit 1
 fi
