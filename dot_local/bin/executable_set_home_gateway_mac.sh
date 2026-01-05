@@ -1,5 +1,5 @@
 #!/bin/bash
 
-CURRENT_GATEWAY_MAC=arp -a|grep -e "^_gateway "|awk '{print $4;}'
+CURRENT_GATEWAY_MAC=`arp fritz.box | grep fritz.box | awk '{print $3;}'`
 
 echo "$CURRENT_GATEWAY_MAC" > ~/.home_gateway_mac

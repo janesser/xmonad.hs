@@ -8,7 +8,7 @@ CHECK_INTERVAL=${CHECK_INTERVAL:=5}
 if [[ -e ~/.home_gateway_mac ]]
 then
     HOME_GATEWAY_MAC=`cat ~/.home_gateway_mac`
-    DEFAULT_GATEWAY_MAC=`arp -a|grep -e '^_gateway '|awk '{print $4;}'`
+    DEFAULT_GATEWAY_MAC=`arp fritz.box | grep fritz.box | awk '{print $3;}'`
     if [[ "$DEFAULT_GATEWAY_MAC" = "$HOME_GATEWAY_MAC" ]]
     then
         echo We are home.
