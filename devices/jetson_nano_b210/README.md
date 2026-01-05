@@ -18,6 +18,46 @@ NOTE the driver package available may help built new kernels.
 <https://github.com/orgs/OE4T/discussions/1593>
 <https://marcopennelli.com/embedded-linux-yocto-project-and-nvidia-jetson-nano-developer-kit-episode-1-369c079b7c15>
 
+## Ensuring fallback kernel
+
+Armbian vanilla kernel won't boot
+TODO place custom build
+
+    # NOTE Some nvidia packages, overwrite present files, like i.e. /boot/Image
+    sudo apt install --reinstall nvidia-l4t-kernel nvidia-l4t-kernel-headers nvidia-l4t-kernel-dtbs nvidia-l4t-firmware
+    uname -r # 4.9.337-tegra
+    
+    cd /boot
+    sudo cp Image vmlinuz-4.9.337-tegra
+    sudo cp initrd initrd.img-4.9.337-tegra
+    
+    sudo ln -sf vmlinuz-6.12.63-current-arm64 Image
+    sudo ln -sf initrd.img-6.12.63-current-arm64 initrd.img
+    sudo ln -sf initrd.img-6.12.63-current-arm64 initrd
+
+    sudo ln -sf vmlinuz-4.9.337-tegra Image.backup
+    sudo ln -sf initrd.img-4.9.337-tegra initrd.img.backup
+    sudo ln -sf initrd.img-4.9.337-tegra initrd.backup
+
+### edit /etc/extlinux/extlinux.conf to be like
+
+    TIMEOUT 30
+    DEFAULT backup
+
+    MENU TITLE L4T boot options
+
+    LABEL primary
+        MENU LABEL primary kernel
+        LINUX /boot/Image
+        INITRD /boot/initrd
+        APPEND ${cbootargs} quiet root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 systemd.unified_cgroup_hierarchy=0
+
+    LABEL backup
+        MENU LABEL backup kernel
+        LINUX /boot/Image.backup
+        INITRD /boot/initrd.backup
+        APPEND ${cbootargs} quiet root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 systemd.unified_cgroup_hierarchy=0
+
 ## No simple answers (with armbian jetson nano)
 
 <https://www.armbian.com/jetson-nano/>
