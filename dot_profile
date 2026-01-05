@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ~/.profile: executed by the command interpreter for login shells.
 # This file is not read by bash(1), if ~/.bash_profile or ~/.bash_login
@@ -43,14 +43,21 @@ fi
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 
-if [ -f "~/.ssh/env" ]; then
-  source ~/.ssh/env
-fi
-if ps -p $SSH_AGENT_PID >/dev/null
+# SSH agent lazy-activation
+
+setenv () { export $1=$2; }
+
+if source ~/.ssh/env
 then
-    echo ssh-agent $SSH_AGENT_PID alive.
-else
-    echo "# GENERATED FILE" >~/.ssh/env
-    ssh-agent -c >>~/.ssh/env
-    source ~/.ssh/env
+    if $(ps -p "$SSH_AGENT_PID" >/dev/null)
+    then
+        echo ssh-agent $SSH_AGENT_PID alive.
+        return 0
+    else
+        echo No re-usable ssh-agent found \($SSH_AGENT_PID\) found.
+    fi
 fi
+
+echo "# GENERATED FILE" >~/.ssh/env
+ssh-agent -c >>~/.ssh/env
+source ~/.ssh/env

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo apt install -y git gitk git-lfs
+sudo apt install -y git gitk git-lfs direnv
 
 if [ "$CHEZMOI_ARCH" = "amd64" ]; then
     sudo apt install -y snap

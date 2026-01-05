@@ -2,10 +2,6 @@
 
 source /etc/bash.bashrc
 
-setenv () {
-  export $1=$2
-}
-
 source /home/jan/.bash_completions/nala.sh
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!

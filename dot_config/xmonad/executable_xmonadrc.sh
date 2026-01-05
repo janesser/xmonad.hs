@@ -25,11 +25,6 @@ xss-lock -- sh -c "pactl set-sink-mute @DEFAULT_SINK@ on; slock" &
 # actually without "-t" tapping isn't blocked
 start_once syndaemon "-i 2 -d -K -t -m 50"
 
-## ssh-agent
-echo "# GENERATED FILE" >~/.ssh/env
-killall ssh-agent
-ssh-agent -c >>~/.ssh/env
-
 # no over-gain mic
 pactl set-source-volume @DEFAULT_SOURCE@ 20%
 
