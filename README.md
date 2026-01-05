@@ -82,23 +82,21 @@ Ubuntu Noble 24 with some additional repositories
 
 `run_once_0_apt_sources.sh`
 
-### ssh x11forwarding
+### ssh_config
+
+resolve hostnames differently for localnetwork
+
+https://fmartingr.com/blog/2022/08/12/using-ssh-config-match-to-connect-to-a-host-using-multiple-ip-or-hostnames/
+
+#### x11forwarding
 
     ssh -X ...
     export XAUTHORITY=$HOME/.Xauthority
     ...
 
-### mobile ssh - mosh
+#### mobile ssh - mosh
 
 <https://linuxhandbook.com/mosh/>
-
-### tmux and reptyr
-
-<https://github.com/nelhage/reptyr>
-
-<https://tmuxcheatsheet.com/>
-
-<https://github.com/budimanjojo/tmux.fish>
 
 ### power button behaviour
 
@@ -668,6 +666,17 @@ CPU thrashing remained high througout several versions
 `run_once_2_my-weather-indicator_install.sh`
 
 <https://github.com/atareao/my-weather-indicator/blob/main/bin/my-weather-indicator>
+
+### tmux and reptyr (deprecated)
+
+Trying wezterm(mux) as replacement.
+
+<https://github.com/nelhage/reptyr>
+
+<https://tmuxcheatsheet.com/>
+
+<https://github.com/budimanjojo/tmux.fish>
+
 
 ## related projects
 
