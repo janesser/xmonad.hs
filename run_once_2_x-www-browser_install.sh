@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sudo apt install lynx
+
 if [ "$CHEZMOI_ARCH" = "amd64" ]; then
     sudo extrepo enable librewolf
     sudo apt update
@@ -10,7 +12,7 @@ if [ "$CHEZMOI_ARCH" = "amd64" ]; then
     curl -o /tmp/keepassxc_browser.xpi https://addons.mozilla.org/firefox/downloads/file/4628286/keepassxc_browser-1.9.11.xpi
     librewolf /tmp/keepassxc_browser.xpi &
 elif [ "$CHEZMOI_ARCH" = "arm64" ]; then
-    ~/pi-apps/manage install Librewolf
+    ~/pi-apps/manage install LibreWolf
     XDG_DEFAULT=librewolf.desktop
 
     ~/pi-apps/manage uninstall Chromium

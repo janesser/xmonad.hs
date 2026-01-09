@@ -5,18 +5,9 @@ image/png=org.xfce.ristretto.desktop
 inode/directory=pcmanfm.desktop
 application/zip=engrampa.desktop
 video/quicktime=vlc.desktop
-{{ if eq .chezmoi.arch "amd64" }}
 text/html=librewolf.desktop
 x-scheme-handler/http=librewolf.desktop
 x-scheme-handler/https=librewolf.desktop
 x-scheme-handler/about=librewolf.desktop
 x-scheme-handler/unknown=librewolf.desktop
 application/pdf=librewolf.desktop
-{{ else if eq .chezmoi.arch "arm64" }}
-text/html=chromium.desktop
-x-scheme-handler/http=chromium.desktop
-x-scheme-handler/https=chromium.desktop
-x-scheme-handler/about=chromium.desktop
-x-scheme-handler/unknown=chromium.desktop
-application/pdf=xpdf.desktop
-{{ end }}
