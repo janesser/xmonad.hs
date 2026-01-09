@@ -2,10 +2,15 @@
 
 ZAPZAP_VERSION=6.2.3.1
 
-sudo apt install -y python3-webview python3-pyqt6 python3-poetry
+# FIXME on ubuntu noble arm64: ImportError: libwebp.so.6: cannot open shared object file: No such file or directory
+sudo apt install -y python-dbus-dev libglib2.0-dev
 
 mkdir -p ~/projs; cd ~/projs
-git clone --depth 1 https://github.com/rafatosta/zapzap.git --single-branch  --branch=$ZAPZAP_VERSION
+if [[ -d "zapzap" ]]; then
+    echo zapzap is already checked out.
+else
+    git clone --depth 1 https://github.com/rafatosta/zapzap.git --single-branch  --branch=$ZAPZAP_VERSION
+fi
 
 if cd ~/projs/zapzap
 then
