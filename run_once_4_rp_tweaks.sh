@@ -2,7 +2,8 @@
 
 # https://thelinuxcode.com/best-video-player-raspberry-pi/
 
-if [ "$CHEZMOI_ARCH" = "arm64" ]; then
+if command -v raspi-config >/dev/null
+then
     sudo apt install -y mesa-vdpau-drivers
     sudo sed -i '/^gpu_mem=/d' /boot/firmware/config.txt
     sudo sed -i '/^display_overlay=/d' /boot/firmware/config.txt

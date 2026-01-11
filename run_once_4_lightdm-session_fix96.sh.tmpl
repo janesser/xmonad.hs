@@ -2,9 +2,9 @@
 # by this fix lightdm sources $HOME/.profile and adopts adjusted PATH variables etc.
 # https://github.com/canonical/lightdm/issues/96
 
-# lightdm changed, so reapply: {{ if eq .chezmoi.arch "arm64" }}{{ include "/etc/lightdm/lightdm.conf" | sha256sum }}{{ end }}
+# lightdm changed, so reapply: {{ if exec "stat" "/etc/lightdm/lightdm.conf" }}{{ include "/etc/lightdm/lightdm.conf" | sha256sum }}{{ end }}
 
-if [ "$CHEZMOI_ARCH" = "arm64" ]
+if command -v raspi-config >/dev/null
 then
     curl -sL https://raw.githubusercontent.com/canonical/lightdm/refs/heads/main/debian/lightdm-session | sudo tee /usr/local/sbin/lightdm-session
     sudo chmod +x /usr/local/sbin/lightdm-session
@@ -21,5 +21,5 @@ then
         sudo systemctl restart lightdm
     fi
 else
-    echo $CHEZMOI_ARCH not supported for lightdm-session fix
+    echo no tweaks for lightdm
 fi

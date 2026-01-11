@@ -8,6 +8,6 @@ go install github.com/nektos/act@latest
 sudo chown root:docker /run/podman
 sudo chmod 750 /run/podman # 700 before
 sudo chown root:docker /run/podman/podman.sock
-sudo chmod 660 /run/podman/podman.socket # 600 before
+sudo chmod 660 /run/podman/podman.sock # 600 before
 
 act --version

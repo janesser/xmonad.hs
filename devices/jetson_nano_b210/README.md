@@ -155,3 +155,13 @@ Some fixes after do-release-upgrade
     sudo jtop
     # eventually enable jetson-clocks
     # eventually switch to 5W mode
+
+## podman with CDI
+
+### with 4.9 kernel
+
+overlayfs aka fuse in usespace requires 4.12
+
+    sudo nano /usr/share/containers/storage
+    # driver = "vfs"
+    podman system reset -f
