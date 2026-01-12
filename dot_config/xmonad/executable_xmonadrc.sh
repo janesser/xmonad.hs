@@ -54,5 +54,10 @@ start_once pavucontrol
 ~/.local/bin/check_host_online.sh airRohr-505856 &
 
 if [ -n "$(udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN)" ]; then
-   start_once onboard -e # FIXME rendering onboard in xmonad won't reliably work
+   # https://bugs.launchpad.net/onboard/+bug/1633284
+   gsettings reset org.onboard.window.landscape x
+   gsettings reset org.onboard.window.landscape y
+   gsettings reset org.onboard.window.landscape width
+   gsettings reset org.onboard.window.landscape height
+   start_once onboard -e
 fi
