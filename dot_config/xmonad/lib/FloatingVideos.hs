@@ -17,19 +17,20 @@ import Data.Maybe
 import Data.Monoid
 import XMonad
 import XMonad.Actions.CopyWindow
-import XMonad.Hooks.ManageHelpers
+import XMonad.Hooks.ManageHelpers (composeOne, doRectFloat, isDialog, isNotification, (-?>))
 import XMonad.Layout.LayoutModifier
 import XMonad.StackSet (RationalRect (..), Stack (..), Workspace (..), allWindows, integrate)
 import qualified XMonad.StackSet as W (filter)
 import XMonad.Util.WindowProperties (getProp32)
 
-data VideoFloatMode = NorthCenter | NorthEast | SouthEast | SouthWest deriving (Eq, Enum, Bounded, Read, Show)
+-- | similar to ManageHelpers.Side(..)
+data VideoFloatMode = NC | NE | SE | SW deriving (Eq, Enum, Bounded, Read, Show)
 
 videoFloatRectangle :: Rational -> VideoFloatMode -> RationalRect
-videoFloatRectangle r NorthCenter = RationalRect ((1 - r) / 2) 0 r r
-videoFloatRectangle r NorthEast = RationalRect (1 - r) 0 r r
-videoFloatRectangle r SouthEast = RationalRect (1 - r) (1 - r) r r
-videoFloatRectangle r SouthWest = RationalRect 0 (1 - r) r r
+videoFloatRectangle r NC = RationalRect ((1 - r) / 2) 0 r r
+videoFloatRectangle r NE = RationalRect (1 - r) 0 r r
+videoFloatRectangle r SE = RationalRect (1 - r) (1 - r) r r
+videoFloatRectangle r SW = RationalRect 0 (1 - r) r r
 smallR :: Rational
 smallR = 2 / 7
 largeR :: Rational
@@ -101,7 +102,7 @@ doPlaceVideos r vf = do
  where
   rect = videoFloatRectangle r vf
   floatHook :: RationalRect -> [String] -> Query (Endo WindowSet)
-  floatHook nrect wss = composeOne [fmap not (isNotification <||> isDialog) -?> doRectFloat nrect <+> doRaise <+> copyToAllWorkspaces wss]
+  floatHook nrect wss = composeOne [fmap not (isNotification <||> isDialog) -?> doRectFloat nrect <+> copyToAllWorkspaces wss]
   copyToAllWorkspaces :: [String] -> Query (Endo WindowSet)
   copyToAllWorkspaces wss = do
     let copied :: [Query (Endo WindowSet)] = map copyWindowToWorkspace wss
@@ -119,7 +120,7 @@ doPlaceVideos r vf = do
     windows g
 
 floatingVideos :: l a -> ModifiedLayout VideoFloating l a
-floatingVideos = ModifiedLayout $ VideoFloating smallR SouthEast
+floatingVideos = ModifiedLayout $ VideoFloating smallR SE
 
 {- | catch new windows or property change of "_NET_WM_STATE"
 
