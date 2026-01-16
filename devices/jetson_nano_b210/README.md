@@ -165,3 +165,23 @@ overlayfs aka fuse in usespace requires 4.12
     sudo nano /usr/share/containers/storage
     # driver = "vfs"
     podman system reset -f
+
+## lightdm
+
+    sudo dpkg-reconfigure lightdm
+    sudo nano /etc/lightdm/lightdm.conf.d/99-custom.conf
+        [SeatDefaults]
+        user-session=
+        session-wrapper=lightdm-session
+    sudo systemctl stop gdm
+    sudo systemctl restart lightdm
+    # pick you favorite window-manager on login
+
+### eglinfo no display found
+
+<https://ttt.io/glsl-jetson-nano> -> points to OE4T egl capability
+<https://forums.developer.nvidia.com/t/egl-eglgetdisplay-failing-on-tx2-jetpack-4-2-2/179511>
+
+    sudo modprobe tegra-udrm modeset=1
+
+<https://github.com/OE4T/meta-tegra/blob/f7780e99f4c1b678bdfcdd707f139ab48510a372/recipes-graphics/mesa/mesa.bbappend#L3>
