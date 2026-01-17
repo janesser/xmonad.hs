@@ -162,9 +162,12 @@ Some fixes after do-release-upgrade
 
 overlayfs aka fuse in usespace requires 4.12
 
-    sudo nano /usr/share/containers/storage
+    sudo apt install -y podman containers-storage
+    sudo nano /usr/share/containers/storage.conf
     # driver = "vfs"
     podman system reset -f
+    sudo nvidia-ctk cdi generate --mode csv --output=/var/run/cdi/nvidia.yaml
+    nvidia-ctk cdi list
 
 ## lightdm
 
