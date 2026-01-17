@@ -8,7 +8,6 @@ import Data.List (intercalate)
 import Data.List.Split (splitOn)
 import Data.Semigroup (Endo)
 import FloatingVideos (
-  PlaceVideos (PlaceVideos),
   RotateVideoFloat (RotateVideoFloat),
   ToggleSizeVideoFloat (ToggleSizeVideoFloat),
   floatingVideos,
@@ -179,9 +178,8 @@ myWorkspaces =
   , browseWs
   , devWs
   , eduWs
-  , privWs
   , gamesWs
-  , leasureWs
+  , privWs
   , adminWs
   ]
 
