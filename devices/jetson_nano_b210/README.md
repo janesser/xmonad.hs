@@ -169,6 +169,14 @@ overlayfs aka fuse in usespace requires 4.12
     sudo nvidia-ctk cdi generate --mode csv --output=/var/run/cdi/nvidia.yaml
     nvidia-ctk cdi list
 
+### podman commit image_copy_tmp_dir
+
+<https://github.com/containers/podman/issues/22342>
+
+    sudo nano /usr/share/containers/storage.conf
+    # image_copy_tmp_dir = "/home/podman_image_copy_tmp_dir"
+    podman info # should display new value immediately
+
 ## lightdm
 
     sudo dpkg-reconfigure lightdm

@@ -1,4 +1,5 @@
 local wezterm = require("wezterm")
+local act = wezterm.action
 
 local config = wezterm.config_builder()
 
@@ -6,7 +7,17 @@ config.keys = {
   {
     key = 'w',
     mods = 'CTRL|SHIFT',
-    action = wezterm.action.CloseCurrentPane { confirm = true },
+    action = act.CloseCurrentPane { confirm = true },
+  },
+  {
+    key = 'b',
+    mods = 'CTRL',
+    action = act.RotatePanes 'CounterClockwise',
+  },
+  {
+    key = 'n',
+    mods = 'CTRL',
+    action = act.RotatePanes 'Clockwise'
   },
 }
 
