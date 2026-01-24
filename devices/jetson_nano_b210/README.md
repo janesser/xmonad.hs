@@ -15,8 +15,7 @@ NOTE the driver package available may help built new kernels.
 
 ## Yocto kernel 4.x
 
-<https://github.com/orgs/OE4T/discussions/1593>
-<https://marcopennelli.com/embedded-linux-yocto-project-and-nvidia-jetson-nano-developer-kit-episode-1-369c079b7c15>
+See compilation setup here: <https://github.com/janesser/kirkstone-jetson-nano.git>
 
 ## Ensuring fallback kernel
 
