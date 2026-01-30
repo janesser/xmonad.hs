@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.1.29",
+    "lastTouchedAt": "2026-01-30T13:46:17.675Z"
+  },
+  "auth": {
+    "profiles": {
+      "ollama:manual": {
+        "provider": "ollama",
+        "mode": "token"
+      }
+    }
+  },
+  "models": {
+    "providers": {
+      "lmstudio": {
+        "baseUrl": "http://localhost:1234/v1",
+        "apiKey": "sk-lm-VaOeP9jh:8yIA8GJeNtv8a95mepub",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "lille-130m-instruct",
+            "name": "lille-130m-instruct",
+            "reasoning": false,
+            "api" : "openai-completions",
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "deepseek-r1-distill-qwen-1.5b",
+            "name": "deepseek-r1-distill-qwen-1.5b",
+            "reasoning": true,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "lmstudio/deepseek-r1-distill-qwen-1.5b"
+      },
+      "models": {
+        "lmstudio/lille-130m-instruct": {},
+        "lmstudio/deepseek-r1-distill-qwen-1.5b": {}
+      },
+      "workspace": "/home/jan/.openclaw/workspace",
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    }
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
+  },
+  "gateway": {
+    "mode": "local"
+  }
+}

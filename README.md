@@ -415,6 +415,8 @@ there is no formatter for 'dockercompose' installed -> <https://github.com/redha
 
 ### ollama & deepseek
 
+`run_once_3_devtools_4ollama.sh`
+
 <https://www.tecmint.com/run-deepseek-locally-on-linux/>
 
     curl -fsSL https://ollama.com/install.sh | sh
