@@ -61,3 +61,8 @@ fi
 echo "# GENERATED FILE" >~/.ssh/env
 ssh-agent -c >>~/.ssh/env
 source ~/.ssh/env
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/home/jan/.lmstudio/bin"
+# End of LM Studio CLI section
+
