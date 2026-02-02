@@ -24,14 +24,14 @@ import qualified XMonad.StackSet as W (filter)
 import XMonad.Util.WindowProperties (getProp32)
 
 -- | similar to ManageHelpers.Side(..)
-data VideoFloatMode = NC | NE | SE | SW | NW deriving (Eq, Enum, Bounded, Read, Show)
+data VideoFloatMode = NC | NE | SE | SW | WE deriving (Eq, Enum, Bounded, Read, Show)
 
 videoFloatRectangle :: Rational -> VideoFloatMode -> RationalRect
 videoFloatRectangle r NC = RationalRect ((1 - r) / 2) 0 r r
 videoFloatRectangle r NE = RationalRect (1 - r) 0 r r
 videoFloatRectangle r SE = RationalRect (1 - r) (1 - r) r r
 videoFloatRectangle r SW = RationalRect 0 (1 - r) r r
-videoFloatRectangle r NW = RationalRect 0 0.05 r r
+videoFloatRectangle r WE = RationalRect 0 ((1-r) / 2) r r
 smallR :: Rational
 smallR = 2 / 7
 largeR :: Rational

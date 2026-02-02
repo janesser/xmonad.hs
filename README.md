@@ -2,6 +2,13 @@
 
 My opinionated xmonad & chezmoi setup. With all dependencies expanded.
 
+## Next steps
+
+<https://github.com/imthenachoman/How-To-Secure-A-Linux-Server>
+
+* libpam-google-authenticator
+* hardening ssh...
+
 ## Dotfiles via chezmoi
 
 ### via snap
@@ -86,7 +93,7 @@ Ubuntu Noble 24 with some additional repositories
 
 resolve hostnames differently for localnetwork
 
-https://fmartingr.com/blog/2022/08/12/using-ssh-config-match-to-connect-to-a-host-using-multiple-ip-or-hostnames/
+<https://fmartingr.com/blog/2022/08/12/using-ssh-config-match-to-connect-to-a-host-using-multiple-ip-or-hostnames/>
 
 #### x11forwarding
 
@@ -678,7 +685,6 @@ Trying wezterm(mux) as replacement.
 <https://tmuxcheatsheet.com/>
 
 <https://github.com/budimanjojo/tmux.fish>
-
 
 ## related projects
 
