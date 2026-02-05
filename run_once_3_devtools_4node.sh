@@ -6,5 +6,5 @@ nvm install lts
 
 fisher install jorgebucaran/nvm.fish
 
-# n8n
-# npx -y n8n
+nvm use lts
+npm i -g pnpm

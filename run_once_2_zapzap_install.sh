@@ -3,7 +3,8 @@
 ZAPZAP_VERSION=6.2.3.1
 
 # FIXME on ubuntu noble arm64: ImportError: libwebp.so.6: cannot open shared object file: No such file or directory
-sudo apt install -y python-dbus-dev libglib2.0-dev
+sudo apt install -y python-dbus-dev libglib2.0-dev pipx
+pipx install -f poetry
 
 mkdir -p ~/projs; cd ~/projs
 if [[ -d "zapzap" ]]; then
