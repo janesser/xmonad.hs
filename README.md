@@ -485,6 +485,8 @@ can use ollama above
     sudo nix-channel --add  https://nixos.org/channels/nixos-24.05
     sudo nix-channel --update
 
+<https://nix.dev/manual/nix/2.33/installation/uninstall.html>
+
 ### kubernetes
 
 #### kubectl
