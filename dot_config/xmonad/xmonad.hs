@@ -72,6 +72,7 @@ myBasicKeyMap =
   , ("C-ö", spawn' "copyq toggle")
   , ("<Print>", spawn' "shutter -s")
   , ("M-C-l", spawn' "xautolock -locknow")
+  , ("M-C-m", spawn' "on-screenlock-toggle.fish")
   , ("<XF86MonBrightnessUp>", spawn' "brightness.sh +")
   , ("<XF86MonBrightnessDown>", spawn' "brightness.sh -")
   ,
@@ -144,7 +145,7 @@ myJournalKeys c =
       , ("M-o S-a", openJournal "orgzly/tochter2.org")
       ]
     where
-      openJournal j = spawn' "emacs ~/Nextcloud/" ++ j
+      openJournal j = spawn' $ "emacs ~/Nextcloud/" ++ j
 
 monWs :: String
 monWs = "top"
