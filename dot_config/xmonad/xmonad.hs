@@ -71,7 +71,7 @@ myBasicKeyMap =
   , ("M-e", spawn' "pcmanfm")
   , ("C-ö", spawn' "copyq toggle")
   , ("<Print>", spawn' "shutter -s")
-  , ("M-S-l", spawn' "xautolock -locknow")
+  , ("M-C-l", spawn' "xautolock -locknow")
   , ("<XF86MonBrightnessUp>", spawn' "brightness.sh +")
   , ("<XF86MonBrightnessDown>", spawn' "brightness.sh -")
   ,
@@ -138,11 +138,13 @@ myJournalKeys c =
   subtitle "My Keys"
     : mkNamedKeymap
       c
-      [ ("M-o S-j", spawn' "emacs ~/Nextcloud/journal.org")
-      , ("M-o S-t", spawn' "emacs ~/Nextcloud/orgzly/todos.org")
-      , ("M-o S-e", spawn' "emacs ~/Nextcloud/orgzly/tochter1.org")
-      , ("M-o S-a", spawn' "emacs ~/Nextcloud/orgzly/tochter2.org")
+      [ ("M-o S-j", openJournal "journal.org")
+      , ("M-o S-t", openJournal "orgzly/todos.org")
+      , ("M-o S-e", openJournal "orgzly/tochter1.org")
+      , ("M-o S-a", openJournal "orgzly/tochter2.org")
       ]
+    where
+      openJournal j = spawn' "emacs ~/Nextcloud/" ++ j
 
 monWs :: String
 monWs = "top"
