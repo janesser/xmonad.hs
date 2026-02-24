@@ -2,6 +2,11 @@
 
 source /etc/bash.bashrc
 
+# https://stackoverflow.com/questions/27613209/how-to-automatically-start-tmux-on-ssh-session
+if [[ $- =~ i ]] && [[ -z "$TMUX" ]] && [[ -n "$SSH_TTY" ]]; then
+  tmux attach-session -t ssh_tmux || tmux new-session -s ssh_tmux
+fi
+
 source /home/jan/.bash_completions/nala.sh
 
 export NVM_DIR="$HOME/.nvm"
