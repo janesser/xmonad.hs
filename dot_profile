@@ -43,11 +43,18 @@ if [ -d "$HOME/.cargo/bin" ]; then
     PATH="$HOME/.cargo/bin:$PATH"
 fi
 
+if [ -d "$HOME/.lmstudio/bin" ]; then
+    PATH="$PATH:$HOME/.lmstudio/bin"
+fi
+
+if [ -d "$HOME/.venv/bin" ]; then
+    PATH="$HOME/.venv/bin:$PATH"
+fi
+
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 
 # SSH agent lazy-activation
-
 setenv () { export $1=$2; }
 
 if source ~/.ssh/env
@@ -55,20 +62,15 @@ then
     if $(ps -p "$SSH_AGENT_PID" >/dev/null)
     then
         echo ssh-agent $SSH_AGENT_PID alive.
-        return 0
     else
         echo No re-usable ssh-agent found \($SSH_AGENT_PID\) found.
+        echo "# GENERATED FILE" >~/.ssh/env
+        ssh-agent -c >>~/.ssh/env
+        source ~/.ssh/env
     fi
-fi
-
-echo "# GENERATED FILE" >~/.ssh/env
-ssh-agent -c >>~/.ssh/env
-source ~/.ssh/env
-
-if [ -d "$HOME/.lmstudio/bin" ]; then
-    PATH="$PATH:$HOME/.lmstudio/bin"
-fi
-
-if [ -d "$HOME/.venv/bin" ]; then
-    PATH="$HOME/.venv/bin:$PATH"
+else
+    # creates ~/.ssh/env initially
+    echo "# GENERATED FILE" >~/.ssh/env
+    ssh-agent -c >>~/.ssh/env
+    source ~/.ssh/env
 fi
