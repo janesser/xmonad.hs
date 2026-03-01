@@ -51,6 +51,7 @@ import XMonad.Util.EZConfig (mkNamedKeymap)
 import XMonad.Util.Hacks
 import XMonad.Util.NamedActions
 import XMonad.Util.SpawnOnce
+import XMonad.StackSet (focusDown)
 
 myWindowPromptConfig :: XPConfig
 myWindowPromptConfig =
@@ -201,7 +202,9 @@ myManageHook :: Query (Endo WindowSet)
 myManageHook =
   composeOne
     [ isDialog -?> doCenterFloat
-    , isNotification -?> doSideFloat NE
+    -- https://wiki.haskell.org/Xmonad/Frequently_asked_questions#Prevent_new_windows_from_stealing_focus
+    -- https://bbs.archlinux.org/viewtopic.php?id=135120
+    , isNotification <||> className =?? "xfce4-notifyd" -?> doIgnore <+> doSideFloat NE
     -- requires https://github.com/benruijl/sflock/commit/6d1998b177c381baff3abe70748ed92ae6e4a262
     , className =? "sflock" -?> doFullFloat
     , -- games & private
