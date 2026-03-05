@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ZAPZAP_VERSION=6.2.3.1
+ZAPZAP_VERSION=6.3.3
 
 # FIXME on ubuntu noble arm64: ImportError: libwebp.so.6: cannot open shared object file: No such file or directory
 sudo apt install -y python-dbus-dev libglib2.0-dev pipx
@@ -17,7 +17,9 @@ if cd ~/projs/zapzap
 then
     git reset --hard $ZAPZAP_VERSION
     echo resetting present env.
+    poetry dynamic-versioning enable
     poetry env remove --all
+    poetry lock
     poetry install
     poetry add dbus-python
 else

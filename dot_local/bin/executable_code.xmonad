@@ -11,6 +11,7 @@ if [ -x $(command -v ghcup) ]; then
     ghcup install cabal recommended
     ghcup install hls recommended
     ghcup install stack recommended
+    ghcup gc --unset
     GHCUP_PREFIX="ghcup run --ghc recommended --cabal recommended --hls recommended --stack recommended --"
 fi
 
