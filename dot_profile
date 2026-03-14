@@ -10,7 +10,7 @@
 # for ssh logins, install and configure the libpam-umask package.
 #umask 022
 
-killall clamfs
+killall -q clamfs || return 0
 clamfs ~/.config/clamfs.d/downloads.xml
 
 # if running bash
