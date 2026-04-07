@@ -29,7 +29,7 @@ start_once syndaemon "-i 2 -d -K -t -m 50"
 pactl set-source-volume @DEFAULT_SOURCE@ 20%
 
 start_once copyq
-start_once nextcloud
+start_once nextcloud --background
 start_once x-weather-client
 
 # either will work on amd64 and arm64
