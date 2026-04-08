@@ -4,3 +4,6 @@
 [submodule ".config/xmonad/xmonad-contrib"]
 	path = .config/xmonad/xmonad-contrib
 	url = https://github.com/xmonad/xmonad-contrib
+[submodule "devices/jetson_nano_b210/kirkstone-jetson-nano"]
+	path = devices/jetson_nano_b210/kirkstone-jetson-nano
+	url = git@github.com:janesser/kirkstone-jetson-nano.git
