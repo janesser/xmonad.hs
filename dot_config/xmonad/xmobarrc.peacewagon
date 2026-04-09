@@ -9,7 +9,7 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
   , lowerOnStart = True
   , commands = [ Run UnsafeXMonadLog
                , Run MultiCpu ["-t", "<total>%"] 20
-               , Run ThermalZone 3 ["-t", "<temp>°C"] 20
+               , Run ThermalZone 5 ["-t", "<temp>°C"] 20
                , Run Battery [ "-t", "<acstatus>"
                , "--"
                , "-O", "<fc=white><left>%</fc>"
@@ -28,5 +28,5 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
                ]
   , sepChar = "%"
   , alignSep = "}{"
-  , template = " %UnsafeXMonadLog% } %date% { CPU: %multicpu% | TMP: %thermal3% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
+  , template = " %UnsafeXMonadLog% } %date% { CPU: %multicpu% | TMP: %thermal5% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
 }
