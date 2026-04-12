@@ -31,7 +31,7 @@ videoFloatRectangle r NC = RationalRect ((1 - r) / 2) 0 r r
 videoFloatRectangle r NE = RationalRect (1 - r) 0 r r
 videoFloatRectangle r SE = RationalRect (1 - r) (1 - r) r r
 videoFloatRectangle r SW = RationalRect 0 (1 - r) r r
-videoFloatRectangle r WE = RationalRect 0 ((1-r) / 2) r r
+videoFloatRectangle r WE = RationalRect 0 ((1 - r) / 2) r r
 smallR :: Rational
 smallR = 2 / 7
 largeR :: Rational
@@ -132,6 +132,7 @@ built by example of https://hackage.haskell.org/package/xmonad-contrib-0.18.1/do
 floatingVideosEventHook :: Event -> X All
 floatingVideosEventHook MapRequestEvent{ev_window = w} = do
   whenX (isVideo w) $ sendMessage PlaceVideos
+  -- TODO if not video raise videos to top again
   return $ All True
 floatingVideosEventHook PropertyEvent{ev_window = w, ev_atom = a, ev_propstate = ps} = do
   pa <- getAtom "_NET_WM_STATE"

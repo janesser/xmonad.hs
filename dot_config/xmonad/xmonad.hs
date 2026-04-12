@@ -76,6 +76,10 @@ myBasicKeyMap =
   , ("M-C-m", spawn' "on-screenlock-toggle.fish")
   , ("<XF86MonBrightnessUp>", spawn' "brightness.sh +")
   , ("<XF86MonBrightnessDown>", spawn' "brightness.sh -")
+  -- https://unix.stackexchange.com/questions/577908/keyboad-key-wrongly-interpreted-by-x-server-how-should-i-go-about-investigating
+  -- https://hackage.haskell.org/package/X11-1.10.3/docs/src/Graphics.X11.Types.html
+  -- # xmodmap -pke | grep 133
+  -- # sudo evtest # pick keyboard
   ,
     ( "<XF86AudioMute>"
     , spawn' "pactl set-sink-mute @DEFAULT_SINK@ toggle"
