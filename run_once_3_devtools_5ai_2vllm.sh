@@ -1,7 +1,5 @@
 #!/bin/bash
 
-sudo apt install -y pipx
-pipx install -f uv
 uv venv --allow-existing
 uv pip install -U vllm
 uv pip install -U huggingface_hub
