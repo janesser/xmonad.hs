@@ -11,3 +11,5 @@ then
 else
     curl -fsSL https://ollama.com/install.sh | sh
 fi
+
+# uninstallation instructions: https://github.com/ollama/ollama/issues/986

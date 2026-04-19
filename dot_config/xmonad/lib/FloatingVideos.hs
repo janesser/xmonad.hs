@@ -130,15 +130,14 @@ _NET_WM_STATE(ATOM) = _NET_WM_STATE_ABOVE, _NET_WM_STATE_STAYS_ON_TOP
 built by example of https://hackage.haskell.org/package/xmonad-contrib-0.18.1/docs/src/XMonad.Hooks.OnPropertyChange.html
 -}
 floatingVideosEventHook :: Event -> X All
-floatingVideosEventHook MapRequestEvent{ev_window = w} = do
-  whenX (isVideo w) $ sendMessage PlaceVideos
-  -- TODO if not video raise videos to top again
-  return $ All True
 floatingVideosEventHook PropertyEvent{ev_window = w, ev_atom = a, ev_propstate = ps} = do
   pa <- getAtom "_NET_WM_STATE"
   when (ps == propertyNewValue && a == pa) $ do
     whenX (isVideo w) $ sendMessage PlaceVideos
   return mempty
+floatingVideosEventHook MapRequestEvent{ev_window = w} = do
+  whenX (isVideo w) $ sendMessage PlaceVideos
+  return $ All True
 floatingVideosEventHook _ = return mempty
 
 -- | built by example of https://hackage.haskell.org/package/xmonad-contrib-0.18.1/docs/src/XMonad.Hooks.EwmhDesktops.html#fullscreenEventHook.html

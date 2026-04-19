@@ -1,5 +1,10 @@
 encryption = "age"
 
+[diff]
+    # only `cz diff` ignores LastNotified, `cz apply` will still edge on it
+    command = "diff"
+    args = ["--ignore-matching-lines=^LastNotified=", "{{ "{{" }} .Destination {{ "}}" }}", "{{ "{{" }} .Target {{ "}}" }}"]
+
 [age]
     # cz age-keygen -o ~/.config/chezmoi/age-id.txt
     ## after recipients change
