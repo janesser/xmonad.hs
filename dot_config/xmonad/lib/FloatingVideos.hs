@@ -9,6 +9,7 @@ module FloatingVideos (
   ToggleSizeVideoFloat (..),
   PlaceVideos (..),
   floatingVideosEventHook,
+  FloatingFull(..)
 ) where
 
 import Control.Monad
@@ -20,7 +21,7 @@ import XMonad.Actions.CopyWindow
 import XMonad.Hooks.ManageHelpers (composeOne, doRectFloat, isDialog, isNotification, (-?>))
 import XMonad.Layout.LayoutModifier
 import XMonad.StackSet (RationalRect (..), Stack (..), Workspace (..), allWindows, integrate)
-import qualified XMonad.StackSet as W (filter)
+import qualified XMonad.StackSet as W (filter, focus)
 import XMonad.Util.WindowProperties (getProp32)
 
 -- | similar to ManageHelpers.Side(..)
@@ -148,3 +149,9 @@ isVideo w = do
   aboveAtom <- getAtom "_NET_WM_STATE_ABOVE"
   wState <- fromMaybe [] <$> getProp32 wmState w
   return $ fromIntegral aboveAtom `elem` wState
+
+
+data FloatingFull a = FloatingFull deriving (Read, Show)
+
+instance LayoutClass FloatingFull a where
+    pureLayout _ r s = [(W.focus s, r)] -- TODO assure focussed window keeps behind floating window

@@ -11,7 +11,7 @@ import FloatingVideos (
   RotateVideoFloat (RotateVideoFloat),
   ToggleSizeVideoFloat (ToggleSizeVideoFloat),
   floatingVideos,
-  floatingVideosEventHook,
+  floatingVideosEventHook, FloatingFull (FloatingFull),
  )
 import MouseGestures
 import Network.HostName
@@ -51,7 +51,6 @@ import XMonad.Util.EZConfig (mkNamedKeymap)
 import XMonad.Util.Hacks
 import XMonad.Util.NamedActions
 import XMonad.Util.SpawnOnce
-import XMonad.StackSet (focusDown)
 
 myWindowPromptConfig :: XPConfig
 myWindowPromptConfig =
@@ -271,7 +270,7 @@ myLayoutHook =
                 screenCornerToggledLayoutHook $
                   smartBorders (tabsL ||| tallM ||| full ||| tall ||| accordion)
  where
-  full = renamed [Replace "Full"] $ noBorders Full
+  full = renamed [Replace "FFull"] $ noBorders FloatingFull -- Full
   tall = Tall 1 (3 / 100) (2 / 3) -- M-S-Space to reset
   tallM = renamed [Replace "Mirror Tall"] $ Mirror tall
   tabsL = renamed [Replace "Tabbed"] simpleTabbed
