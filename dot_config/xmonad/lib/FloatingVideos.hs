@@ -140,6 +140,78 @@ floatingVideosEventHook MapRequestEvent{ev_window = w} = do
   whenX (isVideo w) $ sendMessage PlaceVideos
   return $ All True
 floatingVideosEventHook _ = return mempty
+{-
+
+OBSERVATION workspace is layout.Full
+
+EXAMPLE 1: browser video (meant to float above all)
+
+_NET_WM_WINDOW_OPACITY(CARDINAL) = 3435973836
+_NET_WM_DESKTOP(CARDINAL) = 0
+WM_STATE(WM_STATE):
+                window state: Normal
+                icon window: 0x0
+_NET_WM_STATE(ATOM) = _NET_WM_STATE_ABOVE
+WM_HINTS(WM_HINTS):
+                Client accepts input or input focus: True
+                Initial state is Normal State.
+                window id # of group leader: 0x7a00001
+_GTK_THEME_VARIANT(UTF8_STRING) =
+WM_WINDOW_ROLE(STRING) = "PictureInPicture"
+_NET_WM_BYPASS_COMPOSITOR(CARDINAL) = 2
+XdndAware(ATOM) = BITMAP
+_MOTIF_WM_HINTS(_MOTIF_WM_HINTS) = 0x2, 0x0, 0x0, 0x0, 0x0
+_NET_WM_WINDOW_TYPE(ATOM) = _NET_WM_WINDOW_TYPE_UTILITY
+_NET_WM_SYNC_REQUEST_COUNTER(CARDINAL) = 127936165, 127936166
+_NET_WM_USER_TIME(CARDINAL) = 499388495
+_NET_WM_USER_TIME_WINDOW(WINDOW): window id # 0x7a026a4
+WM_CLIENT_LEADER(WINDOW): window id # 0x7a00001
+_NET_WM_PID(CARDINAL) = 2713265
+WM_LOCALE_NAME(STRING) = "de_DE.UTF-8"
+WM_CLIENT_MACHINE(STRING) = "lincopta"
+WM_NORMAL_HINTS(WM_SIZE_HINTS):
+                program specified minimum size: 142 by 80
+                program specified maximum size: 16384 by 16384
+                program specified base size: 142 by 80
+                window gravity: NorthWest
+WM_PROTOCOLS(ATOM): protocols  WM_DELETE_WINDOW, WM_TAKE_FOCUS, _NET_WM_PING, _NET_WM_SYNC_REQUEST
+WM_CLASS(STRING) = "Toolkit", "librewolf"
+WM_ICON_NAME(STRING) = "Bild-im-Bild"
+_NET_WM_ICON_NAME(UTF8_STRING) = "Bild-im-Bild"
+WM_NAME(STRING) = "Bild-im-Bild"
+_NET_WM_NAME(UTF8_STRING) = "Bild-im-Bild"
+
+EXAMPLE 2: a fullscreen game (that should not float over the videos)
+_NET_WM_STATE(ATOM) = _NET_WM_STATE_FULLSCREEN
+_NET_WM_USER_TIME(CARDINAL) = 499643823
+_NET_WM_ICON(CARDINAL) =        Icon (128 x 128):
+        (not shown)
+
+_NET_WM_WINDOW_OPACITY(CARDINAL) = 4294967295
+_NET_WM_DESKTOP(CARDINAL) = 4
+WM_STATE(WM_STATE):
+                window state: Normal
+                icon window: 0x0
+XdndAware(ATOM) = BITMAP
+_NET_WM_NAME(UTF8_STRING) = "ImagineEarth"
+WM_NAME(STRING) = "ImagineEarth"
+WM_PROTOCOLS(ATOM): protocols  WM_DELETE_WINDOW, WM_TAKE_FOCUS
+_NET_WM_BYPASS_COMPOSITOR(CARDINAL) = 1
+_NET_WM_WINDOW_TYPE(ATOM) = _NET_WM_WINDOW_TYPE_NORMAL
+_NET_WM_PID(CARDINAL) = 518824
+WM_LOCALE_NAME(STRING) = "C"
+WM_CLASS(STRING) = "ImagineEarth.x86_64", "ImagineEarth.x86_64"
+WM_HINTS(WM_HINTS):
+                Client accepts input or input focus: True
+                window id # of group leader: 0x2b0d20b8
+WM_NORMAL_HINTS(WM_SIZE_HINTS):
+                user specified location: 0, 0
+WM_CLIENT_MACHINE(STRING) = "lincopta"
+_MOTIF_WM_HINTS(_MOTIF_WM_HINTS) = 0x2, 0x0, 0x1, 0x0, 0x0
+STEAM_GAME(CARDINAL) = 280720
+
+-}
+
 
 -- | built by example of https://hackage.haskell.org/package/xmonad-contrib-0.18.1/docs/src/XMonad.Hooks.EwmhDesktops.html#fullscreenEventHook.html
 isVideo :: Window -> X Bool

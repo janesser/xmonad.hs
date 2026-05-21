@@ -40,7 +40,6 @@ import XMonad.Layout.NoBorders
 import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Renamed
 import XMonad.Layout.Tabbed
-import XMonad.Layout.WindowArranger
 import XMonad.Prompt
 import XMonad.Prompt.FuzzyMatch
 import XMonad.Prompt.Man
@@ -207,7 +206,7 @@ myManageHook =
     [ isDialog -?> doCenterFloat
     -- https://wiki.haskell.org/Xmonad/Frequently_asked_questions#Prevent_new_windows_from_stealing_focus
     -- https://bbs.archlinux.org/viewtopic.php?id=135120
-    , isNotification <||> className =?? "xfce4-notifyd" -?> doIgnore <+> doSideFloat NE
+    , isNotification <||> className =?? "xfce4-notifyd" -?> doIgnore
     -- requires https://github.com/benruijl/sflock/commit/6d1998b177c381baff3abe70748ed92ae6e4a262
     , className =? "sflock" -?> doFullFloat
     , -- games & private
@@ -262,7 +261,6 @@ myFocusHook =
 myLayoutHook =
   avoidStruts $
     floatingVideos $
-      windowArrange $
         onWorkspace monWs tall $
           onWorkspace commWs tabsL $
             onWorkspace browseWs accordion $
