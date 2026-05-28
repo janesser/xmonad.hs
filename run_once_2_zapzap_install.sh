@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ZAPZAP_VERSION=6.3.3
+ZAPZAP_VERSION=6.4.2
 
 sudo apt install -y python-dbus-dev libglib2.0-dev pyqt6-dev-tools
 
@@ -22,6 +22,7 @@ then
     poetry lock
     poetry install
     poetry add dbus-python
+    # TODO stop running instances
 else
     exit 1
 fi
