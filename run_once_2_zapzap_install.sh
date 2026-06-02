@@ -22,7 +22,9 @@ then
     poetry lock
     poetry install
     poetry add dbus-python
-    # TODO stop running instances
+    # stop running instances
+    pkill -f "^python -m zapzap"
+    # x-whatsapp &
 else
     exit 1
 fi
