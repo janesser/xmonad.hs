@@ -5,10 +5,8 @@
 sudo apt install -y libreadline-dev tk-dev
 sudo apt remove -y pipx
 
-# rm -fR ~/.pyenv
+rm -fR ~/.pyenv
 curl -fsSL https://pyenv.run | bash
-
-pyenv init - fish > ~/.config/fish/conf.d/pyenv.fish
 
 # with pyenv .bashrc enhancements
 bash << EOF
