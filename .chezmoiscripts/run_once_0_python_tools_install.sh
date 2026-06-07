@@ -8,17 +8,16 @@ sudo apt remove -y pipx
 rm -fR ~/.pyenv
 curl -fsSL https://pyenv.run | bash
 
-# with pyenv .bashrc enhancements
-bash << EOF
+export PATH=~/.pyenv/bin:$PATH
+eval "$(pyenv init - bash)"
 
 LATEST_PYENV=`pyenv latest -k 3`
-pyenv install -s \$LATEST_PYENV
-pyenv global \$LATEST_PYENV
+pyenv install -s $LATEST_PYENV
+pyenv global $LATEST_PYENV
 
+pip install --upgrade pip
 pip install -U pipx
 pipx ensurepath
 pipx install -f poetry
 
 curl -LsSf https://astral.sh/uv/install.sh | sh
-
-EOF
