@@ -420,7 +420,38 @@ there is no formatter for 'dockercompose' installed -> <https://github.com/redha
     jupyter-lab &;diswon
     # jupyter-lab stop
 
-### ollama & deepseek
+### Local AI Forge
+
+<https://bizon-tech.com/blog/best-llm-inference-engines>
+
+#### model-runtime: llama.cpp
+
+Self-compiled
+
+    cd ~/projs
+    git clone git clone https://github.com/ggml-org/llama.cpp
+    cd llama.cpp
+
+    cmake -B build -DGGML_CUDA=ON
+    cmake --build build --config Release
+
+#### generic chat: unsloth
+
+models that work on unsloth and RTX 2060
+
+setup connection to stand-alone llama.cpp
+FIXME clamsy as model-list-reload is often required
+TODO enable web search
+
+#### coding : opencode
+
+    nvm use lts
+    npm i -g opencode
+
+TODO check plugins
+especially agent teams
+
+### ollama & deepseek OUTDATED
 
 `run_once_3_devtools_4ollama.sh`
 
