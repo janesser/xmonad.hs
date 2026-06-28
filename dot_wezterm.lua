@@ -3,6 +3,8 @@ local act = wezterm.action
 
 local config = wezterm.config_builder()
 
+config.font_size = 10.0
+
 config.keys = {
   {
     key = 'w',

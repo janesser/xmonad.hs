@@ -1,6 +1,1 @@
-!xmonad.hs
-!xmonadrc
-.stack-work
-stack.yaml.lock
-
-dist-newstyle
+.nodeswitcher

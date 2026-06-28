@@ -1,0 +1,15 @@
+{
+  "packages": [
+    "git:github.com/huggingface/pi-llama",
+    "npm:pi-skill-playbook"
+  ],
+  "lastChangelogVersion": "0.80.2",
+  "theme": "dark",
+  "defaultProvider": "llama-cpp",
+  "defaultModel": "nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF:Q4_K_M",
+  "defaultThinkingLevel": "medium",
+  "hideThinkingBlock": true,
+  "compaction": {
+    "enabled": false
+  }
+}

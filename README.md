@@ -435,6 +435,18 @@ Self-compiled
     cmake -B build -DGGML_CUDA=ON
     cmake --build build --config Release
 
+##### Troubleshooting cuda error
+
+<https://github.com/ollama/ollama/issues/5464#issuecomment-2642442531>
+
+    # /etc/modprobe.d/nvidia-graphics-drivers-kms.conf
+    options nvidia-drm modeset=1
+    options nvidia NVreg_PreserveVideoMemoryAllocations=1
+
+and
+
+    systemctl enable nvidia-suspend.service
+
 #### generic chat: unsloth
 
 models that work on unsloth and RTX 2060
@@ -450,6 +462,13 @@ TODO enable web search
 
 TODO check plugins
 especially agent teams
+
+#### coding : pi
+
+    nvm use lts
+    npm i -g @earendil-works/pi-coding-agent
+
+<https://github.com/opensecurity/code-offline/tree/main>
 
 ### ollama & deepseek OUTDATED
 

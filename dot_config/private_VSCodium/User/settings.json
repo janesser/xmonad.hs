@@ -44,5 +44,6 @@
   },
   "[lua]": {
     "editor.defaultFormatter": "sumneko.lua"
-  }
+  },
+  "pendant.runtimeSource": "external"
 }

@@ -1,0 +1,4 @@
+[whitelist]
+exact = [ "~/.env" ]
+[global]
+load_dotenv = true

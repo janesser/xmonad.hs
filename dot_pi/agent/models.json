@@ -1,0 +1,23 @@
+{
+  "providers": {
+    "llama-cpp": {
+      "baseUrl": "http://localhost:8080/v1",
+      "api": "openai-completions",
+      "apiKey": "none",
+      "models": [
+        {
+          "id": "unsloth/NVIDIA-Nemotron-3-Nano-4B-GGUF:Q5_K_S"
+        },
+        {
+          "id": "mradermacher/UltraThinker-Coder-3B-GGUF:Q4_K_M"
+        },
+        {
+          "id": "unsloth/Qwen3.5-35B-A3B-GGUF:Q4_K_M"
+        },
+        {
+          "id": "mradermacher/Devstral-Small-2507-DRAFT-1.2B-GGUF:Q4_K_M"
+        }
+      ]
+    }
+  }
+}

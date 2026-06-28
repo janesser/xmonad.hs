@@ -8,6 +8,7 @@ sudo apt install -y fzf fdclone
 fisher install PatrickF1/fzf.fish
 
 fisher install halostatue/fish-chezmoi@v1
+fisher install halostatue/fish-direnv@v1
 fisher install edc/bass
 
 fisher remove budimanjojo/tmux.fish
