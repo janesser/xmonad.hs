@@ -6,7 +6,7 @@
   "lastChangelogVersion": "0.80.2",
   "theme": "dark",
   "defaultProvider": "llama-cpp",
-  "defaultModel": "nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF:Q4_K_M",
+  "defaultModel": "LiquidAI/LFM2.5-8B-A1B-GGUF:Q4_0",
   "defaultThinkingLevel": "medium",
   "hideThinkingBlock": true,
   "compaction": {
