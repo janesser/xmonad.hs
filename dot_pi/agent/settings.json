@@ -1,7 +1,9 @@
 {
   "packages": [
     "git:github.com/huggingface/pi-llama",
-    "npm:pi-skill-playbook"
+    "npm:pi-skill-playbook",
+    "npm:@aliou/pi-guardrails",
+    "npm:pi-web-access"
   ],
   "lastChangelogVersion": "0.80.2",
   "theme": "dark",
