@@ -1,5 +1,7 @@
 # Chuwi UBook XPro S5K3_A1
 
+<https://www.chuwi.com/de/product/items/Chuwi-UBooK-Xpro.html>
+
 ## Chuwi Camera Fixing WIP
 
 Chuwi Ubook Xpro has an (back, over screen) ov2680 and (front) ov5648.
