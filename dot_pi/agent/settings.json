@@ -5,13 +5,16 @@
     "npm:@aliou/pi-guardrails",
     "npm:pi-web-access"
   ],
-  "lastChangelogVersion": "0.80.2",
+  "lastChangelogVersion": "0.80.3",
   "theme": "dark",
   "defaultProvider": "llama-cpp",
-  "defaultModel": "LiquidAI/LFM2.5-8B-A1B-GGUF:Q4_0",
+  "defaultModel": "google/gemma-4-E4B-it-qat-q4_0-gguf:IT",
   "defaultThinkingLevel": "medium",
   "hideThinkingBlock": true,
   "compaction": {
+    "enabled": false
+  },
+  "retry": {
     "enabled": false
   }
 }
