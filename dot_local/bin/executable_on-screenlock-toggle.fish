@@ -1,6 +1,6 @@
 #!/usr/bin/fish
 
-argparse h/help m/mute u/unmute t/toggle -- $argv
+argparse h/help m/mute u/unmute t/toggle b/barmode -- $argv
 or return
 
 if set -ql _flag_h
@@ -22,4 +22,10 @@ else if set -ql _flag_t
     end
 end
 
-echo $on_screenlock_mute
+if set -ql _flag_b
+    if test $on_screenlock_mute = MUTE
+        echo a
+    end
+else
+    echo $on_screenlock_mute
+end

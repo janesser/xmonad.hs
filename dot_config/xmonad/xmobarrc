@@ -21,12 +21,15 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
                     "volume" 20
                , Run Com "/bin/bash" ["-c",
                     "pactl -n xmobar get-sink-mute $(pactl get-default-sink) | grep -Po \"M?(?=ute: j)\" & exit 0"] 
-                    "volume-mute" 20
+                    "volume-mute" 20               
+               , Run Com "/bin/bash" ["-c",
+                    "on-screenlock-toggle.fish -b"] 
+                    "volume-automute" 20
                , Run Com "brightness.sh" [] 
                     "brightness" 20
                , Run StdinReader
                ]
   , sepChar = "%"
   , alignSep = "}{"
-  , template = " %UnsafeXMonadLog% } %date% { CPU: %multicpu% | TMP: %thermal0% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
+  , template = " %UnsafeXMonadLog% } %date% { CPU: %multicpu% | TMP: %thermal0% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=white>%volume-automute%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
 }

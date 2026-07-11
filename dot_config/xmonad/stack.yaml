@@ -1,6 +1,7 @@
 # ghc-9.6.7, see https://www.stackage.org/lts-22.44
+# LTS Haskell 24.49 (ghc-9.10.3)
 resolver:
-  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/22/44.yaml
+  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/24/49.yaml
 
 packages:
   - xmonad
@@ -16,5 +17,6 @@ extra-deps:
 
 # ghcup managed
 system-ghc: true
+allow-newer: true
 
 notify-if-nix-on-path: false

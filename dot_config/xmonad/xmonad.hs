@@ -71,7 +71,7 @@ myBasicKeyMap =
   , ("C-ö", spawn' "copyq toggle")
   , ("<Print>", spawn' "shutter -s")
   , ("M-C-l", spawn' "xautolock -locknow")
-  , ("M-C-m", spawn' "on-screenlock-toggle.fish")
+  , ("M-C-m", spawn' "on-screenlock-toggle.fish -t")
   , ("<XF86MonBrightnessUp>", spawn' "brightness.sh +")
   , ("<XF86MonBrightnessDown>", spawn' "brightness.sh -")
   -- https://unix.stackexchange.com/questions/577908/keyboad-key-wrongly-interpreted-by-x-server-how-should-i-go-about-investigating
