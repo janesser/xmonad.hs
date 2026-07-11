@@ -19,8 +19,14 @@ npm i -g @earendil-works/pi-coding-agent
 ## https://github.com/opensecurity/code-offline/tree/main
 ## see 'pi-update-llama-models.sh'
 
-pi install npm:pi-web-access
+pi install npm:pi-llama-cpp # auto-discover models available
+pi install npm:@juicesharp/rpiv-pi 
+# run /rpiv-setup within pi to install required extensions
+# run /web-tools for websearch, e.g. exa.ai free tier
 
-uvx hf download hf://nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF/NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf
-uvx hf download hf://google/gemma-4-E4B-it-qat-q4_0-gguf/gemma-4-E4B-it-mmproj.gguf
-uvx hf download hf://google/gemma-4-E4B-it-qat-q4_0-gguf/gemma-4-E4B_q4_0-it.gguf
+if mountpoint ~/.cache/huggingface/hub; then
+    uvx hf download hf://jica98/qwen3.5-4B-super-coder/qwen3.5-4B-super-coder.BF16-mmproj.gguf
+    uvx hf download hf://jica98/qwen3.5-4B-super-coder/qwen3.5-4B-super-coder.Q4_0.gguf
+    uvx hf download hf://google/gemma-4-E4B-it-qat-q4_0-gguf/gemma-4-E4B-it-mmproj.gguf
+    uvx hf download hf://google/gemma-4-E4B-it-qat-q4_0-gguf/gemma-4-E4B_q4_0-it.gguf
+fi

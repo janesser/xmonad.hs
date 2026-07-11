@@ -1,20 +1,26 @@
 {
   "packages": [
-    "git:github.com/huggingface/pi-llama",
-    "npm:pi-skill-playbook",
-    "npm:@aliou/pi-guardrails",
-    "npm:pi-web-access"
+    "npm:@juicesharp/rpiv-pi",
+    "npm:pi-llama-cpp",
+    "npm:@tintinweb/pi-subagents",
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:@juicesharp/rpiv-todo",
+    "npm:@juicesharp/rpiv-advisor",
+    "npm:@juicesharp/rpiv-i18n",
+    "npm:@juicesharp/rpiv-web-tools",
+    "npm:@juicesharp/rpiv-args",
+    "npm:@juicesharp/rpiv-workflow"
   ],
-  "lastChangelogVersion": "0.80.3",
+  "lastChangelogVersion": "0.80.6",
   "theme": "dark",
-  "defaultProvider": "llama-cpp",
-  "defaultModel": "google/gemma-4-E4B-it-qat-q4_0-gguf:IT",
+  "defaultProvider": "llama-server=http://127.0.0.1:8080",
+  "defaultModel": "jica98/qwen3.5-4B-super-coder:Q4_0",
   "defaultThinkingLevel": "medium",
-  "hideThinkingBlock": true,
+  "hideThinkingBlock": false,
   "compaction": {
     "enabled": false
   },
   "retry": {
-    "enabled": false
+    "enabled": true
   }
 }
