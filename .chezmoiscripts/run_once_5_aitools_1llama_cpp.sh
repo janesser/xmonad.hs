@@ -6,12 +6,17 @@ if [[ $? -ne 0 ]]; then
     exit 0
 fi
 
+pipx install gpustat
+
 cd ~/projs
 git clone https://github.com/ggml-org/llama.cpp
 cd llama.cpp
+git pull
 
 cmake -B build -DGGML_CUDA=ON
 cmake --build build --config Release
+
+restart-llama-server.sh
 
 # use llama.cpp router mode
 ## see .local/bin/llama-server-restart.sh
