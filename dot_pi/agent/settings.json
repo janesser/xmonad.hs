@@ -1,22 +1,22 @@
 {
   "packages": [
-    "npm:@juicesharp/rpiv-pi",
     "npm:@tintinweb/pi-subagents",
+    "npm:pi-model-fusion",
+    "npm:@firstpick/pi-extension-grill-me",
+    "npm:@hypabolic/crossbar",
+    "npm:@juicesharp/rpiv-pi",
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:@juicesharp/rpiv-todo",
     "npm:@juicesharp/rpiv-advisor",
     "npm:@juicesharp/rpiv-i18n",
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@juicesharp/rpiv-args",
-    "npm:@juicesharp/rpiv-workflow",
-    "npm:pi-model-fusion",
-    "npm:@firstpick/pi-extension-grill-me",
-    "npm:@hypabolic/crossbar"
+    "npm:@juicesharp/rpiv-workflow"
   ],
-  "lastChangelogVersion": "0.80.6",
+  "lastChangelogVersion": "0.80.7",
   "theme": "dark",
   "defaultProvider": "crossbar-llamacpp-127-0-0-1-8080",
-  "defaultModel": "WithinUsAI/Opus4.7-GODs.Ghost.Codex-4B.GGuF:Q5_K_M",
+  "defaultModel": "google/gemma-4-E4B-it-qat-q4_0-gguf:IT",
   "defaultThinkingLevel": "medium",
   "hideThinkingBlock": false,
   "compaction": {
