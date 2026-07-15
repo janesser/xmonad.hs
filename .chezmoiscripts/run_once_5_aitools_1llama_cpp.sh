@@ -13,6 +13,7 @@ git clone https://github.com/ggml-org/llama.cpp
 cd llama.cpp
 git pull
 
+sudo apt install -y ccache
 cmake -B build -DGGML_CUDA=ON
 cmake --build build --config Release
 

@@ -1,7 +1,6 @@
 {
   "packages": [
     "npm:@juicesharp/rpiv-pi",
-    "npm:pi-llama-cpp",
     "npm:@tintinweb/pi-subagents",
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:@juicesharp/rpiv-todo",
@@ -9,18 +8,27 @@
     "npm:@juicesharp/rpiv-i18n",
     "npm:@juicesharp/rpiv-web-tools",
     "npm:@juicesharp/rpiv-args",
-    "npm:@juicesharp/rpiv-workflow"
+    "npm:@juicesharp/rpiv-workflow",
+    "npm:pi-model-fusion",
+    "npm:@firstpick/pi-extension-grill-me",
+    "npm:@hypabolic/crossbar"
   ],
   "lastChangelogVersion": "0.80.6",
   "theme": "dark",
-  "defaultProvider": "llama-server=http://127.0.0.1:8080",
-  "defaultModel": "jica98/qwen3.5-4B-super-coder:Q4_0",
+  "defaultProvider": "crossbar-llamacpp-127-0-0-1-8080",
+  "defaultModel": "google/gemma-4-E4B-it-qat-q4_0-gguf:IT",
   "defaultThinkingLevel": "medium",
   "hideThinkingBlock": false,
   "compaction": {
     "enabled": false
   },
   "retry": {
-    "enabled": true
-  }
+    "enabled": false
+  },
+  "quietStartup": true,
+  "treeFilterMode": "default",
+  "terminal": {
+    "showTerminalProgress": true
+  },
+  "collapseChangelog": true
 }

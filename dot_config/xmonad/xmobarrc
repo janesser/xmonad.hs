@@ -25,11 +25,14 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
                , Run Com "/bin/bash" ["-c",
                     "on-screenlock-toggle.fish -b"] 
                     "volume-automute" 20
+               , Run Com "/bin/bash" ["-c",
+                    "gpustat | grep -Po \"[0-9]+ %\" | tr -d ' '"] 
+                    "gpustat" 20
                , Run Com "brightness.sh" [] 
                     "brightness" 20
                , Run StdinReader
                ]
   , sepChar = "%"
   , alignSep = "}{"
-  , template = " %UnsafeXMonadLog% } %date% { CPU: %multicpu% | TMP: %thermal0% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=white>%volume-automute%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
+  , template = " %UnsafeXMonadLog% } %date% { CPU: %multicpu% | GPU: %gpustat% | TMP: %thermal0% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=white>%volume-automute%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
 }

@@ -14,19 +14,29 @@ if ! mountpoint ~/.cache/huggingface/hub
   sudo mount -o bind /media/passeport/huggingface-hub/ ~/.cache/huggingface/hub/
 end
 
+set LOG_DIR ~/.local/log
+mkdir -p $LOG_DIR
+chmod 700 $LOG_DIR
+chown -R $USER $LOG_DIR
+set LOG_FILE $LOG_DIR/$(date -d "today" +"%Y%m%d%H%M").log
+# echo logging to $LOG_FILE
+
 # Run llama-server with default parameters
+##  --mlock
+##  --spec-default \
+##  --cpu-moe \
+
 llama-server \
-  --fit on \
-  --mlock \
   --no-mmap \
-  --ctx-size 100000 \
   --models-max 1 \
-  --spec-default \
-  --cpu-moe \
-  --cache-type-k q4_0 \
-  --cache-type-v q4_0 \
+  --parallel 1 \
+  --no-warmup \
   --offline \
-  --verbosity 2 \
-  --image-min-tokens 1024 \
   --sleep-idle-seconds 240 \
+  --jinja \
+  --models-preset ~/.llama-cpp-models-preset.ini \
+  --verbosity 1 \
 &; disown
+## --log-file $LOG_FILE \
+## 2>/dev/null >/dev/null \
+
