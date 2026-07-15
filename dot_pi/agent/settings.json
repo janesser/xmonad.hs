@@ -16,14 +16,14 @@
   "lastChangelogVersion": "0.80.6",
   "theme": "dark",
   "defaultProvider": "crossbar-llamacpp-127-0-0-1-8080",
-  "defaultModel": "google/gemma-4-E4B-it-qat-q4_0-gguf:IT",
+  "defaultModel": "WithinUsAI/Opus4.7-GODs.Ghost.Codex-4B.GGuF:Q5_K_M",
   "defaultThinkingLevel": "medium",
   "hideThinkingBlock": false,
   "compaction": {
     "enabled": false
   },
   "retry": {
-    "enabled": false
+    "enabled": true
   },
   "quietStartup": true,
   "treeFilterMode": "default",

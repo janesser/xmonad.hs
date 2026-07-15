@@ -6,16 +6,18 @@ if [[ $? -ne 0 ]]; then
     exit 0
 fi
 
+pyenv init - bash|eval
 pipx install gpustat
 
 cd ~/projs
 git clone https://github.com/ggml-org/llama.cpp
 cd llama.cpp
-git pull
+LATEST_RELEASE=`git tag --sort=-committerdate|head -1`
+git checkout $LATEST_RELEASE
 
 sudo apt install -y ccache
 cmake -B build -DGGML_CUDA=ON
-cmake --build build --config Release
+cmake --build build --config Release -j $(grep processor /proc/cpuinfo | wc -l)
 
 restart-llama-server.sh
 
