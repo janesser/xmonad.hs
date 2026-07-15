@@ -7,10 +7,10 @@ if [ -f ~/.ghcup/env ]; then
 fi
 
 if [ -x $(command -v ghcup) ]; then
-    ghcup install ghc recommended
-    ghcup install cabal recommended
-    ghcup install hls recommended
-    ghcup install stack recommended
+    ghcup install --set ghc recommended
+    ghcup install --set cabal recommended
+    ghcup install --set hls recommended
+    ghcup install --set stack recommended
     ghcup gc --unset
     GHCUP_PREFIX="ghcup run --ghc recommended --cabal recommended --hls recommended --stack recommended --"
 fi
