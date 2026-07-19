@@ -13,15 +13,16 @@ nvm use --lts
 sudo apt install -y fd-find
 ## https://github.com/earendil-works/pi/issues/3882
 ln -sf /usr/bin/fdfind ~/.pi/agent/bin/fd
-npm i -g @earendil-works/pi-coding-agent
 
-# use pi with local llama.cpp
-## https://github.com/opensecurity/code-offline/tree/main
-## see 'pi-update-llama-models.sh'
+#npm i -g @earendil-works/pi-coding-agent
+npx @robzolkos/lazypi --yes
 
-pi install npm:pi-llama-cpp # auto-discover models available
-pi install npm:@juicesharp/rpiv-pi 
-# run /rpiv-setup within pi to install required extensions
+pi install npm:@hypabolic/crossbar
+pi install npm:@vigolium/piolium
+
+pi uninstall npm:pi-claude-cli
+pi list |grep -o 'npm:@juicesharp/rpiv-.*'| xargs -L1 pi uninstall
+
 # run /web-tools for websearch, e.g. exa.ai free tier
 
 if mountpoint ~/.cache/huggingface/hub; then
