@@ -22,8 +22,8 @@ start_once blueman-applet
 xautolock -time 10 -locker slock -killtime 30 -killer "systemctl suspend" -notify 10 -detectsleep &
 xss-lock -- on-screenlock.fish &
 
-# actually without "-t" tapping isn't blocked
-start_once syndaemon "-i 2 -d -K -t -m 50"
+# block all touchpad for 2 sec
+start_once syndaemon "-i 1.2 -d -K -R"
 
 # no over-gain mic
 pactl set-source-volume @DEFAULT_SOURCE@ 20%

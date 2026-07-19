@@ -5,4 +5,6 @@ export NVM_DIR="$HOME/.nvm"
 
 nvm use --lts
 
-pi update --all
+if which pi; then
+    pi update --all
+fi
