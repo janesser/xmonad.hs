@@ -6,8 +6,7 @@ if [[ $? -ne 0 ]]; then
     exit 0
 fi
 
-pyenv init - bash|eval
-pipx install gpustat
+uv tool install gpustat
 
 cd ~/projs
 git clone https://github.com/ggml-org/llama.cpp

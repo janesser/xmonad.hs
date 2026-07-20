@@ -1,6 +1,5 @@
-#!/usr/bin/fish
+#!/bin/bash
 
-pyenv init - fish | source
-
-pipx upgrade uv
+# TODO clean-up old python versions
+## uv python list --only-installed --managed-python
 uv cache clean

@@ -2,6 +2,7 @@
 
 ZAPZAP_VERSION=6.4.2
 
+uv tool install poetry
 sudo apt install -y python-dbus-dev libglib2.0-dev pyqt6-dev-tools
 
 mkdir -p ~/projs; cd ~/projs
