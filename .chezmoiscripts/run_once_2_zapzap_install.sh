@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ZAPZAP_VERSION=6.4.2
+ZAPZAP_VERSION=6.5.2.5
 
 uv tool install poetry
 sudo apt install -y python-dbus-dev libglib2.0-dev pyqt6-dev-tools
@@ -16,15 +16,10 @@ if cd ~/projs/zapzap
 then
     git fetch
     git reset --hard $ZAPZAP_VERSION
-    echo resetting present env.
-    poetry self add "poetry-dynamic-versioning[plugin]"
-    poetry dynamic-versioning enable
-    poetry env remove --all
-    poetry lock
-    poetry install
-    poetry add dbus-python
+    uv build
+    uv tool install dist/zapzap-$ZAPZAP_VERSION-*.whl
     # stop running instances
-    pkill -f "^python -m zapzap"
+    pkill -f "tools/zapzap"
     # x-whatsapp &
 else
     exit 1

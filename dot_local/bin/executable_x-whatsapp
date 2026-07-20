@@ -1,8 +1,3 @@
 #!/bin/bash
 
-if [ -d ~/projs/zapzap/ ]; then
-    cd ~/projs/zapzap/
-    poetry run -- python3 run.py dev &
-elif [ -x $(command -v whatsie) ]; then
-    whatsie &
-fi
+zapzap &
