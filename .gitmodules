@@ -4,3 +4,7 @@
 [submodule ".config/xmonad/xmonad-contrib"]
 	path = .config/xmonad/xmonad-contrib
 	url = https://github.com/xmonad/xmonad-contrib
+[submodule "devices/chuwi_ubook_xpro/linux-imx"]
+	path = devices/chuwi_ubook_xpro/linux-imx
+	url = https://github.com/nxp-imx/linux-imx.git
+	shallow = true
