@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sudo "$CHEZMOI_SOURCE_DIR/uninstaller/ollama_uninstall.sh"
+
 lsmod | grep nvidia
 if [[ $? -ne 0 ]]; then
     echo "$(basename $0): No nvidia module loaded in kernel, skipping..."

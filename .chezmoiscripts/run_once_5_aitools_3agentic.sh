@@ -1,16 +1,11 @@
 #!/bin/bash
 
-lsmod | grep nvidia
-if [[ $? -ne 0 ]]; then
-    echo "$(basename $0): No nvidia module loaded in kernel, skipping..."
-    exit 0
-fi
-
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 
 nvm use --lts
 sudo apt install -y fd-find
+sudo apt remove --purge -y fdclone
 ## https://github.com/earendil-works/pi/issues/3882
 ln -sf /usr/bin/fdfind ~/.pi/agent/bin/fd
 
