@@ -1,5 +1,5 @@
-#!/bin/bash
+#!/usr/bin/fish
 
-if mountpoint ~/.cache/huggingface/hub; then
+if mountpoint ~/.cache/huggingface/hub
     hf cache prune -y
-fi
+end

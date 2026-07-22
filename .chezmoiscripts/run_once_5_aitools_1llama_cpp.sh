@@ -13,10 +13,21 @@ uv tool install gpustat
 cd ~/projs
 git clone https://github.com/ggml-org/llama.cpp
 cd llama.cpp
+git fetch
 LATEST_RELEASE=`git tag --sort=-committerdate|head -1`
 git checkout $LATEST_RELEASE
 
-sudo apt install -y ccache
+sudo apt install -y ccache glslang-dev glslc spirv-headers
+# wget https://repo.radeon.com/amdgpu-install/latest/ubuntu/noble/amdgpu-install_7.2.4.70204-1_all.deb
+# amdgpu-install --usecase=graphics,rocm,hip --vulkan=radv --opencl=rocr
+# HIP_VISIBLE_DEVICES=1 \
+# ROCM_PATH=/opt/rocm \
+# HIP_PATH=/opt/rocm \
+# HIP_PLATFORM=amd \
+# HIP_DEVICE_LIB_PATH="$HIP_PATH/amdgcn/bitcode" \
+# HIP_CXX="$HIP_PATH/llvm/bin/clang" \
+# CMAKE_PREFIX_PATH="$ROCM_PATH/lib/cmake:$CMAKE_PREFIX_PATH" \
+# cmake -B build -DGGML_HIP=ON -DCMAKE_HIP_FLAGS:STRING="-I$ROCM_PATH/include"
 cmake -B build -DGGML_CUDA=ON
 cmake --build build --config Release -j $(grep processor /proc/cpuinfo | wc -l)
 

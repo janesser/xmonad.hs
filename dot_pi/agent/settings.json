@@ -5,7 +5,6 @@
     "npm:pi-model-fusion",
     "npm:@firstpick/pi-extension-grill-me",
     "npm:@hypabolic/crossbar",
-    "npm:@vigolium/piolium",
     "npm:@tmustier/pi-ralph-wiggum",
     "npm:pi-subagents",
     "npm:pi-ask-user",
@@ -29,12 +28,12 @@
     "npm:pi-terminal-theme",
     "npm:pi-web-access"
   ],
-  "lastChangelogVersion": "0.80.10",
+  "lastChangelogVersion": "0.81.1",
   "theme": "dark",
   "defaultProvider": "crossbar-llamacpp-127-0-0-1-8080",
   "defaultModel": "google/gemma-4-E4B-it-qat-q4_0-gguf:IT",
   "defaultThinkingLevel": "medium",
-  "hideThinkingBlock": true,
+  "hideThinkingBlock": false,
   "compaction": {
     "enabled": false
   },

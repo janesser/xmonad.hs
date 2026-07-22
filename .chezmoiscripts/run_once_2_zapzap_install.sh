@@ -21,6 +21,7 @@ then
     # stop running instances
     pkill -f "tools/zapzap"
     # x-whatsapp &
+    exit 0
 else
     exit 1
 fi

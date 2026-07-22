@@ -13,7 +13,6 @@ ln -sf /usr/bin/fdfind ~/.pi/agent/bin/fd
 npx @robzolkos/lazypi --yes
 
 pi install npm:@hypabolic/crossbar
-pi install npm:@vigolium/piolium
 
 pi uninstall npm:pi-claude-cli
 pi list |grep -o 'npm:@juicesharp/rpiv-.*'| xargs -L1 pi uninstall
