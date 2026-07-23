@@ -83,3 +83,5 @@ else
     ssh-agent -c >>~/.ssh/env
     source ~/.ssh/env
 fi
+
+export GTK_THEME=Adwaita:dark
