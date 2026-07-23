@@ -43,10 +43,6 @@ if [ -d "$HOME/.cargo/bin" ]; then
     PATH="$HOME/.cargo/bin:$PATH"
 fi
 
-if [ -d "$HOME/.lmstudio/bin" ]; then
-    PATH="$PATH:$HOME/.lmstudio/bin"
-fi
-
 if [ -d "$HOME/.venv/bin" ]; then
     PATH="$HOME/.venv/bin:$PATH"
 fi
@@ -55,13 +51,12 @@ if [ -d "$HOME/.local/share/flatpak/exports/bin" ]; then
     PATH="$HOME/.local/share/flatpak/exports/bin:$PATH"
 fi
 
-if [ -d "$HOME/.pyenv/bin" ]; then
-    PATH="$HOME/.pyenv/bin:$PATH"
-    eval "$(pyenv init - bash)"
-fi
-
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+
+if command -v rustup; then
+    rustup default stable
+fi
 
 # SSH agent lazy-activation
 setenv () { export $1=$2; }
