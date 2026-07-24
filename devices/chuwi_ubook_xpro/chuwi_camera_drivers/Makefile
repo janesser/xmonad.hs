@@ -1,24 +1,23 @@
-# Makefile for cam_char_driver kernel module
+# Makefile for Camera Driver Compilation
 
-# This Makefile is designed for out-of-tree compilation using kbuild.
+# Kernel configuration: Assuming a modern Linux kernel environment
+KDIR ?= /lib/modules/$(shell uname -r)/build
+PWD := $(shell pwd)
 
-obj-m := cam_char_driver.o
+# Source files
+CAM0_DRIVER := cam0_driver.c
+CAM1_DRIVER := cam1_driver.c
 
-# Kernel directory defined by user
-KERNEL_DIR := /usr/src/linux-headers-7.0.0-28-generic
+# Compilation flags (minimal)
+CFLAGS := -I$(shell printenv /usr/include/linux) -Werror
 
-# Default target: build the module
+# Target modules
+obj-m := $(CAM0_DRIVER) $(CAM1_DRIVER)
+
+.PHONY: all clean
+
 all:
-	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
+	make -C $(KDIR) M=$(PWD) modules
 
-# Target to build the module
-%:
-	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
-
-# Target to clean up build artifacts
 clean:
-	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) clean
-
-# Target to install the module (optional)
-install:
-	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules_install
+	make -C $(KDIR) M=$(PWD) clean

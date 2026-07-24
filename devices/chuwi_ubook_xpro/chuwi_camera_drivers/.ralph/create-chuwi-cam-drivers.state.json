@@ -1,0 +1,14 @@
+{
+  "name": "create-chuwi-cam-drivers",
+  "taskFile": ".ralph/create-chuwi-cam-drivers.md",
+  "iteration": 7,
+  "maxIterations": 50,
+  "itemsPerIteration": 0,
+  "reflectEvery": 0,
+  "reflectInstructions": "REFLECTION CHECKPOINT\n\nPause and reflect on your progress:\n1. What has been accomplished so far?\n2. What's working well?\n3. What's not working or blocking progress?\n4. Should the approach be adjusted?\n5. What are the next priorities?\n\nUpdate the task file with your reflection, then continue working.",
+  "active": true,
+  "status": "active",
+  "startedAt": "2026-07-23T18:29:52.616Z",
+  "lastReflectionAt": 0,
+  "ownerSessionId": "019f903c-a278-7cc7-93b6-c45a015c5090"
+}
