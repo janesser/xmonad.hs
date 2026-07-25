@@ -4,15 +4,16 @@
 KDIR ?= /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
 
-# Source files
-CAM0_DRIVER := cam0_driver.c
-CAM1_DRIVER := cam1_driver.c
+# Target files
+CAM0_DRIVER := cam0_driver.o
+CAM1_DRIVER := cam1_driver.o
+PMIC_DRIVER := pmic_driver.o
 
 # Compilation flags (minimal)
 CFLAGS := -I$(shell printenv /usr/include/linux) -Werror
 
 # Target modules
-obj-m := $(CAM0_DRIVER) $(CAM1_DRIVER)
+obj-m := $(CAM0_DRIVER) $(CAM1_DRIVER) $(PMIC_DRIVER)
 
 .PHONY: all clean
 
