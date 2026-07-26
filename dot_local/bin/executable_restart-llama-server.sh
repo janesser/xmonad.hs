@@ -31,7 +31,6 @@ llama-server \
   --no-warmup \
   --offline \
   --sleep-idle-seconds 360 \
-  --jinja \
   --models-preset ~/.llama-cpp-models-preset.ini \
   --verbosity 4 \
   --log-file $LOG_FILE \

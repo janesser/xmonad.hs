@@ -1,1 +1,0 @@
-../acpidump/dsdt.dsl

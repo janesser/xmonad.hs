@@ -1,0 +1,1 @@
+../acpidump/dsdt.cam0_cam1.dsl
