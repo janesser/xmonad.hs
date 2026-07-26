@@ -55,7 +55,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 
 if command -v rustup; then
-    rustup default stable
+    rustup default stable 2>&1
 fi
 
 # SSH agent lazy-activation
