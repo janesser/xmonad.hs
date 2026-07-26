@@ -29,7 +29,7 @@ start_once syndaemon "-i 1.2 -d -K -R"
 pactl set-source-volume @DEFAULT_SOURCE@ 20%
 
 start_once copyq
-start_once nextcloud --background
+#start_once nextcloud --background
 start_once x-weather-client
 
 # either will work on amd64 and arm64
@@ -42,6 +42,7 @@ start_once x-mail-client
 start_once signal-desktop
 start_once signal-desktop-unofficial # arm64 packaging
 start_once x-whatsapp
+start_once zapzap
 # start_once element-desktop
 # INSUFFICIENT_USE start_once dev.geopjr.Tuba # compiled from github
 
