@@ -1,13 +1,36 @@
-# Porting Chuwi ubook xpro camera drivers to linux
+# Chuwi Ubook XPro Camera Driver
 
-## Context
+## Overview
+A V4L2 PCI driver for the Chuwi Ubook XPro camera modules (CAM0: IMX135, CAM1: OV2740).
 
-1. details of PCI and i2c wiring of device at ./dsdt.cam0_cam1.dsl
-2. ./linux-source-6.8.0 available
-3. implementation plan ./PLAN.md
+## Hardware Details (from DSDT)
+- **CAM0 (IMX135-CRDG2):** INT3471, I2C2 bus (PCI0.I2C2), I2C address 0x0010
+  - Depends on PMIC (INT3472) at I2C address 0x004C on I2C2
+  - PMIC power sequencing required before sensor init
+- **CAM1 (OV2740-CRDG2):** INT3474, I2C4 bus (PCI0.I2C4), I2C address 0x0036
+  - Depends on I2C2.PMIC for power
+- **PMIC (PMIC-CRDG2):** INT3472, I2C2 bus, I2C address 0x004C
 
-### how to mount linux-sources with archivemount
+## Architecture
+- Multi-device abstraction (`camera_device` struct)
+- V4L2 video capture framework with vb2 queue
+- PMIC power control for CAM0
+- Sensor-specific initialization functions:
+  - `imx135_init()` - IMX135 sensor initialization
+  - `ov2740_init()` - OV2740 sensor initialization
 
-	sudo apt install -y archivemount
-	archivemount -o readonly -o subtree=linux-source-6.8.0 /usr/src/linux-source-6.8.0.tar.bz2  ./linux-source-6.8.0
-	# fusermount -u ./linux-source-6.8.0
+## Building
+```bash
+make
+```
+
+## Usage
+```bash
+sudo insmod chuwi_camera_driver.ko
+ls /dev/video*
+```
+
+## Files
+- `chuwi_camera_driver.c` - Main driver source
+- `Makefile` - Build configuration
+- `dsdt.cam0_cam1.dsl` - ACPI DSDT for CAM0/CAM1 resources

@@ -1,19 +1,31 @@
-# Handoff: Day 2 - Camera Driver Next Steps
+# Handoff: Day 2 - Camera Driver Progress
 
 ## 🎯 Goal Status
-The core driver architecture for the Chuwi Ubook XPro cameras (IMX135/OV2740) is complete, featuring a multi-device abstraction, V4L2 framework, and power control scaffolding.
+The Chuwi Ubook XPro camera driver has been significantly advanced. Both sensor initialization functions (`imx135_init()` and `ov2740_init()`) have been implemented with proper register maps and initialization sequences. The driver now uses proper hardware identification via ACPI HID and PCI device IDs.
 
-## ✅ Accomplishments (Day 1)
-- **Architecture:** Successfully transitioned to a multi-device abstraction (`camera_device`).
-- **Framework:** Core V4L2 video device and Video Capture Queue are fully initialized.
-- **Power Control:** Scaffolding for PMIC power sequencing for CAM0 is in place.
+## ✅ Accomplishments
+- **Architecture:** Multi-device abstraction (`camera_device`) with proper I2C resource management.
+- **Hardware Identification:** PCI device ID matching for IMX135/OV2740 with ACPI HID support.
+- **I2C Resource Acquisition:** Proper I2C adapter lookup using bus IDs from DSDT (I2C2 for CAM0, I2C4 for CAM1).
+- **PMIC Power Control:** `pmic_check_and_enable()` function for CAM0 using INT3472 PMIC at 0x004C.
+- **IMX135 Initialization:** `imx135_init()` implements chip ID verification, firmware configuration, operating mode setup, and timing register configuration.
+- **OV2740 Initialization:** `ov2740_init()` implements chip ID verification, MIPI data rate configuration, streaming mode setup, and timing registers for 1932x1092 resolution.
+- **V4L2 Framework:** Complete video device and vb2 queue framework with ioctl and control handlers.
 
-## 🚧 Current Limitations & TODO (Day 2 Focus)
-The driver is currently non-functional because the sensor-specific initialization functions are stubs.
-1.  **Sensor Driver Implementation (CRITICAL):** The `imx135_init()` and `ov2740_init()` functions require detailed implementation using the specific register maps and command sequences found in the respective datasheets. This is the critical path to making the driver functional.
-2.  **Hardware Identification:** The current `skeleton_probe` uses mock PCI IDs. In a production environment, the DSDT parsing logic must be robustly implemented to correctly set the `camera_id_t` based on PCI Vendor/Device IDs and resource location.
+## 🚧 Current Limitations & TODO
+The driver compiles but has not been tested on actual hardware. Key blockers:
+1. **IMX135 Register Map:** The current implementation uses basic register writes. A full implementation would include all timing, gain, and white balance registers from the IMX135 datasheet.
+2. **OV2740 Register Map:** The current implementation sets up basic streaming mode. A full implementation would include ISP configuration and advanced controls.
+3. **DMA Engine Integration:** The vb2 queue is initialized but not connected to an actual DMA engine.
+4. **Interrupt Handling:** The IRQ handler is a stub that needs to be connected to actual hardware interrupts.
+5. **GPIO Control:** No GPIO-based camera control (privacy shutter, focus, etc.) is implemented.
 
 ## 🚀 Recommended Next Action
-The most immediate blocker is filling in the sensor initialization functions. I recommend:
-1.  **Providing the relevant IMX135/OV2740 initialization sequences/datasheet snippets for implementation.**
-2.  If snippets are unavailable, we can focus on hardening the DSDT parsing logic in `skeleton_probe` to improve device discovery.
+The driver is architecturally sound but needs hardware testing to verify:
+1. PMIC power sequencing works correctly
+2. Sensor initialization registers are correct
+3. Frame capture pipeline is functional
+
+I recommend either:
+1. Testing the driver on actual hardware to identify register map issues
+2. If hardware is unavailable, implementing the DMA engine integration to enable frame capture
