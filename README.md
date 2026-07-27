@@ -52,7 +52,7 @@ Installation of xmonad xmonad-contrib can be superceded by git-based installatio
         copyq \
         x11-xserver-utils \
         network-manager-gnome \
-        org-mode emacs-gtk \
+        elpa-org-mode elpa-org-roam emacs-gtk \
         onboard \
         easyeffects \
         pipewire-audio \

@@ -51,3 +51,8 @@ sudo apt install -y \
     texworks texlive-humanities \
     texlive-lang-german
 {{end}}
+
+{{if .is_install_org}}
+sudo apt install -y \
+    elpa-org-mode elpa-org-roam emacs-gtk
+{{end}}
