@@ -1,3 +1,3 @@
 #!/bin/bash
 
-flatpak update
+flatpak update -u -y
