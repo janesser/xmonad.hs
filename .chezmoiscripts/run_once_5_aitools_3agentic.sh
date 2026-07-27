@@ -19,9 +19,9 @@ pi list |grep -o 'npm:@juicesharp/rpiv-.*'| xargs -L1 pi uninstall
 
 # run /web-tools for websearch, e.g. exa.ai free tier
 
+# https://www.canirun.ai/device/rtx-2060
 if mountpoint ~/.cache/huggingface/hub; then
-    uvx hf download hf://jica98/qwen3.5-4B-super-coder/qwen3.5-4B-super-coder.BF16-mmproj.gguf
-    uvx hf download hf://jica98/qwen3.5-4B-super-coder/qwen3.5-4B-super-coder.Q4_0.gguf
+    ## hf cache ls --format json | tail -n -1 | jq 'map(.id) | join(",")'
     uvx hf download hf://google/gemma-4-E4B-it-qat-q4_0-gguf/gemma-4-E4B-it-mmproj.gguf
     uvx hf download hf://google/gemma-4-E4B-it-qat-q4_0-gguf/gemma-4-E4B_q4_0-it.gguf
 fi
