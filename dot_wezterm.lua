@@ -21,6 +21,20 @@ config.keys = {
     mods = 'CTRL',
     action = act.RotatePanes 'Clockwise'
   },
+  {
+    key = '0',
+    mods = 'CTRL',
+    action = act.PaneSelect {
+      mode = 'SwapWithActive'
+    }
+  },
+  {
+    key = '9',
+    mods = 'CTRL',
+    action = act.PaneSelect {
+      mode = 'Activate'
+    }
+  }
 }
 
 
