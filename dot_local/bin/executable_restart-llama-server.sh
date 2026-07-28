@@ -36,3 +36,5 @@ llama-server \
   --log-file $LOG_FILE \
   2>/dev/null >/dev/null \
 &; disown
+
+echo "llama-server (re-)started."

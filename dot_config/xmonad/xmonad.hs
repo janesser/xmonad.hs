@@ -142,7 +142,8 @@ myJournalKeys c =
   subtitle "My Keys"
     : mkNamedKeymap
       c
-      [ ("M-o S-j", openJournal "journal.org")
+      [ ("M-o S-j", openJournal "journal.org.d/journal.org")
+      , ("M-o S-k", openJournal "journal.org.d/kitchen.org")
       , ("M-o S-t", openJournal "orgzly/todos.org")
       , ("M-o S-e", openJournal "orgzly/tochter1.org")
       , ("M-o S-a", openJournal "orgzly/tochter2.org")

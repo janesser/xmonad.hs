@@ -28,7 +28,7 @@ sudo apt install -y ccache glslang-dev glslc spirv-headers
 # HIP_CXX="$HIP_PATH/llvm/bin/clang" \
 # CMAKE_PREFIX_PATH="$ROCM_PATH/lib/cmake:$CMAKE_PREFIX_PATH" \
 # cmake -B build -DGGML_HIP=ON -DCMAKE_HIP_FLAGS:STRING="-I$ROCM_PATH/include"
-cmake -B build -DGGML_CUDA=ON
+cmake -B build -DGGML_CUDA=ON -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=ON
 cmake --build build --config Release -j $(grep processor /proc/cpuinfo | wc -l)
 
 restart-llama-server.sh
