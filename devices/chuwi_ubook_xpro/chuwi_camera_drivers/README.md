@@ -3,6 +3,12 @@
 ## Overview
 A V4L2 PCI driver for the Chuwi Ubook XPro camera modules (CAM0: IMX135, CAM1: OV2740).
 
+Presently in `dmesg`
+
+   i2c i2c-OVTI2680:00: deferred probe pending: ov2680: waiting for fwnode graph endpoint
+
+<https://www.kernel.org/doc/html/v4.13/media/kapi/v4l2-fwnode.html>
+
 ## Hardware Details (from DSDT)
 - **CAM0 (IMX135-CRDG2):** INT3471, I2C2 bus (PCI0.I2C2), I2C address 0x0010
   - Depends on PMIC (INT3472) at I2C address 0x004C on I2C2
