@@ -21,5 +21,5 @@ mkdir -p $UBOOK_XPRO_DRIVERS
 if mountpoint $UBOOK_XPRO_DRIVERS; then
   echo "already mounted: $UBOOK_XPRO_DRIVERS"
 else
-  ratarmount ./ubook-xpro-drivers-win11.rar $UBOOK_XPRO_DRIVERS
+  ratarmount -o modules=subdir,subdir='UBook XPro  Drivers' ./ubook-xpro-drivers-win11.rar $UBOOK_XPRO_DRIVERS
 fi
