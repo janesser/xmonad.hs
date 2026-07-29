@@ -143,6 +143,7 @@ _There is a storyline along tty-terminals left open, don't have that, aslong i u
 ##### sflock (deprecated)
 
 Unfortunaly I didn't get suspend work properly.
+Inability of systemd / feature-request here: <https://github.com/systemd/systemd/issues/40387>
 
 <https://github.com/benruijl/sflock>
 
@@ -151,6 +152,24 @@ Unfortunaly I didn't get suspend work properly.
     cd sflock
     sudo make clean install
     sflock -f fixed
+
+Last attempt on systemd/system level
+
+    [Unit]
+    Description=sflock before suspend
+    Before=sleep.target
+    StopWhenUnneeded=Yes
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=Yes
+    Environment=XAUTHORITY=/home/%I/.Xauthority
+    Environment=DISPLAY=:0.0
+    ExecStart=xautolock -locknow
+    ExecStop=
+
+    [Install]
+    WantedBy=sleep.target
 
 ## Candidates & Experiments
 
