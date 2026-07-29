@@ -61,25 +61,27 @@ fi
 # SSH agent lazy-activation
 setenv () { export $1=$2; }
 
-if source ~/.ssh/env
+rm -f ~/.ssh/env # cleanup
+## FIXME should .ssh/ssh_auth_sock be rred here ?
+if [ -n "$SSH_AUTH_SOCK" ] && ssh-add -l >/dev/null
+then
+    echo ssh-agent via forwarding $SSH_AUTH_SOCK.
+elif source ~/.ssh/my-env
 then
     if $(ps -p "$SSH_AGENT_PID" >/dev/null)
     then
         echo ssh-agent $SSH_AGENT_PID alive.
-    elif [ -z "$SSH_AUTH_SOCK" ]
-    then
-        echo ssh-agent via forwarding $SSH_AUTH_SOCK.
     else
-        echo No re-usable ssh-agent found \($SSH_AGENT_PID\) found.
-        echo "# GENERATED FILE" >~/.ssh/env
-        ssh-agent -c >>~/.ssh/env
-        source ~/.ssh/env
+        echo No re-usable ssh-agent found.
+        echo "# GENERATED FILE" >~/.ssh/my-env
+        ssh-agent -c >>~/.ssh/my-env
+        source ~/.ssh/my-env
     fi
 else
     # creates ~/.ssh/env initially
-    echo "# GENERATED FILE" >~/.ssh/env
-    ssh-agent -c >>~/.ssh/env
-    source ~/.ssh/env
+    echo "# GENERATED FILE" >~/.ssh/my-env
+    ssh-agent -c >>~/.ssh/my-env
+    source ~/.ssh/my-env
 fi
 
 export GTK_THEME=Adwaita:dark
