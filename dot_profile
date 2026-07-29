@@ -66,6 +66,9 @@ then
     if $(ps -p "$SSH_AGENT_PID" >/dev/null)
     then
         echo ssh-agent $SSH_AGENT_PID alive.
+    elif [ -z "$SSH_AUTH_SOCK" ]
+    then
+        echo ssh-agent via forwarding $SSH_AUTH_SOCK.
     else
         echo No re-usable ssh-agent found \($SSH_AGENT_PID\) found.
         echo "# GENERATED FILE" >~/.ssh/env
