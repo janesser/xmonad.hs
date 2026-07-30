@@ -1,4 +1,4 @@
-# Agent Mode
+# Agent Guidance
 
 1. Check **README.md** and **PLAN.md**
 2. Consider project directory read-only, write to **agent_work** directory
@@ -7,3 +7,5 @@
 5. Create handovers in **agent_work** to revert to it if required
 6. carefully parse error output, to pin point exact problems
 7. Whenever pointing to files, consider path in **current working directory** first
+8. Check every path against **./agent_work/fs_mappings.md**, prefer softlinks.
+9. When **sudo** is needed, ask the user to execute the command for you

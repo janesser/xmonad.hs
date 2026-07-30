@@ -16,10 +16,12 @@ else
   ratarmount -o modules=subdir,subdir=linux-source-6.8.0 /usr/src/linux-source-6.8.0.tar.bz2 $LINUX_SRC
 fi
 
+## agent has tough times with (multiple!) spaces in folder names here
 UBOOK_XPRO_DRIVERS="./chuwi-ubook-xpro"
 mkdir -p $UBOOK_XPRO_DRIVERS
 if mountpoint $UBOOK_XPRO_DRIVERS; then
   echo "already mounted: $UBOOK_XPRO_DRIVERS"
 else
-  ratarmount -o modules=subdir,subdir='UBook XPro  Drivers' ./ubook-xpro-drivers-win11.rar $UBOOK_XPRO_DRIVERS
+  sudo mount -o bind ~/.downloads/UBook\ XPro\ \ Drivers/ ~/.local/share/chezmoi/devices/chuwi_ubook_xpro/chuwi_camera_drivers/chuwi-ubook-xpro/
+  # ratarmount -o modules=subdir,subdir='UBook XPro  Drivers' ./ubook-xpro-drivers-win11.rar $UBOOK_XPRO_DRIVERS
 fi

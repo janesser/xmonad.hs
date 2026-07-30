@@ -54,9 +54,9 @@ The OV2680 driver is loaded but not producing video. Key issues to investigate:
 
 ## 📁 Key Files
 - `chuwi_camera_driver.c` - Custom driver source (agent_work/) - based on WRONG hardware
-- `chuwi_camera_drivers/chuwi-ubook-xpro/UBook XPro  Drivers/System devices/ov2680.inf_amd64_*/` - Windows OV2680 driver
-- `chuwi_camera_drivers/chuwi-ubook-xpro/UBook XPro  Drivers/System devices/ov5648.inf_amd64_*/` - Windows OV5648 driver
-- `chuwi_camera_drivers/chuwi-ubook-xpro/UBook XPro  Drivers/Sensors/mxc6655.inf_amd64_*/` - Windows MXC6655 PMIC driver
+- `chuwi_camera_drivers/chuwi-ubook-xpro/System devices/ov2680.inf_amd64_*/` - Windows OV2680 driver
+- `chuwi_camera_drivers/chuwi-ubook-xpro/System devices/ov5648.inf_amd64_*/` - Windows OV5648 driver
+- `chuwi_camera_drivers/chuwi-ubook-xpro/Sensors/mxc6655.inf_amd64_*/` - Windows MXC6655 PMIC driver
 - `linux-source-6.8.0/` - Kernel source tree (empty, needs to be fetched)
 - `acpidump/` - ACPI dump files (from original machine, shows INT3471/INT3474)
 - `dsdt.cam0_cam1.dsl` - DSDT with ACPI device definitions (INT3471/INT3474)
