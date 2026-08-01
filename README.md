@@ -776,3 +776,9 @@ sudo dd bs=4M if=$HOME/Downloads/gparted-live-1.7.0-12.amd64.iso of=/dev/sdb sta
 
 <https://config.phundrak.com/fish.html>
 <https://mwop.net/blog/2024-07-04-how-i-use-wezterm.html>
+
+## Restoring package maintainer files
+
+    sudo apt install --reinstall -o Dpkg::Options::="--force-confask,confnew,confmiss" <package-name>
+
+See detailed discussion here: <https://askubuntu.com/questions/66533/how-can-i-restore-configuration-files>

@@ -66,7 +66,7 @@ rm -f ~/.ssh/env # cleanup
 if [ -n "$SSH_AUTH_SOCK" ] && ssh-add -l >/dev/null
 then
     echo ssh-agent via forwarding $SSH_AUTH_SOCK.
-elif source ~/.ssh/my-env
+elif source ~/.ssh/my-env 2>/dev/null
 then
     if $(ps -p "$SSH_AGENT_PID" >/dev/null)
     then

@@ -1,29 +1,18 @@
 #!/usr/bin/env bash
 
-start_once() {
-   echo starting... $1
-   LINK=$(which $1)
-   PRG=$(readlink -f $LINK) # dive behind x-www-browser etc.
-   ARGS="${*:2}"
-   if [ -x $(command -v $PRG) ] && [ ! "$(pidof $PRG)" ]; then
-      exec $PRG $ARGS &
-   fi
-}
-
 killall btop # kill dangling instances
 
 xsetroot -solid black # feh for background image
 
 gtk-sni-tray-standalone --bottom --beginning --watcher &
 
+source ~/.local/share/start_once.func
+
 start_once blueman-applet
 
 # "systemctl suspend" cannot be passed through as quoting doesn't group args correctly
 xautolock -time 10 -locker slock -killtime 30 -killer "systemctl suspend" -notify 10 -detectsleep &
 xss-lock -- on-screenlock.fish &
-
-# block all touchpad for 2 sec
-start_once syndaemon "-i 1.2 -d -K -R"
 
 # no over-gain mic
 pactl set-source-volume @DEFAULT_SOURCE@ 20%
@@ -38,13 +27,11 @@ start_once nm-tray
 
 ### COMM ###
 
-start_once x-mail-client
-start_once signal-desktop
-start_once signal-desktop-unofficial # arm64 packaging
-start_once x-whatsapp
-start_once zapzap
-# start_once element-desktop
-# INSUFFICIENT_USE start_once dev.geopjr.Tuba # compiled from github
+# x-social.sh
+
+#### WEB ####
+
+# x-www-browser
 
 ## ADMIN
 # start_once easyeffects
