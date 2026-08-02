@@ -1,0 +1,12 @@
+#!/bin/bash
+# Restart syndaemon for touchpad input11
+# This script runs as root (triggered by udev rule)
+# It restarts syndaemon as the user (jan) via su
+
+# Kill existing syndaemon
+killall syndaemon 2>/dev/null
+
+# Restart syndaemon as the user (jan)
+export XAUTHORITY=/home/jan/.Xauthority
+export DISPLAY=:0.0
+su - jan -w DISPLAY,XAUTHORITY -c "syndaemon -i 1.2 -d -K -R"
