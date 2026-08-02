@@ -26,7 +26,8 @@ sudo apt install -y aptitude \
         xss-lock \
         pavucontrol \
         xfce4-power-manager \
-	w3m \
+        w3m \
+        autossh \
         {{ if eq .chezmoi.arch "amd64" }} xautolock {{ end }}
         # FIXME xautolock for arm64 missing
 
