@@ -7,4 +7,4 @@
 killall syndaemon 2>/dev/null
 
 # Restart syndaemon as the user
-syndaemon -i 1.2 -K -R -d
+syndaemon -i 1.2 -d -K -R

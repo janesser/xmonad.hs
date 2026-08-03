@@ -1,0 +1,20 @@
+# Restart syndaemon as the user when the touchpad device appears or disappears
+# Device: HS-CH12U-PTP-01-04-14 USB KeyBoard Touchpad
+#
+# This is a user service, so it runs as the logged-in user (not root).
+# It can be triggered manually via:
+#   systemctl --user restart syndaemon-restart
+#
+# Or triggered from a udev rule (root) via:
+#   systemctl --user start syndaemon-restart
+
+[Unit]
+Description=Restart syndaemon touchpad input daemon
+After=graphical.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'exec $HOME/.local/bin/restart-syndaemon'
+
+[Install]
+WantedBy=default.target

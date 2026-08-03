@@ -2,4 +2,4 @@
 # Device: HS-CH12U-PTP-01-04-14 USB KeyBoard Touchpad
 # This handles detach/reattach and suspend/resume
 
-ACTION=="add|remove", SUBSYSTEM=="input", ATTR{name}=="HS-CH12U-PTP-01-04-14 USB KeyBoard Touchpad", RUN+="/usr/local/bin/restart-syndaemon"
+ACTION=="add|remove", SUBSYSTEM=="input", ATTR{name}=="HS-CH12U-PTP-01-04-14 USB KeyBoard Touchpad", TAG+="systemd", ENV{SYSTEMD_USER_WANTS}="syndaemon-restart.service"

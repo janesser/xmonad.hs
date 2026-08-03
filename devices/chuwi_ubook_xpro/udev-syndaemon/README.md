@@ -1,4 +1,4 @@
-# udev rule for syndaemon
+# systemd user unit + udev rule for syndaemon
 
 ## Symptom 
 
@@ -16,7 +16,7 @@ X Error of failed request:  XI_BadDevice (invalid Device parameter)
 
 ## Mitigation
 
-create udev rule that reacts on create/remove events of devices
+create systemd user service and udev rule that reacts on create/remove events of devices
 
 criteria will be name: **HS-CH12U-PTP-01-04-14 USB KeyBoard Touchpad**
 
@@ -33,3 +33,29 @@ in order to bind to the respective xsession, udev-rule from root context needs t
 ### FailFasts
 
   su - $USER -w XAUTHORITY,DISPLAY ... # works from root-shell, not from udev-rule
+
+## Files
+
+| File | Purpose |
+|---|---|
+| `99-syndaemon-restart.rules` | udev rule: sets `ENV{SYSTEMD_USER_WANTS}` on touchpad add/remove |
+| `restart-syndaemon` | script: kill + restart syndaemon as user (runs via systemd) |
+| `syndaemon-restart.service` | systemd user unit: runs the script as the user |
+
+## Architecture
+
+1. **udev rule** detects touchpad add/remove and sets `ENV{SYSTEMD_USER_WANTS}`
+2. **systemd** reads the environment variable and starts `syndaemon-restart.service` as the user
+3. **Script** kills existing syndaemon and restarts it
+
+## Usage
+
+### Manual (user session)
+
+```bash
+systemctl --user restart syndaemon-restart
+```
+
+### From udev rule (root context)
+
+The udev rule sets `ENV{SYSTEMD_USER_WANTS}="syndaemon-restart.service"`, which triggers systemd to start the service automatically.
