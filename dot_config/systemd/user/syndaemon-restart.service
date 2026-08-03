@@ -15,6 +15,7 @@ After=graphical.target
 [Service]
 Type=oneshot
 ExecStart=/bin/bash -c 'exec $HOME/.local/bin/restart-syndaemon'
+KillMode=process
 
 [Install]
 WantedBy=default.target

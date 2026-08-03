@@ -35,5 +35,6 @@ config.keys = {
 local domains = wezterm.plugin.require("https://github.com/DavidRR-F/quick_domains.wezterm")
 domains.apply_to_config(config)
 
+multiplexing = "WezTerm"
 
 return config
