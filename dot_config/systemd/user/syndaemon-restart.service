@@ -10,7 +10,6 @@
 
 [Unit]
 Description=Restart syndaemon touchpad input daemon
-After=graphical.target
 
 [Service]
 Type=oneshot

@@ -47,6 +47,7 @@ in order to bind to the respective xsession, udev-rule from root context needs t
 1. **udev rule** detects touchpad add/remove and sets `ENV{SYSTEMD_USER_WANTS}`
 2. **systemd** reads the environment variable and starts `syndaemon-restart.service` as the user
 3. **Script** kills existing syndaemon and restarts it
+4. **xmonadrc.sh** starts `sysdaemon-restart.service` on user's xsession start
 
 ## Usage
 

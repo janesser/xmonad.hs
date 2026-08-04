@@ -49,3 +49,5 @@ if [ -n "$(udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN)" ]; then
    gsettings reset org.onboard.window.landscape height
    start_once onboard -e
 fi
+
+systemctl --user start syndaemon-restart.service
