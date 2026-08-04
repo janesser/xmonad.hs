@@ -7,7 +7,12 @@ then
     
     # https://helloacm.com/how-to-clean-up-nvm-node-versions-except-one/
     KEEP_VERSION=`nvm ls-remote --lts --no-colors | tail -n 1 | grep -oE "v[0-9\.]+"`
+    OLD_VERSION=`nvm ls --no-colors --no-alias | head -n 1 | grep -oE "v[0-9\.]+"`
+    
     echo Keeping version $KEEP_VERSION.
+    nvm use $KEEP_VERSION
+    nvm reinstall-packages $OLD_VERSION
+    
     for v in $(nvm ls --no-colors --no-alias | \
             grep -v $KEEP_VERSION | \
             grep -v system | \
