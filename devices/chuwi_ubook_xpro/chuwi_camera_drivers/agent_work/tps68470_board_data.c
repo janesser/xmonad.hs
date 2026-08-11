@@ -283,8 +283,8 @@ static const struct tps68470_regulator_platform_data chuwi_tps68470_pdata = {
 static struct gpiod_lookup_table chuwi_int347a_gpios = {
 	.dev_id = "i2c-INT347A:00",
 	.table = {
-		GPIO_LOOKUP("tps68470-gpio", 9, "reset", GPIO_ACTIVE_LOW),
-		GPIO_LOOKUP("tps68470-gpio", 7, "powerdown", GPIO_ACTIVE_LOW),
+		GPIO_LOOKUP("tps68470-gpio", 3, "reset", GPIO_ACTIVE_LOW),
+		GPIO_LOOKUP("tps68470-gpio", 4, "powerdown", GPIO_ACTIVE_LOW),
 		{ }
 	}
 };

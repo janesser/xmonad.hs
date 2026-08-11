@@ -4,3 +4,6 @@ chuwi-ubook-xpro
 
 **/*.aml
 **/*.asm
+**/*.o
+**/*.ko
+**/*.mod
