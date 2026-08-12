@@ -30,11 +30,17 @@ config.keys = {
   }
 }
 
+config.unix_domains = {
+  {
+    name = wezterm.hostname(),
+  },
+}
+
+config.default_domain = wezterm.hostname() -- gui
+config.default_mux_server_domain = wezterm.hostname() -- mux
 
 -- https://github.com/wezterm/wezterm/issues/7423 about ssh-agent confusion
 local domains = wezterm.plugin.require("https://github.com/DavidRR-F/quick_domains.wezterm")
 domains.apply_to_config(config)
-
-multiplexing = "WezTerm"
 
 return config
