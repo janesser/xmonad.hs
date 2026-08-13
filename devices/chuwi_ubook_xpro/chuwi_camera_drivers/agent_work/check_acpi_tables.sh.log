@@ -1,0 +1,95 @@
+=== DSDT Table Contents (INT347 references) ===
+INT3471
+INT3476
+INT3477
+INT3474
+INT3473
+INT3475
+INT3478
+INT3479
+INT347A
+INT347B
+INT3472
+INT3472
+INT3472
+INT3472
+INT3472
+INT3472
+INT3472
+INT3472
+INT3472
+INT3472
+INT3472
+INT3472
+INT3472
+INT3472
+INT3472
+INT3472
+INT3471
+INT3471
+INT3474
+INT3474
+
+=== FACP Table ===
+
+=== All ACPI Tables ===
+APIC
+ASF!
+BGRT
+data
+DBG2
+DBGP
+DMAR
+DSDT
+dynamic
+FACP
+FACS
+FIDT
+FPDT
+HPET
+LPIT
+MCFG
+MSDM
+SSDT1
+SSDT10
+SSDT11
+SSDT12
+SSDT13
+SSDT2
+SSDT3
+SSDT4
+SSDT5
+SSDT6
+SSDT7
+SSDT8
+SSDT9
+TPM2
+UEFI
+WSMT
+
+=== Check for INT347A and INT347E in all tables ===
+--- /sys/firmware/acpi/tables/*.dat ---
+
+=== INT3472 ACPI devices ===
+=== /sys/bus/acpi/devices/INT3472:00/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:00//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+=== /sys/bus/acpi/devices/INT3472:01/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:01//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+=== /sys/bus/acpi/devices/INT3472:02/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:02//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+=== /sys/bus/acpi/devices/INT3472:03/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:03//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+=== /sys/bus/acpi/devices/INT3472:04/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:04//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+=== /sys/bus/acpi/devices/INT3472:05/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:05//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+=== /sys/bus/acpi/devices/INT3472:06/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:06//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+=== /sys/bus/acpi/devices/INT3472:07/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:07//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+=== /sys/bus/acpi/devices/INT3472:08/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:08//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+
+=== INT347A and INT347E devices ===
+=== /sys/bus/acpi/devices/INT347A:*/ ===
+=== /sys/bus/acpi/devices/INT347E:*/ ===

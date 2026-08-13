@@ -1,0 +1,144 @@
+=== I2C Bus Scan ===
+--- i2c-0 ---
+delete_device
+device
+firmware_node
+i2c-dev
+i2c-MXC6655:00
+name
+new_device
+power
+software_node
+subsystem
+uevent
+waiting_for_supplier
+--- i2c-1 ---
+delete_device
+device
+firmware_node
+i2c-dev
+i2c-GXTP7385:01
+name
+new_device
+power
+software_node
+subsystem
+uevent
+waiting_for_supplier
+--- i2c-2 ---
+delete_device
+device
+firmware_node
+i2c-dev
+i2c-OVTI2680:00
+i2c-OVTI5648:00
+name
+new_device
+power
+software_node
+subsystem
+uevent
+waiting_for_supplier
+--- i2c-3 ---
+delete_device
+device
+firmware_node
+i2c-dev
+name
+new_device
+power
+subsystem
+uevent
+waiting_for_supplier
+--- i2c-4 ---
+delete_device
+device
+i2c-dev
+name
+new_device
+power
+subsystem
+uevent
+--- i2c-5 ---
+delete_device
+device
+i2c-dev
+name
+new_device
+power
+subsystem
+uevent
+--- i2c-6 ---
+delete_device
+device
+i2c-dev
+name
+new_device
+power
+subsystem
+uevent
+--- i2c-7 ---
+delete_device
+device
+i2c-dev
+name
+new_device
+power
+subsystem
+uevent
+--- i2c-8 ---
+delete_device
+device
+i2c-dev
+name
+new_device
+power
+subsystem
+uevent
+
+=== Scanning for TPS68470 at common addresses ===
+Scanning 0x48 on all buses...
+  i2c-0: no device
+  i2c-1: no device
+  i2c-2: no device
+  i2c-3: no device
+  i2c-4: no device
+  i2c-5: no device
+  i2c-6: no device
+  i2c-7: no device
+  i2c-8: no device
+Scanning 0x49 on all buses...
+  i2c-0: no device
+  i2c-1: no device
+  i2c-2: no device
+  i2c-3: no device
+  i2c-4: no device
+  i2c-5: no device
+  i2c-6: no device
+  i2c-7: no device
+  i2c-8: no device
+Scanning 0x60 on all buses...
+  i2c-0: no device
+  i2c-1: no device
+  i2c-2: no device
+  i2c-3: no device
+  i2c-4: no device
+  i2c-5: no device
+  i2c-6: no device
+  i2c-7: no device
+  i2c-8: no device
+Scanning 0x61 on all buses...
+  i2c-0: no device
+  i2c-1: no device
+  i2c-2: no device
+  i2c-3: no device
+  i2c-4: no device
+  i2c-5: no device
+  i2c-6: no device
+  i2c-7: no device
+  i2c-8: no device
+
+=== Loaded I2C Controllers ===
+int3472-tps68470
+
+=== I2C Controller Bind Status ===

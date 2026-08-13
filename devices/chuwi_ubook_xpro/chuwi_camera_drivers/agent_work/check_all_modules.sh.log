@@ -1,0 +1,36 @@
+=== All loaded I2C related modules ===
+i2c_algo_bit           16384  1 i915
+i2c_i801               36864  0
+i2c_smbus              16384  1 i2c_i801
+intel_skl_int3472_tps68470    20480  0
+tps68470_regulator     12288  0
+clk_tps68470           12288  0
+intel_skl_int3472_discrete    24576  0
+i2c_hid_acpi           12288  0
+i2c_hid                40960  1 i2c_hid_acpi
+hid                   180224  4 i2c_hid,usbhid,hid_multitouch,hid_generic
+
+=== All loaded GPIO related modules ===
+intel_skl_int3472_tps68470    20480  0
+tps68470_regulator     12288  0
+clk_tps68470           12288  0
+intel_skl_int3472_discrete    24576  0
+
+=== Check if any I2C controller is using the int3472-tps68470 driver ===
+bind
+module
+uevent
+unbind
+Content:
+bind
+module
+uevent
+unbind
+
+=== Check if the I2C controller has a firmware_node ===
+=== /sys/bus/i2c/drivers/int3472-tps68470/module/ ===
+
+=== Check for I2C controller parameters ===
+=== /sys/bus/i2c/drivers/int3472-tps68470/module/ ===
+
+=== Check for any I2C controller that might be needed ===

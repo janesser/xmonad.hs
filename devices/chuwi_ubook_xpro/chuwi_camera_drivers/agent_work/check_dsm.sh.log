@@ -1,0 +1,41 @@
+=== Checking for DSM methods on INT3472 devices ===
+=== /sys/bus/acpi/devices/INT3472:00/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:00//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+dsm:
+dst:
+=== /sys/bus/acpi/devices/INT3472:01/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:01//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+dsm:
+dst:
+=== /sys/bus/acpi/devices/INT3472:02/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:02//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+dsm:
+dst:
+=== /sys/bus/acpi/devices/INT3472:03/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:03//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+dsm:
+dst:
+=== /sys/bus/acpi/devices/INT3472:04/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:04//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+dsm:
+dst:
+=== /sys/bus/acpi/devices/INT3472:05/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:05//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+dsm:
+dst:
+=== /sys/bus/acpi/devices/INT3472:06/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:06//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+dsm:
+dst:
+=== /sys/bus/acpi/devices/INT3472:07/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:07//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+dsm:
+dst:
+=== /sys/bus/acpi/devices/INT3472:08/ ===
+ls: Zugriff auf '/sys/bus/acpi/devices//sys/bus/acpi/devices/INT3472:08//' nicht möglich: Datei oder Verzeichnis nicht gefunden
+dsm:
+dst:
+
+=== Checking for DSM methods on INT347A ===
+
+=== Checking for DSM methods on INT347E ===

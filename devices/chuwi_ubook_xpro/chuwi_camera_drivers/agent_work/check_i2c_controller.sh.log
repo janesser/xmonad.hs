@@ -1,0 +1,39 @@
+=== int3472-tps68470 controller info ===
+
+=== Try to read I2C controller params ===
+--- i2c-0 ---
+Synopsys DesignWare I2C adapter
+--- i2c-1 ---
+Synopsys DesignWare I2C adapter
+--- i2c-2 ---
+Synopsys DesignWare I2C adapter
+--- i2c-3 ---
+SMBus I801 adapter at f040
+--- i2c-4 ---
+i915 gmbus dpc
+--- i2c-5 ---
+i915 gmbus dpb
+--- i2c-6 ---
+i915 gmbus dpd
+--- i2c-7 ---
+AUX A/DDI A/PHY A
+--- i2c-8 ---
+AUX C/DDI C/PHY C
+--- i2c-GXTP7385:01 ---
+GXTP7385:01
+--- i2c-MXC6655:00 ---
+MXC6655:00
+--- i2c-OVTI2680:00 ---
+OVTI2680:00
+--- i2c-OVTI5648:00 ---
+OVTI5648:00
+
+=== Check for I2C controllers in device tree ===
+grep: »(« oder »\(« ohne schließende Klammer
+
+=== Check kernel config for I2C controllers ===
+CONFIG_TPS68470_PMIC_OPREGION=y
+CONFIG_GPIO_TPS68470=m
+CONFIG_REGULATOR_TPS68470=m
+CONFIG_INTEL_SKL_INT3472=m
+CONFIG_COMMON_CLK_TPS68470=m

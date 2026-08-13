@@ -1,0 +1,129 @@
+=== Manual I2C bus scan for TPS68470 ===
+Scanning all I2C buses for devices at common PMIC addresses...
+
+=== i2c-0 ===
+  Found: delete_device
+  Found: device
+  Found: firmware_node
+  Found: i2c-MXC6655:00
+MXC6655:00
+  Found: name
+  Found: new_device
+  Found: power
+  Found: software_node
+  Found: subsystem
+  Found: uevent
+  Found: waiting_for_supplier
+=== i2c-1 ===
+  Found: delete_device
+  Found: device
+  Found: firmware_node
+  Found: i2c-GXTP7385:01
+GXTP7385:01
+  Found: name
+  Found: new_device
+  Found: power
+  Found: software_node
+  Found: subsystem
+  Found: uevent
+  Found: waiting_for_supplier
+=== i2c-2 ===
+  Found: delete_device
+  Found: device
+  Found: firmware_node
+  Found: i2c-OVTI2680:00
+OVTI2680:00
+  Found: i2c-OVTI5648:00
+OVTI5648:00
+  Found: name
+  Found: new_device
+  Found: power
+  Found: software_node
+  Found: subsystem
+  Found: uevent
+  Found: waiting_for_supplier
+=== i2c-3 ===
+  Found: delete_device
+  Found: device
+  Found: firmware_node
+  Found: name
+  Found: new_device
+  Found: power
+  Found: subsystem
+  Found: uevent
+  Found: waiting_for_supplier
+=== i2c-4 ===
+  Found: delete_device
+  Found: device
+  Found: name
+  Found: new_device
+  Found: power
+  Found: subsystem
+  Found: uevent
+=== i2c-5 ===
+  Found: delete_device
+  Found: device
+  Found: name
+  Found: new_device
+  Found: power
+  Found: subsystem
+  Found: uevent
+=== i2c-6 ===
+  Found: delete_device
+  Found: device
+  Found: name
+  Found: new_device
+  Found: power
+  Found: subsystem
+  Found: uevent
+=== i2c-7 ===
+  Found: delete_device
+  Found: device
+  Found: name
+  Found: new_device
+  Found: power
+  Found: subsystem
+  Found: uevent
+=== i2c-8 ===
+  Found: delete_device
+  Found: device
+  Found: name
+  Found: new_device
+  Found: power
+  Found: subsystem
+  Found: uevent
+
+=== Try to detect TPS68470 using i2cdetect ===
+/usr/sbin/i2cdetect
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                         08 -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+40: -- -- -- -- 44 -- -- -- -- -- -- -- -- -- -- -- 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+70: -- -- -- -- -- -- -- --                         
+
+=== Check for i2c-tools ===
+No i2c-tools installed
+
+=== Try to read I2C bus info ===
+=== i2c-0 info ===
+Synopsys DesignWare I2C adapter
+=== i2c-1 info ===
+Synopsys DesignWare I2C adapter
+=== i2c-2 info ===
+Synopsys DesignWare I2C adapter
+=== i2c-3 info ===
+SMBus I801 adapter at f040
+=== i2c-4 info ===
+i915 gmbus dpc
+=== i2c-5 info ===
+i915 gmbus dpb
+=== i2c-6 info ===
+i915 gmbus dpd
+=== i2c-7 info ===
+AUX A/DDI A/PHY A
+=== i2c-8 info ===
+AUX C/DDI C/PHY C

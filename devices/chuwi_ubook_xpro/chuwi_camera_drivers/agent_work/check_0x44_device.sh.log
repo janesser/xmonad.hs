@@ -1,0 +1,84 @@
+=== Investigating device at 0x44 on i2c-3 ===
+
+=== i2cdetect scan of i2c-3 ===
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                         08 -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+40: -- -- -- -- 44 -- -- -- -- -- -- -- -- -- -- -- 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+70: -- -- -- -- -- -- -- --                         
+
+=== Check i2c-3 new_device ===
+
+=== Check if device is bound to any driver ===
+
+=== Check for TPS68470-specific I2C controller ===
+Looking for I2C controllers that might route to the TPS68470 PMIC...
+
+=== Check for INT3472 I2C controller ===
+bind
+module
+uevent
+unbind
+Content:
+Not bound
+Module:
+Not loaded
+Uevent:
+
+=== Check for GPIO TPS68470 ===
+No TPS68470 GPIO chip
+
+=== Check for CLK TPS68470 ===
+No TPS68470 clock
+
+=== Check for REGULATOR TPS68470 ===
+No TPS68470 regulator
+
+=== Check for INT3472 platform device ===
+INT3472:01
+INT3472:02
+
+=== Check for I2C devices on i2c-3 ===
+delete_device
+device
+firmware_node
+i2c-dev
+name
+new_device
+power
+subsystem
+uevent
+waiting_for_supplier
+
+=== Try to read the device name ===
+
+Device name: 
+
+=== Check for I2C controller that routes to i2c-3 ===
+i2c-3 is SMBus I801 adapter at f040
+This is the ICH SMBus controller
+
+Possible I2C controllers:
+  1. ICH SMBus (i2c-3) - This is where the device is
+  2. DesignWare I2C controllers (i2c-0, i2c-1, i2c-2)
+  3. GMBUS controllers (i2c-4 to i2c-8)
+
+The TPS68470 PMIC should be on the ICH SMBus (i2c-3)
+
+=== Check if the PMIC is at a different address ===
+Scanning all I2C buses for common PMIC addresses...
+Address 0x44: Address 0x48: Address 0x49: Address 0x60: Address 0x61: Address 0x36: Address 0x37: Address 0x38: Address 0x39: 
+=== Summary ===
+Device at 0x44 on i2c-3 is likely the TPS68470 PMIC
+It's bound to multiple drivers: as3711, da903x, da9063, int3472-tps68470, max310x, max77693, rc5t583
+This suggests the PMIC is being claimed by multiple drivers
+
+Possible issues:
+  1. The PMIC is not responding correctly
+  2. The I2C controller (SMBus I801) is not properly configured
+  3. The INT3472 ACPI driver doesn't have the correct GPIO/I2C routing
+  4. The PMIC requires a different I2C controller

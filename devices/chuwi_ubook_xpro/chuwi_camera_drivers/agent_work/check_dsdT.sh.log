@@ -1,0 +1,18 @@
+=== Dumping DSDT with iasl ===
+agent_work/check_dsdT.sh: Zeile 5: /tmp/dsdT.txt: Keine Berechtigung
+Failed to dump DSDT
+
+=== Looking for INT3472 in DSDT ===
+
+=== Looking for INT347A in DSDT ===
+
+=== Looking for INT347E in DSDT ===
+
+=== Looking for I2C controllers ===
+
+=== Looking for GPIO controllers ===
+
+=== Looking for Device definitions with INT347 ===
+
+=== Full DSDT size ===
+5 /tmp/dsdT.txt

@@ -1,0 +1,37 @@
+=== Kernel Version ===
+6.8.0-136-generic
+
+=== Checking kernel config for TPS68470 ===
+CONFIG_TPS68470_PMIC_OPREGION=y
+CONFIG_GPIO_TPS68470=m
+CONFIG_REGULATOR_TPS68470=m
+CONFIG_INTEL_SKL_INT3472=m
+CONFIG_COMMON_CLK_TPS68470=m
+
+=== Checking kernel config for I2C controllers ===
+CONFIG_TPS68470_PMIC_OPREGION=y
+CONFIG_GPIO_TPS68470=m
+CONFIG_REGULATOR_TPS68470=m
+CONFIG_INTEL_SKL_INT3472=m
+CONFIG_COMMON_CLK_TPS68470=m
+
+=== Looking for I2C controller modules ===
+No modules built-in
+No module aliases
+
+=== Check for INT3472 I2C controller module ===
+Module not found
+Module not found (alt name)
+
+=== Check for GPIO controller modules ===
+intel_skl_int3472.ko not found
+intel_skl_int3472_gpio.ko not found
+
+=== Check for any I2C controller that might route to TPS68470 ===
+No TPS68470 I2C controller module
+
+=== Check if I2C controller needs to be manually loaded ===
+intel_skl_int3472_tps68470    20480  0
+tps68470_regulator     12288  0
+clk_tps68470           12288  0
+intel_skl_int3472_discrete    24576  0

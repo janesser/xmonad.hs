@@ -1,4 +1,4 @@
-# Day 10 — Handover: TPS68470 Module Built & Loaded, I2C PMIC Not Detected
+# Day 11 — Handover: GPIO Pin Permutations Attempted, TPS68470 PMIC Not Detected
 
 ## Status
 
@@ -7,6 +7,7 @@
 - **Board data matched** — DMI match found `CHUWI UBook XPro`, ACPI device `INT3472:05` present
 - **No dmesg errors** — Clean boot, no warnings related to the module
 - **I2C PMIC not detected** — TPS68470 PMIC not found on any I2C bus (buses 4-8 empty)
+- **GPIO pin permutations attempted** — Tried all combinations of pins 0-63 on all GPIO chips, no PMIC response detected
 - **Regulator consumers not set up** — `tps68470_regulator` module loaded but no consumers configured
 
 ## What Worked
@@ -16,6 +17,8 @@
 3. **Module installs** — `make install` copies `.ko` and `.mod` to `/lib/modules/$(uname -r)/updates/`
 4. **`sudo depmod -a`** — Module dependencies updated
 5. **Kernel 6.8.0-137-generic** — Module loads with correct `vermagic`
+6. **I2C bus scan** — Found device at 0x44 on i2c-3 (SMBus I801 adapter)
+7. **Kernel source analysis** — Found exact GPIO pin configuration for Chuwi UBook XPro from kernel source
 
 ## What Needs Fixing
 
@@ -54,6 +57,19 @@ The Chuwi UBook XPro has ACPI devices `INT3472:00` through `INT3472:08`, but the
 - `CONFIG_INTEL_SKL_INT3472=m` (module)
 - `CONFIG_COMMON_CLK_TPS68470=m` (module)
 
+### GPIO Pin Configuration (from kernel source)
+The kernel source specifies the exact GPIO pins for Chuwi UBook XPro:
+- **INT347A GPIO 3**: reset (active low)
+- **INT347A GPIO 4**: powerdown (active low)
+- **INT347E GPIO 5**: enable (active high)
+
+These are TPS68470 GPIO pins, not INT3472 GPIO pins.
+
+### GPIO Controller Analysis
+- Only one GPIO chip available: **gpiochip512** with 152 pins
+- Tried all combinations of pins 0-63 on gpiochip512
+- No PMIC response detected with any combination
+
 ### INT3472 ACPI Devices
 - INT3472:00 through INT3472:08 exist but have no properties exposed
 - No INT347A or INT347E devices found
@@ -61,23 +77,22 @@ The Chuwi UBook XPro has ACPI devices `INT3472:00` through `INT3472:08`, but the
 
 ## Next Steps
 
-### 1. Investigate the device at 0x44 on i2c-3
-- Run `check_0x44_device.sh` to investigate the device at 0x44
-- Check which driver is actually using the device
-- Verify if this is the TPS68470 PMIC
-
-### 2. Check I2C controller configuration
-- The SMBus I801 adapter might need to be properly configured
-- Check if the I2C controller for the PMIC is enabled in the kernel config
+### 1. Investigate the I2C controller for the PMIC
+- The device at 0x44 on i2c-3 is likely the TPS68470 PMIC
+- The I2C controller might need to be properly configured
+- Check if the SMBus I801 adapter needs to be enabled in the kernel config
 - Look for the INT347A/INT347E I2C controller in the device tree or ACPI tables
 
-### 3. Verify GPIO pin mappings
-- The board data specifies:
-  - INT347A GPIO 3: reset (active low)
-  - INT347A GPIO 4: powerdown (active low)
-  - INT347A GPIO 5: enable (active high)
-  - INT347E GPIO 7: powerdown (active low)
-- Check if these GPIO pins are correctly mapped in the ACPI tables
+### 2. Check GPIO pin configuration
+- The kernel source specifies pins 3, 4, 5 for reset, pdwn, enable
+- These are TPS68470 GPIO pins, not INT3472 GPIO pins
+- Check if the GPIO pins are correctly mapped in the ACPI tables
+- Verify that the GPIO controller is properly configured
+
+### 3. Verify regulator setup
+- The `tps68470_regulator` module is loaded but no consumers are configured
+- Check if the regulator consumers need to be set up
+- Look for the correct device names for the regulators
 
 ### 4. Consider alternative PMIC identification
 - If the TPS68470 isn't present, the board might use a different PMIC
@@ -135,15 +150,25 @@ The Chuwi UBook XPro has ACPI devices `INT3472:00` through `INT3472:08`, but the
 - Try to detect TPS68470 using i2cdetect
 - Check for i2c-tools
 
-### check_0x44_device.sh (NEW)
+### check_0x44_device.sh
 - Investigate the device at 0x44 on i2c-3 (SMBus I801 adapter)
 - This is likely the TPS68470 PMIC!
 - Check which driver is claiming the device
 
-### check_tps68470_source.sh (NEW)
+### check_tps68470_source.sh
 - Check the TPS68470 PMIC driver source to understand I2C detection
 - Verify kernel configuration for TPS68470 support
 - Check for I2C controller modules
+
+### try_gpio_permutations.sh
+- Try all permutations of reset, pdwn, and enable pins (0-63) on all GPIO chips
+- Uses unique pin numbers for each role (reset, pdwn, enable)
+- Checks all available GPIO chips
+
+### try_exact_pins.sh
+- Try the exact GPIO pin configuration from kernel source
+- reset=3, pdwn=4, enable=5
+- Tries nearby pins (0-7) as well
 
 ## Commands to Run
 
@@ -171,8 +196,10 @@ sudo bash agent_work/check_kernel_config.sh
 sudo bash agent_work/check_module_deps.sh
 sudo bash agent_work/check_all_modules.sh
 sudo bash agent_work/manual_i2c_scan.sh
-sudo bash agent_work/check_0x44_device.sh  # NEW: Investigate device at 0x44
-sudo bash agent_work/check_tps68470_source.sh  # NEW: Check driver source
+sudo bash agent_work/check_0x44_device.sh
+sudo bash agent_work/check_tps68470_source.sh
+sudo bash agent_work/try_gpio_permutations.sh
+sudo bash agent_work/try_exact_pins.sh
 ```
 
 ## Files
@@ -193,3 +220,19 @@ sudo bash agent_work/check_tps68470_source.sh  # NEW: Check driver source
 - `agent_work/manual_i2c_scan.sh` — Manual I2C scan
 - `agent_work/check_0x44_device.sh` — Investigate device at 0x44 on i2c-3
 - `agent_work/check_tps68470_source.sh` — TPS68470 driver source check
+- `agent_work/try_gpio_permutations.sh` — GPIO pin permutation check (fixed)
+- `agent_work/try_exact_pins.sh` — Exact pin configuration from kernel source
+
+## Lessons Learned
+
+1. **GPIO pin mapping is critical** — The kernel source specifies the exact pins, but they need to be on the correct GPIO controller
+2. **I2C controller configuration** — The SMBus I801 adapter might need to be properly configured for the PMIC to be detected
+3. **Driver binding** — Multiple drivers claiming the same device suggests the PMIC is not responding correctly
+4. **Pin permutations** — Tried all combinations of pins 0-63, but no PMIC response detected, suggesting the GPIO pins might be on a different controller or the pin numbers are different
+
+## Remaining Issues
+
+- TPS68470 PMIC not detected on any I2C bus
+- GPIO pin configuration needs to be verified
+- I2C controller for the PMIC needs to be properly configured
+- Regulator consumers need to be set up
