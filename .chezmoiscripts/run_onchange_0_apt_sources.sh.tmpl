@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# charm glow {{ include "./etc/apt/sources.list.d/charm.sources" | sha256sum }} {{ include "./etc/apt/keyrings/charm.gpg" | sha256sum }}
-# element.io {{ include "./etc/apt/sources.list.d/element-io.sources" | sha256sum }} {{ include "./etc/apt/keyrings/element-io-archive-keyring.gpg" | sha256sum }}
-# signal {{ include "./etc/apt/sources.list.d/signal-xenial.sources" | sha256sum }} {{ include "./etc/apt/keyrings/signal-desktop-keyring.gpg" | sha256sum }}
 # teamviewer {{ include "./etc/apt/sources.list.d/teamviewer.list" | sha256sum }} {{ include "./etc/apt/keyrings/teamviewer-keyring.gpg" | sha256sum }}
 
 if [ "$CHEZMOI_ARCH" = "amd64" ]; then
@@ -16,3 +13,23 @@ fi
 sudo apt install -y extrepo
 
 # TODO find signal for arm64, e.g. https://github.com/dennisameling/Signal-Desktop
+
+
+# CLEAN UPs
+
+sudo rm -f /etc/apt/sources.list.d/charm.sources
+sudo rm -f /etc/apt/keyrings/charm.gpg
+sudo apt remove --purge -y glow
+
+sudo rm -f /etc/apt/sources.list.d/signal-xenial.sources
+sudo rm -f /etc/apt/keyrings/signal-desktop-keyring.gpg
+sudo apt remove --purge -y signal-desktop
+
+sudo rm -f /etc/apt/sources.list.d/element-io.sources
+sudo rm -f /etc/apt/keyrings/element-io-archive-keyring.gpg
+sudo apt remove --purge -y element-desktop
+
+sudo apt install -y snap
+sudo snap install glow
+sudo snap install signal-desktop
+sudo snap install element-desktop

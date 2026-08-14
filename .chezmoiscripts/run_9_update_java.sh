@@ -6,4 +6,5 @@ export SDKMAN_DIR="$HOME/.sdkman"
 sdk selfupdate
 sdk upgrade java
 sdk upgrade maven
+sdk upgrade gradle
 sdk flush

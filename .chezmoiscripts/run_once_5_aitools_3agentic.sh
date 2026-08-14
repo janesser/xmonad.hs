@@ -15,6 +15,9 @@ npx @robzolkos/lazypi --yes
 pi install npm:@hypabolic/crossbar
 pi install npm:pi-animations
 
+sudo snap install ghidra
+pi install npm:pi-ghidra
+
 pi uninstall npm:pi-claude-cli
 pi list |grep -o 'npm:@juicesharp/rpiv-.*'| xargs -L1 pi uninstall
 
