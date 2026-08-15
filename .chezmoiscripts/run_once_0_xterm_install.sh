@@ -11,6 +11,11 @@ wezterm shell-completion --shell fish > ~/.config/fish/completions/wezterm.fish
 
 sudo update-alternatives --set x-terminal-emulator /usr/bin/open-wezterm-here
 
+## experiment zellij
+cargo install --locked zellij
+sudo update-alternatives --set x-terminal-emulator $(which zutty)
+# see .config/fish/conf.d/zellij.fish
+
 ## clean-up kitty if present
 sudo update-alternatives --remove x-terminal-emulator /usr/local/bin/kitty
 sudo rm -fR /usr/local/bin/kitty /usr/local/bin/kitten \
@@ -22,3 +27,7 @@ sudo rm -fR /usr/local/bin/kitty /usr/local/bin/kitten \
     '/usr/local/share/man/man1/kitten*' \
     '/usr/local/share/man/man5/kitty*'
 exit 0
+
+## clean-up alacritty if present
+sudo update-alternatives --remove x-terminal-emulator $HOME/.cargo/bin/alacritty
+cargo uninstall alacritty

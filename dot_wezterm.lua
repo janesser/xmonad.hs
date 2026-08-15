@@ -36,8 +36,8 @@ config.unix_domains = {
   },
 }
 
-config.default_domain = wezterm.hostname() -- gui
--- config.default_mux_server_domain = wezterm.hostname() -- mux
+-- config.default_domain = wezterm.hostname() -- gui FIXME breaks panes
+-- config.default_mux_server_domain = wezterm.hostname() -- mux FIXME breaks wezterm entirely
 
 -- https://github.com/wezterm/wezterm/issues/7423 about ssh-agent confusion
 local domains = wezterm.plugin.require("https://github.com/DavidRR-F/quick_domains.wezterm")
