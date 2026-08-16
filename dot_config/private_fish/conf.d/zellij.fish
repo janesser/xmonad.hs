@@ -1,4 +1,4 @@
-if status is-interactive
+if test -z "$SSH_CLIENT" && status is-interactive
     set ZELLIJ_AUTO_ATTACH false
     set ZELLIJ_AUTO_EXIT true
 
