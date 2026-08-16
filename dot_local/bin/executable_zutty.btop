@@ -1,2 +1,4 @@
 #!/bin/bash
+xrdb -remove
 zutty btop
+xrdb ~/.Xresources

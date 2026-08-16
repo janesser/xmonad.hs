@@ -279,7 +279,7 @@ myStartupHook :: X ()
 myStartupHook = do
   spawnOnce "bash ~/.config/xmonad/xmonadrc.sh"
   addVerticalScreenCorners
-  spawnOnOnce monWs "zutty btop"
+  spawnOnOnce monWs "zutty.btop"
   --spawnOnOnce monWs "wezterm -e amdgpu_top"
 
 myFadeHook :: FadeHook
