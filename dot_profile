@@ -81,7 +81,7 @@ then
         source ~/.ssh/my-env
     fi
 else
-    # creates ~/.ssh/env initially
+    # creates ~/.ssh/my-env initially
     echo "# GENERATED FILE" >~/.ssh/my-env
     ssh-agent -c >>~/.ssh/my-env
     source ~/.ssh/my-env
