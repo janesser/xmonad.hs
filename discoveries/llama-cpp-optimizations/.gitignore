@@ -1,0 +1,8 @@
+testing.txt
+succeeded.txt
+failed.txt
+.ralph
+.pi/*
+!.pi/agent
+.pi/agent/*
+!.pi/agent/settings.json

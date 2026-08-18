@@ -1,0 +1,11 @@
+{
+  "packages": [
+    "npm:@hypabolic/crossbar"
+  ],
+  "lastChangelogVersion": "0.84.2",
+  "defaultProvider": "crossbar-llamacpp-127-0-0-1-8080",
+  "retry": {
+    "enabled": false
+  },
+  "quietStartup": true
+}
