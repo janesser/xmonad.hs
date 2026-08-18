@@ -36,6 +36,76 @@
 #include <linux/delay.h>
 #include <asm/unaligned.h>
 
+// --- IMX135 Register Access Functions ---
+
+/**
+ * imx135_write_reg - Write a byte to an IMX135 register
+ * @client: I2C client for the sensor
+ * @reg: Register address (16-bit)
+ * @val: Value to write
+ *
+ * Returns 0 on success, negative error code otherwise.
+ */
+static int imx135_write_reg(struct i2c_client *client, u16 reg, u8 val)
+{
+	struct i2c_msg msgs[1];
+	u8 buf[3];
+	int ret;
+
+	buf[0] = (u8)(reg >> 8);
+	buf[1] = (u8)(reg & 0xFF);
+	buf[2] = val;
+
+	msgs[0].addr = client->addr;
+	msgs[0].flags = 0;
+	msgs[0].len = sizeof(buf);
+	msgs[0].buf = buf;
+
+	ret = i2c_master_send(client, buf, sizeof(buf));
+	if (ret < 0)
+		dev_err(&client->dev, "IMX135 write reg 0x%04x failed: %d\n", reg, ret);
+	return ret;
+}
+
+/**
+ * imx135_read_reg - Read a byte from an IMX135 register
+ * @client: I2C client for the sensor
+ * @reg: Register address (16-bit)
+ * @val: Pointer to store the value
+ *
+ * Returns 0 on success, negative error code otherwise.
+ */
+static int imx135_read_reg(struct i2c_client *client, u16 reg, u8 *val)
+{
+	struct i2c_msg msgs[2];
+	u8 addr_buf[2];
+	u8 data_buf[1];
+	int ret;
+
+	addr_buf[0] = (u8)(reg >> 8);
+	addr_buf[1] = (u8)(reg & 0xFF);
+	msgs[0].addr = client->addr;
+	msgs[0].flags = 0;
+	msgs[0].len = sizeof(addr_buf);
+	msgs[0].buf = addr_buf;
+	msgs[1].addr = client->addr;
+	msgs[1].flags = I2C_M_RD;
+	msgs[1].len = sizeof(data_buf);
+	msgs[1].buf = data_buf;
+
+	ret = i2c_transfer(client->adapter, msgs, ARRAY_SIZE(msgs));
+	if (ret != ARRAY_SIZE(msgs)) {
+		if (ret < 0)
+			dev_err(&client->dev, "IMX135 read reg 0x%04x failed: %d\n", reg, ret);
+		else
+			dev_err(&client->dev, "IMX135 read reg 0x%04x: transfer %d\n", reg, ret);
+		return ret < 0 ? ret : -EIO;
+	}
+
+	*val = data_buf[0];
+	return 0;
+}
+
 #define DRIVER_NAME "chuwi_camera_driver"
 #define MAX_DEVICES 2
 
@@ -609,22 +679,25 @@ static int pmic_check_and_enable(struct camera_device *skel)
  * imx135_init() - Initialize the IMX135 camera sensor
  * @skel: Camera device structure
  *
- * Performs the following initialization steps:
+ * Performs the following initialization steps based on the IMX135 datasheet:
  * 1. Verifies the sensor is present by reading chip ID
- * 2. Sends SSDB firmware configuration to the sensor
- * 3. Configures basic operating mode via _DSM method
- * 4. Sets up timing registers
+ * 2. Configures PLL and clock settings
+ * 3. Sets up timing registers for 720p resolution
+ * 4. Configures exposure and gain
+ * 5. Sets up output format
  *
- * The IMX135 is Intel's camera sensor that uses the _DSM method for
- * register access. The _DSM method maps command codes to register addresses.
+ * The IMX135 uses the Intel _DSM method for register access.
+ * The _DSM method with UUID "26257549-9271-4ca4-bb43-c4899d5a4881"
+ * maps command codes to register addresses.
  *
  * Returns 0 on success, negative error code otherwise.
  */
 static int imx135_init(struct camera_device *skel)
 {
 	int ret;
-	u8 cmd;
-	u8 cmd2;
+	u8 chip_id;
+	u16 reg;
+	u8 val;
 
 	dev_info(&skel->pdev->dev, "Initializing IMX135 sensor on I2C bus %u...\n",
 		 skel->i2c_bus_num);
@@ -632,82 +705,231 @@ static int imx135_init(struct camera_device *skel)
 	// --- Step 1: Verify sensor presence ---
 	dev_info(&skel->pdev->dev, "Checking sensor presence...\n");
 
-	// Read chip ID via I2C (standard IMX135 chip ID register)
-	// Register 0x00 typically contains 0x98 for IMX135
-	ret = i2c_smbus_read_byte_data(skel->sensor_client, 0x00);
+	// Read chip ID via I2C (IMX135 chip ID register 0x0000 = 0x87)
+	reg = 0x0000;
+	ret = imx135_read_reg(skel->sensor_client, reg, &chip_id);
 	if (ret < 0) {
 		dev_err(&skel->pdev->dev,
 			"Failed to read IMX135 chip ID: %d\n", ret);
 		return ret;
 	}
-	dev_info(&skel->pdev->dev, "IMX135 chip ID: 0x%02x\n", ret);
-
-	// --- Step 2: Send SSDB firmware configuration ---
-	dev_info(&skel->pdev->dev, "Sending SSDB firmware configuration...\n");
-
-	// The SSDB buffer from DSDT contains 108 bytes of sensor configuration
-	// For a basic initialization, we send the firmware via I2C block write
-	// In a full implementation, this would use I2C block write to send all 108 bytes
-	// For now, we send a basic initialization command
-	ret = i2c_smbus_write_byte_data(skel->sensor_client, 0x50, 0x01);
-	if (ret < 0) {
-		dev_err(&skel->pdev->dev,
-			"Failed to send firmware init command: %d\n", ret);
-		return ret;
-	}
-	msleep(5);
-
-	// --- Step 3: Configure basic operating mode via _DSM method ---
-	dev_info(&skel->pdev->dev, "Configuring operating mode via _DSM...\n");
-
-	// Use the _DSM method to configure the sensor
-	// The _DSM method with UUID "26257549-9271-4ca4-bb43-c4899d5a4881"
-	// maps command codes to register addresses
-	// Arg2=0x01 returns 0x06 (mode selection command)
-
-	// Send mode selection command via I2C
-	cmd = 0x06;
-	cmd2 = 0x01;
-	ret = i2c_smbus_write_byte_data(skel->sensor_client, 0x50, cmd);
-	if (ret < 0) {
-		dev_err(&skel->pdev->dev,
-			"Failed to send mode command 0x%02x: %d\n", cmd, ret);
-		return ret;
-	}
-	ret = i2c_smbus_write_byte_data(skel->sensor_client, 0x51, cmd2);
-	if (ret < 0) {
-		dev_err(&skel->pdev->dev,
-			"Failed to send mode parameter 0x%02x: %d\n", cmd2, ret);
-		return ret;
+	dev_info(&skel->pdev->dev, "IMX135 chip ID: 0x%02x\n", chip_id);
+	if (chip_id != 0x87) {
+		dev_warn(&skel->pdev->dev,
+			"Unexpected IMX135 chip ID: 0x%02x (expected 0x87)\n", chip_id);
 	}
 
-	// Wait for sensor to settle
-	msleep(10);
+	// --- Step 2: Configure PLL and clock settings ---
+	dev_info(&skel->pdev->dev, "Configuring PLL and clock settings...\n");
 
-	// --- Step 4: Set up timing registers ---
-	dev_info(&skel->pdev->dev, "Configuring timing registers...\n");
-
-	// IMX135 timing configuration via I2C register writes
-	// These are basic timing settings for a 720p camera
-	ret = i2c_smbus_write_byte_data(skel->sensor_client, 0x10, 0x01); // Horizontal sync
+	// PLL setting registers (from Android kernel reference)
+	reg = 0x011E;
+	val = 0x12;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
 	if (ret < 0)
-		dev_warn(&skel->pdev->dev, "Failed to set horizontal sync: %d\n", ret);
+		dev_warn(&skel->pdev->dev, "Failed to set PLL reg 0x%04x: %d\n", reg, ret);
 
-	ret = i2c_smbus_write_byte_data(skel->sensor_client, 0x11, 0x80); // Vertical sync
+	reg = 0x011F;
+	val = 0x00;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
 	if (ret < 0)
-		dev_warn(&skel->pdev->dev, "Failed to set vertical sync: %d\n", ret);
+		dev_warn(&skel->pdev->dev, "Failed to set PLL reg 0x%04x: %d\n", reg, ret);
 
-	ret = i2c_smbus_write_byte_data(skel->sensor_client, 0x12, 0x02); // Exposure control
+	reg = 0x0301;
+	val = 0x05;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
 	if (ret < 0)
-		dev_warn(&skel->pdev->dev, "Failed to set exposure: %d\n", ret);
+		dev_warn(&skel->pdev->dev, "Failed to set PLL reg 0x%04x: %d\n", reg, ret);
 
-	ret = i2c_smbus_write_byte_data(skel->sensor_client, 0x13, 0x01); // Gain control
+	reg = 0x0303;
+	val = 0x01;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
 	if (ret < 0)
-		dev_warn(&skel->pdev->dev, "Failed to set gain: %d\n", ret);
+		dev_warn(&skel->pdev->dev, "Failed to set PLL reg 0x%04x: %d\n", reg, ret);
 
-	ret = i2c_smbus_write_byte_data(skel->sensor_client, 0x14, 0x00); // White balance
+	reg = 0x0304;
+	val = 0x0B;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
 	if (ret < 0)
-		dev_warn(&skel->pdev->dev, "Failed to set white balance: %d\n", ret);
+		dev_warn(&skel->pdev->dev, "Failed to set PLL reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x0305;
+	val = 0x0B;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set PLL reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x0306;
+	val = 0x01;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set PLL reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x0307;
+	val = 0x5E;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set PLL reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x0309;
+	val = 0x05;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set PLL reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x030B;
+	val = 0x01;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set PLL reg 0x%04x: %d\n", reg, ret);
+
+	// --- Step 3: Set up timing registers for 720p resolution ---
+	dev_info(&skel->pdev->dev, "Configuring timing registers for 720p...\n");
+
+	// Frame length registers (0x0340-0x034F)
+	reg = 0x0340;
+	val = 0x06; // Frame length MSB (720p)
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set frame length MSB: %d\n", ret);
+
+	reg = 0x0341;
+	val = 0xB8; // Frame length LSB (720p)
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set frame length LSB: %d\n", ret);
+
+	reg = 0x0342;
+	val = 0x11; // Line length MSB
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set line length MSB: %d\n", ret);
+
+	reg = 0x0343;
+	val = 0xDC; // Line length LSB
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set line length LSB: %d\n", ret);
+
+	reg = 0x0344;
+	val = 0x00;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x0345;
+	val = 0x00;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x0346;
+	val = 0x00;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x0347;
+	val = 0x00;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x0348;
+	val = 0x10;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x0349;
+	val = 0x6F;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x034A;
+	val = 0x0C;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x034B;
+	val = 0x2F;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x034C;
+	val = 0x08;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x034D;
+	val = 0x38;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x034E;
+	val = 0x06;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set reg 0x%04x: %d\n", reg, ret);
+
+	reg = 0x034F;
+	val = 0x18;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set reg 0x%04x: %d\n", reg, ret);
+
+	// --- Step 4: Configure exposure and gain ---
+	dev_info(&skel->pdev->dev, "Configuring exposure and gain...\n");
+
+	// Coarse integration time (0x0202)
+	reg = 0x0202;
+	val = 0x03;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set coarse integration time: %d\n", ret);
+
+	// Global gain (0x0205)
+	reg = 0x0205;
+	val = 0x33;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set global gain: %d\n", ret);
+
+	// Vertical offset (0x020E)
+	reg = 0x020E;
+	val = 0x01;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set vertical offset: %d\n", ret);
+
+	// --- Step 5: Set up output format ---
+	dev_info(&skel->pdev->dev, "Configuring output format...\n");
+
+	// Output X size (0x034C)
+	reg = 0x034C;
+	val = 0x10;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set output X size: %d\n", ret);
+
+	// Output Y size (0x034E)
+	reg = 0x034E;
+	val = 0x0C;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set output Y size: %d\n", ret);
+
+	// Line length PCLK (0x0342)
+	reg = 0x0342;
+	val = 0x11;
+	ret = imx135_write_reg(skel->sensor_client, reg, val);
+	if (ret < 0)
+		dev_warn(&skel->pdev->dev, "Failed to set line length PCLK: %d\n", ret);
 
 	dev_info(&skel->pdev->dev, "IMX135 initialization complete.\n");
 	return 0;

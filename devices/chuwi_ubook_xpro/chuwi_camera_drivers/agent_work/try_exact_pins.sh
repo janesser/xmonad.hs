@@ -90,15 +90,15 @@ try_gpio_config() {
 # Try the exact configuration from the kernel source
 # These are TPS68470 GPIO pins, so they should be on the GPIO controller that exposes TPS68470 GPIOs
 echo "=== Trying exact configuration: reset=3, pdwn=4, enable=5 ==="
-try_gpio_config 512 "3,4,5" "Exact configuration from kernel source" || true
+try_gpio_config 0 "3,4,5" "Exact configuration from kernel source" || true
 
 echo ""
 echo "=== Trying nearby pins (0-7) ==="
-# Try all combinations of pins 0-7 on GPIO chip 512
+# Try all combinations of pins 0-7 on GPIO chip 0
 for reset_pin in 0 1 2 3 4 5 6 7; do
     for pdwn_pin in 0 1 2 3 4 5 6 7; do
         for enable_pin in 0 1 2 3 4 5 6 7; do
-            try_gpio_config 512 "$reset_pin,$pdwn_pin,$enable_pin" "Pins $reset_pin,$pdwn_pin,$enable_pin" || true
+            try_gpio_config 0 "$reset_pin,$pdwn_pin,$enable_pin" "Pins $reset_pin,$pdwn_pin,$enable_pin" || true
         done
     done
 done
