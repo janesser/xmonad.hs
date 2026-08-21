@@ -27,12 +27,12 @@ set LOG_FILE $LOG_DIR/llama-server.log
 
 llama-server \
   --models-max 1 \
-  --parallel 2 \
+  --parallel 1 \
   --no-warmup \
   --offline \
-  --sleep-idle-seconds 360 \
+  --sleep-idle-seconds 3600 \
   --models-preset ~/.llama-cpp-models-preset.ini \
-  --verbosity 4 \
+  --verbosity 3 \
   --log-file $LOG_FILE \
   2>/dev/null >/dev/null \
 &; disown

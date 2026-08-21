@@ -14,10 +14,19 @@ cd ~/projs
 git clone https://github.com/ggml-org/llama.cpp
 cd llama.cpp
 git fetch
-LATEST_RELEASE=`git tag --sort=-committerdate|head -1`
+WORKING_RELEASE="b10235"
+LATEST_RELEASE="$WORKING_RELEASE" #`git tag --sort=-committerdate|head -1`
 git checkout $LATEST_RELEASE
 
-sudo apt install -y ccache glslang-dev glslc spirv-headers
+if [[ -n "$CLEAN" ]]; then
+    rm -fr build/
+    echo Deleted build/
+    sudo apt remove --purge -y ccache
+else
+    sudo apt install -y ccache
+fi
+
+sudo apt install -y glslang-dev glslc spirv-headers
 # wget https://repo.radeon.com/amdgpu-install/latest/ubuntu/noble/amdgpu-install_7.2.4.70204-1_all.deb
 # amdgpu-install --usecase=graphics,rocm,hip --vulkan=radv --opencl=rocr
 # HIP_VISIBLE_DEVICES=1 \
@@ -28,7 +37,7 @@ sudo apt install -y ccache glslang-dev glslc spirv-headers
 # HIP_CXX="$HIP_PATH/llvm/bin/clang" \
 # CMAKE_PREFIX_PATH="$ROCM_PATH/lib/cmake:$CMAKE_PREFIX_PATH" \
 # cmake -B build -DGGML_HIP=ON -DCMAKE_HIP_FLAGS:STRING="-I$ROCM_PATH/include"
-cmake -B build -DGGML_CUDA=ON -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=ON
+cmake -B build -DGGML_CUDA=ON -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=ON 
 cmake --build build --config Release -j $(grep processor /proc/cpuinfo | wc -l)
 
 restart-llama-server.sh
