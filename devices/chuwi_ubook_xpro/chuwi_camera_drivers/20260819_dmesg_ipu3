@@ -1,0 +1,431 @@
+[ 4580.395916] dump_intel_ipu_data: Version 1.1 init
+[ 4580.400304] get_acpi_pmic_data(): ==================== INT3472:01 (PMIC) ====================
+[ 4580.400549] ACPI _ADR: 0
+[ 4580.400556] ACPI _HID: INT3472
+[ 4580.400560] ACPI _CID: INT3472
+[ 4580.400564] ACPI _DDN: PMIC-CRDG
+[ 4580.400566] ACPI _SUB: Entry not found
+[ 4580.400570] ACPI _UID: 0
+[ 4580.400572] ACPI path: \_SB_.PCI0.DSC0
+[ 4580.400574] ACPI device name: INT3472:01
+[ 4580.400580] print_pmic_i2c_dev_name(): (i2c dev not found as expected (DISCRETE))
+[ 4580.400582] ACPI _DEP: Entry not found
+[ 4580.400583] ACPI _PLD: ---------- dump_pld() ----------
+[ 4580.400585] ACPI _PLD: Entry not found
+[ 4580.400586] ACPI _CRS: ---------- dump_crs() ----------
+[ 4580.400926] ACPI _CRS: Full raw output:
+[ 4580.400928] 00000000: 8c 25 00 01 01 01 00 02 00 00 00 00 00 00 17 00  .%..............
+[ 4580.400931] 00000010: 00 19 00 28 00 00 00 78 00 5c 5f 53 42 2e 50 43  ...(...x.\_SB.PC
+[ 4580.400933] 00000020: 49 30 2e 47 50 49 30 00 8c 25 00 01 01 01 00 02  I0.GPI0..%......
+[ 4580.400934] 00000030: 00 00 00 00 00 00 17 00 00 19 00 28 00 00 00 7b  ...........(...{
+[ 4580.400936] 00000040: 00 5c 5f 53 42 2e 50 43 49 30 2e 47 50 49 30 00  .\_SB.PCI0.GPI0.
+[ 4580.400937] 00000050: 8c 25 00 01 01 01 00 02 00 00 00 00 00 00 17 00  .%..............
+[ 4580.400939] 00000060: 00 19 00 28 00 00 00 7e 00 5c 5f 53 42 2e 50 43  ...(...~.\_SB.PC
+[ 4580.400941] 00000070: 49 30 2e 47 50 49 30 00 79 00                    I0.GPI0.y.
+[ 4580.400942] ACPI CLDB: ---------- dump_cldb() ----------
+[ 4580.401176] ACPI CLDB: Full raw output:
+[ 4580.401178] 00000000: 01 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00  ... ............
+[ 4580.401180] 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[ 4580.401181] version:            1
+[ 4580.401183] control_logic_type: 1
+[ 4580.401184] control_logic_id:   0
+[ 4580.401185] sensor_card_sku:    32
+[ 4580.401186] reserved:
+[ 4580.401187] 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[ 4580.401189] 00000010: 00 00 00 00 00 00 00 00 00 00 00 00              ............
+[ 4580.401190] ACPI CLDB: PMIC type is 1: DISCRETE(CRD-D)
+[ 4580.401214] __dump_subsys_id_dsm(): Couldn't get Subsystem ID. GUID not exist?
+[ 4580.401234] __dump_i2c_dev_dsm(): Couldn't get i2c dev amount. GUID not exist?
+[ 4580.401278] __dump_discrete_pmic_dsm(): GPIO pin amount: 3
+[ 4580.401428] __dump_discrete_pmic_dsm(): GPIO pin _DSM data (1 of 3): 0x01007800, first_byte: 0x01, second_byte: 0x00, pin_num: 0x78, last_byte: 0x00
+[ 4580.401585] __dump_discrete_pmic_dsm(): GPIO pin _DSM data (2 of 3): 0x01007b0c, first_byte: 0x01, second_byte: 0x00, pin_num: 0x7b, last_byte: 0x0c
+[ 4580.401745] __dump_discrete_pmic_dsm(): GPIO pin _DSM data (3 of 3): 0x01007e01, first_byte: 0x01, second_byte: 0x00, pin_num: 0x7e, last_byte: 0x01
+[ 4580.401768] __dump_dsmb_dsm(): Full raw output of DSMB:
+[ 4580.401769] 00000000: 00                                               .
+
+[ 4580.401816] get_acpi_pmic_data(): ==================== INT3472:02 (PMIC) ====================
+[ 4580.402126] ACPI _ADR: 0
+[ 4580.402134] ACPI _HID: INT3472
+[ 4580.402141] ACPI _CID: INT3472
+[ 4580.402146] ACPI _DDN: PMIC-CRDG
+[ 4580.402149] ACPI _SUB: Entry not found
+[ 4580.402155] ACPI _UID: 1
+[ 4580.402157] ACPI path: \_SB_.PCI0.DSC1
+[ 4580.402159] ACPI device name: INT3472:02
+[ 4580.402167] print_pmic_i2c_dev_name(): (i2c dev not found as expected (DISCRETE))
+[ 4580.402184] ACPI _DEP: Entry not found
+[ 4580.402186] ACPI _PLD: ---------- dump_pld() ----------
+[ 4580.402189] ACPI _PLD: Entry not found
+[ 4580.402191] ACPI _CRS: ---------- dump_crs() ----------
+[ 4580.402555] ACPI _CRS: Full raw output:
+[ 4580.402559] 00000000: 8c 25 00 01 01 01 00 02 00 00 00 00 00 00 17 00  .%..............
+[ 4580.402562] 00000010: 00 19 00 28 00 00 00 79 00 5c 5f 53 42 2e 50 43  ...(...y.\_SB.PC
+[ 4580.402565] 00000020: 49 30 2e 47 50 49 30 00 8c 25 00 01 01 01 00 02  I0.GPI0..%......
+[ 4580.402568] 00000030: 00 00 00 00 00 00 17 00 00 19 00 28 00 00 00 7a  ...........(...z
+[ 4580.402570] 00000040: 00 5c 5f 53 42 2e 50 43 49 30 2e 47 50 49 30 00  .\_SB.PCI0.GPI0.
+[ 4580.402573] 00000050: 8c 25 00 01 01 01 00 02 00 00 00 00 00 00 17 00  .%..............
+[ 4580.402576] 00000060: 00 19 00 28 00 00 00 8f 00 5c 5f 53 42 2e 50 43  ...(.....\_SB.PC
+[ 4580.402579] 00000070: 49 30 2e 47 50 49 30 00 79 00                    I0.GPI0.y.
+[ 4580.402582] ACPI CLDB: ---------- dump_cldb() ----------
+[ 4580.402853] ACPI CLDB: Full raw output:
+[ 4580.402856] 00000000: 01 01 01 20 00 00 00 00 00 00 00 00 00 00 00 00  ... ............
+[ 4580.402858] 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[ 4580.402861] version:            1
+[ 4580.402863] control_logic_type: 1
+[ 4580.402865] control_logic_id:   1
+[ 4580.402866] sensor_card_sku:    32
+[ 4580.402868] reserved:
+[ 4580.402877] 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[ 4580.402879] 00000010: 00 00 00 00 00 00 00 00 00 00 00 00              ............
+[ 4580.402882] ACPI CLDB: PMIC type is 1: DISCRETE(CRD-D)
+[ 4580.402918] __dump_subsys_id_dsm(): Couldn't get Subsystem ID. GUID not exist?
+[ 4580.402949] __dump_i2c_dev_dsm(): Couldn't get i2c dev amount. GUID not exist?
+[ 4580.403011] __dump_discrete_pmic_dsm(): GPIO pin amount: 3
+[ 4580.403193] __dump_discrete_pmic_dsm(): GPIO pin _DSM data (1 of 3): 0x01007900, first_byte: 0x01, second_byte: 0x00, pin_num: 0x79, last_byte: 0x00
+[ 4580.403364] __dump_discrete_pmic_dsm(): GPIO pin _DSM data (2 of 3): 0x01007a0c, first_byte: 0x01, second_byte: 0x00, pin_num: 0x7a, last_byte: 0x0c
+[ 4580.403542] __dump_discrete_pmic_dsm(): GPIO pin _DSM data (3 of 3): 0x01008f01, first_byte: 0x01, second_byte: 0x00, pin_num: 0x8f, last_byte: 0x01
+[ 4580.403566] __dump_dsmb_dsm(): Full raw output of DSMB:
+[ 4580.403568] 00000000: 00                                               .
+
+[ 4580.404928] get_acpi_sensor_data(): ==================== OVTI5648:00 (Sensor) ====================
+[ 4580.405333] ACPI _ADR: 0
+[ 4580.405776] ACPI _HID: OVTI5648
+[ 4580.406298] ACPI _CID: OVTI5648
+[ 4580.406696] ACPI _DDN: GEFF150023R
+[ 4580.406698] ACPI _SUB: Entry not found
+[ 4580.406704] ACPI _UID: 0
+[ 4580.406706] ACPI path: \_SB_.PCI0.LNK0
+[ 4580.406707] ACPI device name: OVTI5648:00
+[ 4580.406712] i2c device name: i2c-OVTI5648:00
+[ 4580.406856] ACPI _DEP: Evaluation failed
+[ 4580.406859] ACPI _PLD: ---------- dump_pld() ----------
+[ 4580.406946] revision:            2
+[ 4580.406949] ignore_color:        1
+[ 4580.406951] red:                 0
+[ 4580.406952] green:               0
+[ 4580.406954] blue:                0
+[ 4580.406955] width:               0
+[ 4580.406957] height:              0
+[ 4580.406959] user_visible:        1
+[ 4580.406960] dock:                0
+[ 4580.406962] lid:                 0
+[ 4580.406964] panel:               5
+[ 4580.406965] vertical_position:   1
+[ 4580.406967] horizontal_position: 2
+[ 4580.406969] shape:               3
+[ 4580.406970] group_orientation:   0
+[ 4580.406972] group_token:         0
+[ 4580.406973] group_position:      0
+[ 4580.406974] bay:                 0
+[ 4580.406976] ejectable:           1
+[ 4580.406977] ospm_eject_required: 1
+[ 4580.406979] cabinet_number:      0
+[ 4580.406981] card_cage_number:    0
+[ 4580.406982] reference:           0
+[ 4580.406984] rotation:            0
+[ 4580.406985] order:               0
+[ 4580.406987] reserved:            0
+[ 4580.406988] vertical_offset:     65535
+[ 4580.406990] horizontal_offset:   65535
+[ 4580.406992] ----- in string -----
+[ 4580.406994] PLD_Panel: BACK
+[ 4580.406996] PLD_VerticalPosition: CENTER
+[ 4580.406998] PLD_HorizontalPosition: RIGHT
+[ 4580.406999] PLD_Shape: VERTICALRECTANGLE
+[ 4580.407001] ACPI _CRS: ---------- dump_crs() ----------
+[ 4580.407492] ACPI _CRS: Full raw output:
+[ 4580.407496] 00000000: 8e 1e 00 01 00 01 02 00 00 01 06 00 80 1a 06 00  ................
+[ 4580.407499] 00000010: 36 00 5c 5f 53 42 2e 50 43 49 30 2e 49 32 43 32  6.\_SB.PCI0.I2C2
+[ 4580.407502] 00000020: 00 8e 1e 00 01 00 01 02 00 00 01 06 00 80 1a 06  ................
+[ 4580.407504] 00000030: 00 0c 00 5c 5f 53 42 2e 50 43 49 30 2e 49 32 43  ...\_SB.PCI0.I2C
+[ 4580.407506] 00000040: 32 00 79 00                                      2.y.
+[ 4580.407508] ACPI SSDB: ---------- dump_ssdb() ----------
+[ 4580.407889] ACPI SSDB: Full raw output:
+[ 4580.407892] 00000000: 01 20 69 56 39 8a f7 11 a9 4e 9c 7d 20 ee 0a b5  . iV9....N.} ...
+[ 4580.407894] 00000010: ca 40 a3 00 00 00 00 00 00 00 00 00 00 02 00 00  .@..............
+[ 4580.407896] 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[ 4580.407897] 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[ 4580.407899] 00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06  ................
+[ 4580.407902] 00000050: 09 00 02 00 00 01 00 f8 24 01 00 00 00 00 00 00  ........$.......
+[ 4580.407904] 00000060: 00 00 00 00 00 00 00 00 00 00 00 00              ............
+[ 4580.407907] version:                      1
+[ 4580.407909] sensor_card_sku:              32
+[ 4580.407911] csi2_data_stream_interface:
+[ 4580.407912] 00000000: 69 56 39 8a f7 11 a9 4e 9c 7d 20 ee 0a b5 ca 40  iV9....N.} ....@
+[ 4580.407915] bdf_value:                    163
+[ 4580.407917] dphy_link_en_fuses:           0
+[ 4580.407919] lanes_clock_division:         0
+[ 4580.407920] link_used:                    0
+[ 4580.407922] lanes_used:                   2
+[ 4580.407924] csi_rx_dly_cnt_termen_clane:  0
+[ 4580.407925] csi_rx_dly_cnt_settle_clane:  0
+[ 4580.407927] csi_rx_dly_cnt_termen_dlane0: 0
+[ 4580.407929] csi_rx_dly_cnt_settle_dlane0: 0
+[ 4580.407931] csi_rx_dly_cnt_termen_dlane1: 0
+[ 4580.407932] csi_rx_dly_cnt_settle_dlane1: 0
+[ 4580.407934] csi_rx_dly_cnt_termen_dlane2: 0
+[ 4580.407936] csi_rx_dly_cnt_settle_dlane2: 0
+[ 4580.407938] csi_rx_dly_cnt_termen_dlane3: 0
+[ 4580.407939] csi_rx_dly_cnt_settle_dlane3: 0
+[ 4580.407941] max_lane_speed:               0
+[ 4580.407943] sensor_cal_file_idx:          0
+[ 4580.407945] sensor_cal_file_idx_mbz:
+[ 4580.407947] 00000000: 00 00 00                                         ...
+[ 4580.407949] rom_type:                     0
+[ 4580.407951] vcm_type:                     6
+[ 4580.407953] platform:                     9
+[ 4580.407954] platform_sub:                 0
+[ 4580.407955] flash_support:                2
+[ 4580.407956] privacy_led:                  0
+[ 4580.407957] degree:                       0
+[ 4580.407958] mipi_define:                  1
+[ 4580.407960] mclk_speed:                   19200000
+[ 4580.407961] control_logic_id:             0
+[ 4580.407962] mipi_data_format:             0
+[ 4580.407963] silicon_version:              0
+[ 4580.407965] customer_id:                  0
+[ 4580.407967] mclk_port:                    0
+[ 4580.407969] reserved:
+[ 4580.407970] 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00           .............
+[ 4580.407973] ----- excerpt -----
+[ 4580.407974] link_used:     0
+[ 4580.407976] lanes_used:    2
+[ 4580.407978] vcm_type:      6
+[ 4580.407979] flash_support: 2
+[ 4580.407981] degree:        0
+[ 4580.407982] mclk_speed:    19200000
+[ 4580.407984] mclk_port:     0
+[ 4580.408440] __dump_subsys_id_dsm(): Subsystem ID: GEFF150023R
+[ 4580.408503] __dump_i2c_dev_dsm(): i2c device amount: 2
+[ 4580.408657] __dump_i2c_dev_dsm(): i2c device _DSM data (1 of 2): 0x02003600, bus: 0x02, second_byte: 0x00, addr: 0x36, dev_type: 0x00
+[ 4580.408817] __dump_i2c_dev_dsm(): i2c device _DSM data (2 of 2): 0x02000c01, bus: 0x02, second_byte: 0x00, addr: 0x0c, dev_type: 0x01
+[ 4580.408854] __dump_discrete_pmic_dsm(): Couldn't get GPIO pin amount func. GUID not exist?
+[ 4580.410131] __dump_dsmb_dsm(): Full raw output of DSMB:
+[ 4580.410133] 00000000: 02 00 00 00 00 36 00 02 01 0c 00 02 02 50 00 02  .....6.......P..
+[ 4580.410135] 00000010: 03 51 00 02 04 52 00 02 05 53 00 02 06 54 00 02  .Q...R...S...T..
+[ 4580.410137] 00000020: 07 55 00 02 08 56 00 02 09 57 00 02 0a 58 00 02  .U...V...W...X..
+[ 4580.410139] 00000030: 00 59 00 02                                      .Y..
+
+[ 4580.410182] get_acpi_sensor_data(): ==================== OVTI2680:00 (Sensor) ====================
+[ 4580.410558] ACPI _ADR: 0
+[ 4580.411020] ACPI _HID: OVTI2680
+[ 4580.411446] ACPI _CID: OVTI2680
+[ 4580.411824] ACPI _DDN: GNDF140809R
+[ 4580.411826] ACPI _SUB: Entry not found
+[ 4580.411831] ACPI _UID: 1
+[ 4580.411833] ACPI path: \_SB_.PCI0.LNK1
+[ 4580.411835] ACPI device name: OVTI2680:00
+[ 4580.411838] i2c device name: i2c-OVTI2680:00
+[ 4580.411979] ACPI _DEP: Evaluation failed
+[ 4580.411983] ACPI _PLD: ---------- dump_pld() ----------
+[ 4580.412063] revision:            2
+[ 4580.412065] ignore_color:        1
+[ 4580.412066] red:                 0
+[ 4580.412067] green:               0
+[ 4580.412068] blue:                0
+[ 4580.412069] width:               0
+[ 4580.412070] height:              0
+[ 4580.412071] user_visible:        1
+[ 4580.412072] dock:                0
+[ 4580.412073] lid:                 0
+[ 4580.412074] panel:               4
+[ 4580.412075] vertical_position:   1
+[ 4580.412076] horizontal_position: 2
+[ 4580.412077] shape:               3
+[ 4580.412078] group_orientation:   0
+[ 4580.412079] group_token:         0
+[ 4580.412080] group_position:      0
+[ 4580.412081] bay:                 0
+[ 4580.412082] ejectable:           1
+[ 4580.412083] ospm_eject_required: 1
+[ 4580.412084] cabinet_number:      0
+[ 4580.412085] card_cage_number:    0
+[ 4580.412086] reference:           0
+[ 4580.412087] rotation:            0
+[ 4580.412088] order:               0
+[ 4580.412089] reserved:            0
+[ 4580.412090] vertical_offset:     65535
+[ 4580.412091] horizontal_offset:   65535
+[ 4580.412092] ----- in string -----
+[ 4580.412093] PLD_Panel: FRONT
+[ 4580.412095] PLD_VerticalPosition: CENTER
+[ 4580.412096] PLD_HorizontalPosition: RIGHT
+[ 4580.412097] PLD_Shape: VERTICALRECTANGLE
+[ 4580.412098] ACPI _CRS: ---------- dump_crs() ----------
+[ 4580.412457] ACPI _CRS: Full raw output:
+[ 4580.412459] 00000000: 8e 1e 00 01 00 01 02 00 00 01 06 00 80 1a 06 00  ................
+[ 4580.412461] 00000010: 10 00 5c 5f 53 42 2e 50 43 49 30 2e 49 32 43 32  ..\_SB.PCI0.I2C2
+[ 4580.412463] 00000020: 00 79 00                                         .y.
+[ 4580.412465] ACPI SSDB: ---------- dump_ssdb() ----------
+[ 4580.412836] ACPI SSDB: Full raw output:
+[ 4580.412838] 00000000: 01 20 69 56 39 8a f7 11 a9 4e 9c 7d 20 ee 0a b5  . iV9....N.} ...
+[ 4580.412840] 00000010: ca 40 a3 00 00 00 00 00 00 00 00 00 01 01 00 00  .@..............
+[ 4580.412842] 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[ 4580.412843] 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[ 4580.412845] 00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[ 4580.412846] 00000050: 09 00 02 00 00 01 00 f8 24 01 01 00 00 00 00 00  ........$.......
+[ 4580.412848] 00000060: 00 00 00 00 00 00 00 00 00 00 00 00              ............
+[ 4580.412850] version:                      1
+[ 4580.412851] sensor_card_sku:              32
+[ 4580.412852] csi2_data_stream_interface:
+[ 4580.412853] 00000000: 69 56 39 8a f7 11 a9 4e 9c 7d 20 ee 0a b5 ca 40  iV9....N.} ....@
+[ 4580.412855] bdf_value:                    163
+[ 4580.412856] dphy_link_en_fuses:           0
+[ 4580.412857] lanes_clock_division:         0
+[ 4580.412858] link_used:                    1
+[ 4580.412859] lanes_used:                   1
+[ 4580.412860] csi_rx_dly_cnt_termen_clane:  0
+[ 4580.412861] csi_rx_dly_cnt_settle_clane:  0
+[ 4580.412862] csi_rx_dly_cnt_termen_dlane0: 0
+[ 4580.412863] csi_rx_dly_cnt_settle_dlane0: 0
+[ 4580.412865] csi_rx_dly_cnt_termen_dlane1: 0
+[ 4580.412866] csi_rx_dly_cnt_settle_dlane1: 0
+[ 4580.412867] csi_rx_dly_cnt_termen_dlane2: 0
+[ 4580.412868] csi_rx_dly_cnt_settle_dlane2: 0
+[ 4580.412877] csi_rx_dly_cnt_termen_dlane3: 0
+[ 4580.412879] csi_rx_dly_cnt_settle_dlane3: 0
+[ 4580.412881] max_lane_speed:               0
+[ 4580.412882] sensor_cal_file_idx:          0
+[ 4580.412883] sensor_cal_file_idx_mbz:
+[ 4580.412885] 00000000: 00 00 00                                         ...
+[ 4580.412886] rom_type:                     0
+[ 4580.412887] vcm_type:                     0
+[ 4580.412888] platform:                     9
+[ 4580.412889] platform_sub:                 0
+[ 4580.412891] flash_support:                2
+[ 4580.412892] privacy_led:                  0
+[ 4580.412893] degree:                       0
+[ 4580.412894] mipi_define:                  1
+[ 4580.412895] mclk_speed:                   19200000
+[ 4580.412896] control_logic_id:             1
+[ 4580.412898] mipi_data_format:             0
+[ 4580.412899] silicon_version:              0
+[ 4580.412900] customer_id:                  0
+[ 4580.412901] mclk_port:                    0
+[ 4580.412902] reserved:
+[ 4580.412903] 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00           .............
+[ 4580.412905] ----- excerpt -----
+[ 4580.412906] link_used:     1
+[ 4580.412907] lanes_used:    1
+[ 4580.412908] vcm_type:      0
+[ 4580.412909] flash_support: 2
+[ 4580.412910] degree:        0
+[ 4580.412911] mclk_speed:    19200000
+[ 4580.412912] mclk_port:     0
+[ 4580.413459] __dump_subsys_id_dsm(): Subsystem ID: GNDF140809R
+[ 4580.413521] __dump_i2c_dev_dsm(): i2c device amount: 1
+[ 4580.413671] __dump_i2c_dev_dsm(): i2c device _DSM data (1 of 1): 0x02001000, bus: 0x02, second_byte: 0x00, addr: 0x10, dev_type: 0x00
+[ 4580.413708] __dump_discrete_pmic_dsm(): Couldn't get GPIO pin amount func. GUID not exist?
+[ 4580.414939] __dump_dsmb_dsm(): Full raw output of DSMB:
+[ 4580.414942] 00000000: 01 00 00 00 00 10 00 02 01 0c 00 02 02 50 00 02  .............P..
+[ 4580.414944] 00000010: 03 51 00 02 04 52 00 02 05 53 00 02 06 54 00 02  .Q...R...S...T..
+[ 4580.414946] 00000020: 07 55 00 02 08 56 00 02 09 57 00 02 0a 58 00 02  .U...V...W...X..
+[ 4580.414947] 00000030: 0c 59 00 02                                      .Y..
+
+[ 4580.415003] dump_intel_ipu_data: Found 2 supported sensor(s)
+[ 4580.415004] dump_intel_ipu_data: Found 2 supported PMIC(s)
+[ 4680.166286] wlp1s0: deauthenticating from 1c:ed:6f:c8:aa:0b by local choice (Reason: 3=DEAUTH_LEAVING)
+[ 4680.678179] PM: suspend entry (deep)
+[ 4680.746615] Filesystems sync: 0.068 seconds
+[ 4680.878423] Freezing user space processes
+[ 4680.889081] Freezing user space processes completed (elapsed 0.010 seconds)
+[ 4680.889105] OOM killer disabled.
+[ 4680.889112] Freezing remaining freezable tasks
+[ 4680.891063] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
+[ 4680.891220] printk: Suspending console(s) (use no_console_suspend to debug)
+[ 4680.912584] sd 1:0:0:0: [sda] Synchronizing SCSI cache
+[ 4680.916126] ata2.00: Entering standby power mode
+[ 4681.354615] ACPI: EC: interrupt blocked
+[ 4681.388849] ACPI: PM: Preparing to enter system sleep state S3
+[ 4681.394408] ACPI: EC: event blocked
+[ 4681.394415] ACPI: EC: EC stopped
+[ 4681.394419] ACPI: PM: Saving platform NVS memory
+[ 4681.394563] Disabling non-boot CPUs ...
+[ 4681.398995] smpboot: CPU 1 is now offline
+[ 4681.406024] smpboot: CPU 2 is now offline
+[ 4681.411122] smpboot: CPU 3 is now offline
+[ 4681.420198] ACPI: PM: Low-level resume complete
+[ 4681.420257] ACPI: EC: EC started
+[ 4681.420259] ACPI: PM: Restoring platform NVS memory
+[ 4681.421053] Enabling non-boot CPUs ...
+[ 4681.421107] smpboot: Booting Node 0 Processor 1 APIC 0x2
+[ 4681.426492] CPU1 is up
+[ 4681.426513] smpboot: Booting Node 0 Processor 2 APIC 0x1
+[ 4681.427602] CPU2 is up
+[ 4681.427623] smpboot: Booting Node 0 Processor 3 APIC 0x3
+[ 4681.428668] CPU3 is up
+[ 4681.430998] ACPI: PM: Waking up from system sleep state S3
+[ 4681.548940] ACPI: EC: interrupt unblocked
+[ 4681.549759] pcieport 0000:00:1d.0: Intel SPT PCH root port ACS workaround enabled
+[ 4681.563932] ACPI: EC: event unblocked
+[ 4681.567490] i915 0000:00:02.0: [drm] [ENCODER:94:DDI A/PHY A] is disabled/in DSI mode with an ungated DDI clock, gate it
+[ 4681.567505] i915 0000:00:02.0: [drm] [ENCODER:102:DDI B/PHY B] is disabled/in DSI mode with an ungated DDI clock, gate it
+[ 4681.567514] i915 0000:00:02.0: [drm] [ENCODER:111:DDI C/PHY C] is disabled/in DSI mode with an ungated DDI clock, gate it
+[ 4681.810882] usb 1-7: reset full-speed USB device number 2 using xhci_hcd
+[ 4682.474848] OOM killer enabled.
+[ 4682.474852] Restarting tasks ... 
+[ 4682.475615] mei_hdcp 0000:00:16.0-b638ab7e-94e2-4ea2-a552-d1c54b627f04: bound 0000:00:02.0 (ops i915_hdcp_ops [i915])
+[ 4682.481823] done.
+[ 4682.481844] random: crng reseeded on system resumption
+[ 4682.509178] thermal thermal_zone4: failed to read out thermal zone (-61)
+[ 4682.509238] PM: suspend exit
+[ 4682.523337] Bluetooth: hci0: Legacy ROM 2.5 revision 1.0 build 3 week 17 2014
+[ 4682.602537] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+[ 4682.602726] ACPI BIOS Error (bug): Could not resolve symbol [\_SB.PCI0.SAT0.PRT1._GTF.DSSP], AE_NOT_FOUND (20230628/psargs-332)
+
+[ 4682.602738] No Local Variables are initialized for Method [_GTF]
+
+[ 4682.602741] No Arguments are initialized for method [_GTF]
+
+[ 4682.602744] ACPI Error: Aborting method \_SB.PCI0.SAT0.PRT1._GTF due to previous error (AE_NOT_FOUND) (20230628/psparse-529)
+[ 4682.604747] sd 1:0:0:0: [sda] Starting disk
+[ 4682.608564] ACPI BIOS Error (bug): Could not resolve symbol [\_SB.PCI0.SAT0.PRT1._GTF.DSSP], AE_NOT_FOUND (20230628/psargs-332)
+
+[ 4682.608591] No Local Variables are initialized for Method [_GTF]
+
+[ 4682.608595] No Arguments are initialized for method [_GTF]
+
+[ 4682.608599] ACPI Error: Aborting method \_SB.PCI0.SAT0.PRT1._GTF due to previous error (AE_NOT_FOUND) (20230628/psparse-529)
+[ 4682.612095] ata2.00: configured for UDMA/133
+[ 4682.705330] Bluetooth: hci0: Intel Bluetooth firmware file: intel/ibt-hw-37.8.10-fw-1.10.3.11.e.bseq
+[ 4682.929059] iwlwifi 0000:01:00.0: Applying debug destination EXTERNAL_DRAM
+[ 4683.014950] iwlwifi 0000:01:00.0: Applying debug destination EXTERNAL_DRAM
+[ 4683.017659] iwlwifi 0000:01:00.0: FW already configured (0) - re-configuring
+[ 4683.035342] Bluetooth: hci0: Intel BT fw patch 0x32 completed & activated
+[ 4683.086630] Bluetooth: MGMT ver 1.22
+[ 4684.691502] ACPI: button: The lid device is not compliant to SW_LID.
+[ 4686.698958] wlp1s0: authenticate with 1c:ed:6f:c8:aa:0b (local address=5c:80:b6:da:52:b9)
+[ 4686.699982] wlp1s0: send auth to 1c:ed:6f:c8:aa:0b (try 1/3)
+[ 4686.883041] wlp1s0: authenticate with 1c:ed:6f:c8:aa:0b (local address=5c:80:b6:da:52:b9)
+[ 4686.883072] wlp1s0: send auth to 1c:ed:6f:c8:aa:0b (try 1/3)
+[ 4686.973058] wlp1s0: authenticated
+[ 4686.974370] wlp1s0: associate with 1c:ed:6f:c8:aa:0b (try 1/3)
+[ 4686.978513] wlp1s0: RX AssocResp from 1c:ed:6f:c8:aa:0b (capab=0x1511 status=0 aid=3)
+[ 4686.981247] wlp1s0: associated
+[ 4687.070431] wlp1s0: Limiting TX power to 27 (30 - 3) dBm as advertised by 1c:ed:6f:c8:aa:0b
+[ 5379.007849] perf: interrupt took too long (3197 > 3167), lowering kernel.perf_event_max_sample_rate to 62000
+[ 7627.684496] perf: interrupt took too long (4002 > 3996), lowering kernel.perf_event_max_sample_rate to 49000
+[ 8559.860197] audit: type=1400 audit(1787207771.213:237): apparmor="AUDIT" operation="userns_create" class="namespace" info="Userns create - transitioning profile" profile="unconfined" pid=92085 comm="zapzap" requested="userns_create" target="unprivileged_userns"
+[ 8559.873777] audit: type=1400 audit(1787207771.226:238): apparmor="DENIED" operation="capable" class="cap" profile="unprivileged_userns" pid=92151 comm="zapzap" capability=21  capname="sys_admin"
+[ 8582.200287] audit: type=1326 audit(1787207793.553:239): auid=4294967295 uid=1000 gid=1000 ses=4294967295 subj=snap.signal-desktop.signal-desktop pid=92818 comm="signal-desktop" exe="/snap/signal-desktop/934/opt/Signal/signal-desktop" sig=0 arch=c000003e syscall=330 compat=0 ip=0x77b8e23d632b code=0x50000
+[ 8582.200965] audit: type=1326 audit(1787207793.554:240): auid=4294967295 uid=1000 gid=1000 ses=4294967295 subj=snap.signal-desktop.signal-desktop pid=92817 comm="signal-desktop" exe="/snap/signal-desktop/934/opt/Signal/signal-desktop" sig=0 arch=c000003e syscall=330 compat=0 ip=0x7603e3b1532b code=0x50000
+[ 8582.280206] audit: type=1326 audit(1787207793.633:241): auid=4294967295 uid=1000 gid=1000 ses=4294967295 subj=snap.signal-desktop.signal-desktop pid=92580 comm="signal-desktop" exe="/snap/signal-desktop/934/opt/Signal/signal-desktop" sig=0 arch=c000003e syscall=425 compat=0 ip=0x7fa6f36c028d code=0x50000
+[ 8582.280324] audit: type=1326 audit(1787207793.634:242): auid=4294967295 uid=1000 gid=1000 ses=4294967295 subj=snap.signal-desktop.signal-desktop pid=92580 comm="signal-desktop" exe="/snap/signal-desktop/934/opt/Signal/signal-desktop" sig=0 arch=c000003e syscall=425 compat=0 ip=0x7fa6f36c028d code=0x50000
+[ 8582.282648] audit: type=1326 audit(1787207793.636:243): auid=4294967295 uid=1000 gid=1000 ses=4294967295 subj=snap.signal-desktop.signal-desktop pid=92580 comm="DelayedTaskSche" exe="/snap/signal-desktop/934/opt/Signal/signal-desktop" sig=0 arch=c000003e syscall=425 compat=0 ip=0x7fa6f36c028d code=0x50000
+[ 8583.534126] audit: type=1326 audit(1787207794.887:244): auid=4294967295 uid=1000 gid=1000 ses=4294967295 subj=snap.signal-desktop.signal-desktop pid=92580 comm="WorkerThread" exe="/snap/signal-desktop/934/opt/Signal/signal-desktop" sig=0 arch=c000003e syscall=425 compat=0 ip=0x7fa6f36c028d code=0x50000
+[ 8583.534229] audit: type=1400 audit(1787207794.887:245): apparmor="DENIED" operation="open" class="file" profile="snap.signal-desktop.signal-desktop" name="/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/snap.signal-desktop.signal-desktop-cfbc4087-ae98-4647-8095-7f7f2bdb9fd9.scope/memory.max" pid=92580 comm="WorkerThread" requested_mask="r" denied_mask="r" fsuid=1000 ouid=1000
+[ 8583.534245] audit: type=1400 audit(1787207794.887:246): apparmor="DENIED" operation="open" class="file" profile="snap.signal-desktop.signal-desktop" name="/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/snap.signal-desktop.signal-desktop-cfbc4087-ae98-4647-8095-7f7f2bdb9fd9.scope/memory.high" pid=92580 comm="WorkerThread" requested_mask="r" denied_mask="r" fsuid=1000 ouid=1000
+[ 8583.534707] audit: type=1400 audit(1787207794.888:247): apparmor="DENIED" operation="open" class="file" profile="snap.signal-desktop.signal-desktop" name="/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/snap.signal-desktop.signal-desktop-cfbc4087-ae98-4647-8095-7f7f2bdb9fd9.scope/memory.max" pid=92580 comm="WorkerThread" requested_mask="r" denied_mask="r" fsuid=1000 ouid=1000
+[ 8583.534714] audit: type=1400 audit(1787207794.888:248): apparmor="DENIED" operation="open" class="file" profile="snap.signal-desktop.signal-desktop" name="/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/snap.signal-desktop.signal-desktop-cfbc4087-ae98-4647-8095-7f7f2bdb9fd9.scope/memory.high" pid=92580 comm="WorkerThread" requested_mask="r" denied_mask="r" fsuid=1000 ouid=1000
+[ 8588.104461] kauditd_printk_skb: 26 callbacks suppressed
+[ 8588.104467] audit: type=1400 audit(1787207799.457:275): apparmor="DENIED" operation="open" class="file" profile="snap.signal-desktop.signal-desktop" name="/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/cpu.max" pid=92923 comm="signal-desktop" requested_mask="r" denied_mask="r" fsuid=1000 ouid=1000
+[ 8588.104475] audit: type=1400 audit(1787207799.457:276): apparmor="DENIED" operation="open" class="file" profile="snap.signal-desktop.signal-desktop" name="/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/cpu.max" pid=92923 comm="signal-desktop" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[ 8588.104480] audit: type=1400 audit(1787207799.457:277): apparmor="DENIED" operation="open" class="file" profile="snap.signal-desktop.signal-desktop" name="/sys/fs/cgroup/user.slice/user-1000.slice/cpu.max" pid=92923 comm="signal-desktop" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[ 8588.104484] audit: type=1400 audit(1787207799.457:278): apparmor="DENIED" operation="open" class="file" profile="snap.signal-desktop.signal-desktop" name="/sys/fs/cgroup/user.slice/cpu.max" pid=92923 comm="signal-desktop" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[ 8608.113202] audit: type=1400 audit(1787207819.466:279): apparmor="AUDIT" operation="userns_create" class="namespace" info="Userns create - transitioning profile" profile="unconfined" pid=93641 comm="codium" requested="userns_create" target="unprivileged_userns"
+[ 8679.221589] audit: type=1326 audit(1787207890.577:280): auid=4294967295 uid=1000 gid=1000 ses=4294967295 subj=snap.zapzap.zapzap pid=94912 comm="zapzap" exe="/usr/bin/python3.12" sig=0 arch=c000003e syscall=203 compat=0 ip=0x769bcd16c6f1 code=0x50000
+[ 8679.221598] audit: type=1326 audit(1787207890.577:281): auid=4294967295 uid=1000 gid=1000 ses=4294967295 subj=snap.zapzap.zapzap pid=94912 comm="zapzap" exe="/usr/bin/python3.12" sig=0 arch=c000003e syscall=141 compat=0 ip=0x769bcd1e665b code=0x50000
+[ 8679.280525] audit: type=1326 audit(1787207890.636:282): auid=4294967295 uid=1000 gid=1000 ses=4294967295 subj=snap.zapzap.zapzap pid=94912 comm="zapzap" exe="/usr/bin/python3.12" sig=0 arch=c000003e syscall=203 compat=0 ip=0x769bcd16c6f1 code=0x50000
+[ 8679.351295] audit: type=1326 audit(1787207890.707:283): auid=4294967295 uid=1000 gid=1000 ses=4294967295 subj=snap.zapzap.zapzap pid=94912 comm="zapzap" exe="/usr/bin/python3.12" sig=0 arch=c000003e syscall=141 compat=0 ip=0x769bcd1e665b code=0x50000
+[ 8680.213090] audit: type=1326 audit(1787207891.569:284): auid=4294967295 uid=1000 gid=1000 ses=4294967295 subj=snap.zapzap.zapzap pid=94912 comm="zapzap" exe="/usr/bin/python3.12" sig=0 arch=c000003e syscall=141 compat=0 ip=0x769bcd1e665b code=0x50000
+[ 8681.525423] traps: ThreadPoolForeg[95044] trap int3 ip:769bc06b0f9e sp:769b80ab4f60 error:0 in libQt6WebEngineCore.so.6.4.2[769bbd026000+7b6a000]

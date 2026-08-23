@@ -5,18 +5,18 @@
  * 
  * Disassembling to symbolic ASL+ operators
  *
- * Disassembly of dsdt.dat, Fri Aug 21 13:19:15 2026
+ * Disassembly of /home/jan/.local/share/chezmoi/devices/chuwi_ubook_xpro/chuwi_camera_drivers/kernel/firmware/acpi/dsdt.aml, Fri Aug 21 14:12:16 2026
  *
  * Original Table Header:
  *     Signature        "DSDT"
- *     Length           0x0002C9CC (182732)
+ *     Length           0x0002C97A (182650)
  *     Revision         0x02
- *     Checksum         0x08
+ *     Checksum         0xEF
  *     OEM ID           "ALASKA"
  *     OEM Table ID     "A M I "
  *     OEM Revision     0x01072009 (17244169)
  *     Compiler ID      "INTL"
- *     Compiler Version 0x20160422 (538313762)
+ *     Compiler Version 0x20230628 (539166248)
  */
 DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
 {
@@ -186,7 +186,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
     External (_TZ_.TZ00, DeviceObj)
     External (_TZ_.TZ01, DeviceObj)
     External (ALSE, UnknownObj)
-    External (BNUM, UnknownObj)    // Conflicts with a later declaration
+    External (BNUM, UnknownObj)
     External (BRTL, UnknownObj)
     External (CRBI, UnknownObj)
     External (DIDX, UnknownObj)
@@ -207,7 +207,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
     External (P1WK, UnknownObj)
     External (P2GP, UnknownObj)
     External (P2WK, UnknownObj)
-    External (P80D, UnknownObj)    // Conflicts with a later declaration
+    External (P80D, UnknownObj)
     External (PC00, IntObj)
     External (PC01, UnknownObj)
     External (PC02, UnknownObj)
@@ -329,7 +329,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
     Name (SS3, One)
     Name (SS4, One)
     Name (IOST, 0xFFFF)
-    Name (TOPM, 0x00000000)
+    Name (TOPM, Zero)
     Name (ROMS, 0xFFE00000)
     Name (VGAF, One)
     OperationRegion (GNVS, SystemMemory, 0x8AA74000, 0x0792)
@@ -11908,7 +11908,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
 
         Method (GADR, 2, NotSerialized)
         {
-            Local0 = (GINF (Arg0, Zero) + SBRG)
+            Local0 = (GINF (Arg0, Zero) + SBRG) /* \SBRG */
             Local1 = GINF (Arg0, Arg1)
             Return ((Local0 + Local1))
         }
@@ -11993,8 +11993,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
         {
             Local0 = GGRP (Arg0)
             Local1 = GNMB (Arg0)
-            Local2 = ((GADR (Local0, 0x02) + (Local1 * 0x08)) + 
-                0x04)
+            Local2 = ((GADR (Local0, 0x02) + (Local1 * 0x08)) + 0x04)
             OperationRegion (PDW1, SystemMemory, Local2, 0x04)
             Field (PDW1, AnyAcc, NoLock, Preserve)
             {
@@ -12008,8 +12007,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
         {
             Local0 = GGRP (Arg0)
             Local1 = GNMB (Arg0)
-            Local2 = ((GADR (Local0, 0x02) + (Local1 * 0x08)) + 
-                0x04)
+            Local2 = ((GADR (Local0, 0x02) + (Local1 * 0x08)) + 0x04)
             OperationRegion (PDW1, SystemMemory, Local2, 0x04)
             Field (PDW1, AnyAcc, NoLock, Preserve)
             {
@@ -12186,8 +12184,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
         {
             Local0 = GGRP (Arg0)
             Local1 = GNMB (Arg0)
-            Local2 = (GADR (Local0, 0x04) + ((Local1 >> 0x03) * 0x04
-                ))
+            Local2 = (GADR (Local0, 0x04) + ((Local1 >> 0x03) * 0x04))
             OperationRegion (PREG, SystemMemory, Local2, 0x04)
             Field (PREG, AnyAcc, NoLock, Preserve)
             {
@@ -12218,8 +12215,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
         {
             Local0 = GGRP (Arg0)
             Local1 = GNMB (Arg0)
-            Local2 = ((GADR (Local0, 0x02) + (Local1 * 0x08)) + 
-                0x04)
+            Local2 = ((GADR (Local0, 0x02) + (Local1 * 0x08)) + 0x04)
             OperationRegion (PDW0, SystemMemory, Local2, 0x04)
             Field (PDW0, AnyAcc, NoLock, Preserve)
             {
@@ -13081,7 +13077,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
         Method (PCRR, 2, Serialized)
         {
             Local0 = ((Arg0 << 0x10) + Arg1)
-            Local0 += SBRG
+            Local0 += SBRG /* \SBRG */
             OperationRegion (PCR0, SystemMemory, Local0, 0x04)
             Field (PCR0, DWordAcc, Lock, Preserve)
             {
@@ -13094,7 +13090,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
         Method (PCRW, 3, Serialized)
         {
             Local0 = ((Arg0 << 0x10) + Arg1)
-            Local0 += SBRG
+            Local0 += SBRG /* \SBRG */
             OperationRegion (PCR0, SystemMemory, Local0, 0x04)
             Field (PCR0, DWordAcc, Lock, Preserve)
             {
@@ -13593,42 +13589,42 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                 If (((PLS1 == 0x03) && PLC1))
                 {
                     PSCO = (0xFFFFFFFD & PSC1) /* \_SB_.PCI0.XHC_._PS3.PSC1 */
-                    PSCO |= 0x00400000 /* \_SB_.PCI0.XHC_._PS3.PSCO */
+                    PSCO |= 0x00400000
                     PSC1 = PSCO /* \_SB_.PCI0.XHC_._PS3.PSCO */
                 }
 
                 If (((PLS2 == 0x03) && PLC2))
                 {
                     PSCO = (0xFFFFFFFD & PSC2) /* \_SB_.PCI0.XHC_._PS3.PSC2 */
-                    PSCO |= 0x00400000 /* \_SB_.PCI0.XHC_._PS3.PSCO */
+                    PSCO |= 0x00400000
                     PSC2 = PSCO /* \_SB_.PCI0.XHC_._PS3.PSCO */
                 }
 
                 If (((PLS3 == 0x03) && PLC3))
                 {
                     PSCO = (0xFFFFFFFD & PSC3) /* \_SB_.PCI0.XHC_._PS3.PSC3 */
-                    PSCO |= 0x00400000 /* \_SB_.PCI0.XHC_._PS3.PSCO */
+                    PSCO |= 0x00400000
                     PSC3 = PSCO /* \_SB_.PCI0.XHC_._PS3.PSCO */
                 }
 
                 If (((PLS4 == 0x03) && PLC4))
                 {
                     PSCO = (0xFFFFFFFD & PSC4) /* \_SB_.PCI0.XHC_._PS3.PSC4 */
-                    PSCO |= 0x00400000 /* \_SB_.PCI0.XHC_._PS3.PSCO */
+                    PSCO |= 0x00400000
                     PSC4 = PSCO /* \_SB_.PCI0.XHC_._PS3.PSCO */
                 }
 
                 If (((PLS5 == 0x03) && PLC5))
                 {
                     PSCO = (0xFFFFFFFD & PSC5) /* \_SB_.PCI0.XHC_._PS3.PSC5 */
-                    PSCO |= 0x00400000 /* \_SB_.PCI0.XHC_._PS3.PSCO */
+                    PSCO |= 0x00400000
                     PSC5 = PSCO /* \_SB_.PCI0.XHC_._PS3.PSCO */
                 }
 
                 If (((PLS6 == 0x03) && PLC6))
                 {
                     PSCO = (0xFFFFFFFD & PSC6) /* \_SB_.PCI0.XHC_._PS3.PSC6 */
-                    PSCO |= 0x00400000 /* \_SB_.PCI0.XHC_._PS3.PSCO */
+                    PSCO |= 0x00400000
                     PSC6 = PSCO /* \_SB_.PCI0.XHC_._PS3.PSCO */
                 }
 
@@ -19871,7 +19867,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                 }
 
                 DATA = Arg2
-                DATA = (END + READ)
+                DATA = (END + READ) /* \_SB_.PCI0.GEXP.READ */
                 While ((ACTV != Zero))
                 {
                     If ((Timer > Local1))
@@ -20038,7 +20034,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                 Else
                 {
                     NEWV = (OLDV & ~(One << PINN))
-                    NEWV |= (Arg3 << PINN) /* \_SB_.PCI0.GEXP.CSER.NEWV */
+                    NEWV |= (Arg3 << PINN)
                     If ((NEWV != OLDV))
                     {
                         WREG (SB0X, Arg1, REGA, NEWV)
@@ -22084,7 +22080,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
             P2TB = 0x0D
             While ((Local1 > Zero))
             {
-                Local1 = (Local1 - One)
+                Local1 -= One
                 Local2 = TB2P /* \_GPE.OSUP.TB2P */
                 If ((Local2 == 0xFFFFFFFF))
                 {
@@ -37455,7 +37451,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                     /* 0018 */  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00   // ........
                 })
                 PAR [Zero] = C0VE /* \C0VE */
-                PAR [One] = C0TP /* \C0TP */
+                PAR [One] = 0x02
                 PAR [0x03] = C0CV /* \C0CV */
                 PAR [0x08] = C0W0 /* \C0W0 */
                 PAR [0x09] = C0W1 /* \C0W1 */
@@ -37582,7 +37578,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                     /* 0018 */  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00   // ........
                 })
                 PAR [Zero] = C1VE /* \C1VE */
-                PAR [One] = C1TP /* \C1TP */
+                PAR [One] = 0x02
                 PAR [0x03] = C1CV /* \C1CV */
                 PAR [0x08] = C1W0 /* \C1W0 */
                 PAR [0x09] = C1W1 /* \C1W1 */
@@ -37705,7 +37701,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                     /* 0018 */  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00   // ........
                 })
                 PAR [Zero] = C2VE /* \C2VE */
-                PAR [One] = C2TP /* \C2TP */
+                PAR [One] = 0x02
                 PAR [0x03] = C2CV /* \C2CV */
                 PAR [0x08] = C2W0 /* \C2W0 */
                 PAR [0x09] = C2W1 /* \C2W1 */
@@ -37828,7 +37824,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                     /* 0018 */  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00   // ........
                 })
                 PAR [Zero] = C3VE /* \C3VE */
-                PAR [One] = C3TP /* \C3TP */
+                PAR [One] = 0x02
                 PAR [0x03] = C3CV /* \C3CV */
                 PAR [0x08] = C3W0 /* \C3W0 */
                 PAR [0x09] = C3W1 /* \C3W1 */
@@ -37952,7 +37948,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                     /* 0018 */  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00   // ........
                 })
                 PAR [Zero] = C0VE /* \C0VE */
-                PAR [One] = C0TP /* \C0TP */
+                PAR [One] = 0x02
                 PAR [0x03] = C0CV /* \C0CV */
                 PAR [0x08] = C0W0 /* \C0W0 */
                 PAR [0x09] = C0W1 /* \C0W1 */
@@ -38118,7 +38114,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                     /* 0018 */  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00   // ........
                 })
                 PAR [Zero] = C1VE /* \C1VE */
-                PAR [One] = C1TP /* \C1TP */
+                PAR [One] = 0x02
                 PAR [0x03] = C1CV /* \C1CV */
                 PAR [0x08] = C1W0 /* \C1W0 */
                 PAR [0x09] = C1W1 /* \C1W1 */
@@ -38284,7 +38280,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                     /* 0018 */  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00   // ........
                 })
                 PAR [Zero] = C2VE /* \C2VE */
-                PAR [One] = C2TP /* \C2TP */
+                PAR [One] = 0x02
                 PAR [0x03] = C2CV /* \C2CV */
                 PAR [0x08] = C2W0 /* \C2W0 */
                 PAR [0x09] = C2W1 /* \C2W1 */
@@ -38450,7 +38446,7 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                     /* 0018 */  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00   // ........
                 })
                 PAR [Zero] = C3VE /* \C3VE */
-                PAR [One] = C3TP /* \C3TP */
+                PAR [One] = 0x02
                 PAR [0x03] = C3CV /* \C3CV */
                 PAR [0x08] = C3W0 /* \C3W0 */
                 PAR [0x09] = C3W1 /* \C3W1 */
@@ -41040,13 +41036,13 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                     If (((ACWA == 0xFFFFFFFF) && (One & WTTR)))
                     {
                         Local0 |= One
-                        WTTR ^= One /* \_SB_.AWAC.WTTR */
+                        WTTR ^= One
                     }
                 }
                 ElseIf (((DCWA == 0xFFFFFFFF) && (0x02 & WTTR)))
                 {
                     Local0 |= One
-                    WTTR ^= 0x02 /* \_SB_.AWAC.WTTR */
+                    WTTR ^= 0x02
                 }
 
                 If (WAST)
@@ -41082,12 +41078,12 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                 If ((Arg0 == Zero))
                 {
                     ACWA = Arg1
-                    WTTR |= One /* \_SB_.AWAC.WTTR */
+                    WTTR |= One
                 }
                 Else
                 {
                     DCWA = Arg1
-                    WTTR |= 0x02 /* \_SB_.AWAC.WTTR */
+                    WTTR |= 0x02
                 }
 
                 Return (Zero)
@@ -42948,14 +42944,14 @@ DefinitionBlock ("", "DSDT", 2, "ALASKA", "A M I ", 0x01072009)
                     PKG1 [Zero] = (B1ST & 0x07)
                     If ((B1ST & One))
                     {
-                        Local0 = (B1CR * B1FV)
-                        Local0 = (Local0 / 0x03E8)
+                        Local0 = (B1CR * B1FV) /* \_SB_.PCI0.LPCB.H_EC.B1FV */
+                        Local0 /= 0x03E8
                         PKG1 [One] = Local0
                     }
                     Else
                     {
-                        Local0 = (B1CR * B1FV)
-                        Local0 = (Local0 / 0x03E8)
+                        Local0 = (B1CR * B1FV) /* \_SB_.PCI0.LPCB.H_EC.B1FV */
+                        Local0 /= 0x03E8
                         PKG1 [One] = Local0
                     }
 
