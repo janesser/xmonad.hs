@@ -1,0 +1,9 @@
+--- /etc/fstab
++++ /etc/fstab
+@@ -14,3 +14,7 @@
+ 
+ # systemd automount
+ UUID=f162eadb-2dc0-48d2-9eba-6b1964cbecbe	/media/passeport	btrfs	defaults,nofail,x-systemd.automount	0	2
++
++# Mount for Huggingface cache (to be used on other machines with correct UUID)
++LABEL="passeport" /media/passeport/huggingface_cache btrfs defaults,nofail,x-systemd.automount 0 2
