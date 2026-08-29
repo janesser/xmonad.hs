@@ -1,4 +1,4 @@
-sdkman_auto_answer=true
+sdkman_auto_answer=false
 sdkman_colour_enable=true
 sdkman_selfupdate_feature=true
 sdkman_auto_complete=true
@@ -8,7 +8,7 @@ sdkman_checksum_enable=true
 sdkman_curl_connect_timeout=7
 sdkman_curl_max_time=10
 sdkman_debug_mode=false
+sdkman_healthcheck_enable=true
 sdkman_insecure_ssl=false
 sdkman_native_enable=true
-sdkman_healthcheck_enable=true
 sdkman_auto_update=true
