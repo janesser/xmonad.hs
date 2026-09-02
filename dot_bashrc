@@ -4,14 +4,6 @@ source /etc/bash.bashrc
 
 source /home/jan/.bash_completions/nala.sh
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-
 # https://stackoverflow.com/questions/27613209/how-to-automatically-start-tmux-on-ssh-session
 if [[ $- =~ i ]] && [[ -z "$TMUX" ]] && [[ -n "$SSH_CLIENT" ]]; then
   tmux attach-session -t ssh_tmux || tmux new-session -s ssh_tmux

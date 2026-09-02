@@ -4,7 +4,7 @@ curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fi
 
 fisher install oh-my-fish/plugin-foreign-env
 
-sudo apt install -y fzf fdclone
+sudo apt install -y fzf fd-find
 fisher install PatrickF1/fzf.fish
 
 fisher install halostatue/fish-chezmoi@v1
@@ -12,4 +12,5 @@ fisher install halostatue/fish-direnv@v1
 fisher install edc/bass
 
 fisher remove budimanjojo/tmux.fish
+fisher remove jorgebucaran/nvm.fish
 exit 0

@@ -9,11 +9,15 @@ sudo apt remove --purge -y fdclone
 ## https://github.com/earendil-works/pi/issues/3882
 ln -sf /usr/bin/fdfind ~/.pi/agent/bin/fd
 
-#npm i -g @earendil-works/pi-coding-agent
+npm i -g @earendil-works/pi-coding-agent
 npx @robzolkos/lazypi --yes
 
+pi install npm:pi-grill
+pi install npm:pi-web-access
+pi install npm:@pi-unipi/ralph
+pi install npm:pi-subagents
 pi install npm:@hypabolic/crossbar
-pi install npm:pi-animations
+# pi install npm:pi-animations
 
 sudo snap install ghidra
 pi install npm:pi-ghidra

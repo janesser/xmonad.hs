@@ -2,10 +2,15 @@
 
 sudo apt install -y git gitk git-lfs direnv
 
-if [ "$CHEZMOI_ARCH" = "amd64" ]; then
-    sudo apt install -y snap
-    sudo snap install kubectl --classic
-    sudo snap install helm --classic
-else
-    echo $CHEZMOI_ARCH not supported for snap.
-fi
+# snap
+sudo apt install -y snap
+sudo snap remove --purge kubectl
+sudo snap remove --purge helm
+
+# git credential manager
+## https://docs.github.com/en/get-started/git-basics/why-is-git-always-asking-for-my-credentials
+
+curl -s https://api.github.com/repos/git-ecosystem/git-credential-manager/releases/latest| jq '.assets.[].browser_download_url | match(".*x64.*deb")|.string'| xargs curl -o /tmp/gcm.deb -L
+sudo dpkg -i /tmp/gcm.deb
+sudo apt --fix-broken -y install
+git config --global credential.credentialStore secretservice

@@ -8,6 +8,7 @@ rm -fR ~/.pyenv
 rm -fR ~/.local/pipx/venvs
 rm -f ~/.config/fish/completions/pipx.fish
 
-curl -LsSf https://astral.sh/uv/install.sh | sh
+asdf plugin add uv https://github.com/asdf-community/asdf-uv.git
+asdf install uv latest
 
 uv python install 3 --default
