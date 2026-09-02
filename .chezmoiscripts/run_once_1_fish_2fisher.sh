@@ -13,4 +13,5 @@ fisher install edc/bass
 
 fisher remove budimanjojo/tmux.fish
 fisher remove jorgebucaran/nvm.fish
+fisher remove reitzig/sdkman-for-fish
 exit 0

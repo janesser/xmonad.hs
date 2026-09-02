@@ -45,5 +45,6 @@
   "[lua]": {
     "editor.defaultFormatter": "sumneko.lua"
   },
-  "pendant.runtimeSource": "external"
+  "pendant.runtimeSource": "external",
+  "git.enableSmartCommit": true
 }

@@ -1,19 +1,16 @@
 #!/bin/bash
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-
-nvm use --lts
 sudo apt install -y fd-find
 sudo apt remove --purge -y fdclone
 ## https://github.com/earendil-works/pi/issues/3882
 ln -sf /usr/bin/fdfind ~/.pi/agent/bin/fd
 
 npm i -g @earendil-works/pi-coding-agent
-npx @robzolkos/lazypi --yes
+# npx @robzolkos/lazypi --yes
 
 pi install npm:pi-grill
 pi install npm:pi-web-access
+pi install npm:pi-simplify
 pi install npm:@pi-unipi/ralph
 pi install npm:pi-subagents
 pi install npm:@hypabolic/crossbar
@@ -21,9 +18,6 @@ pi install npm:@hypabolic/crossbar
 
 sudo snap install ghidra
 pi install npm:pi-ghidra
-
-pi uninstall npm:pi-claude-cli
-pi list |grep -o 'npm:@juicesharp/rpiv-.*'| xargs -L1 pi uninstall
 
 # run /web-tools for websearch, e.g. exa.ai free tier
 

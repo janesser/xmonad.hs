@@ -20,7 +20,7 @@ git checkout $LATEST_RELEASE
 
 sudo usermod -aG render $USER
 sudo usermod -aG video $USER
-sudo apt install -y glslang-dev glslc spirv-headers libssl-dev libnccl-dev ccache
+sudo apt install -y glslang-dev glslc spirv-headers libssl-dev libnccl-dev ccache nvidia-cuda-toolkit
 # dpclang-6 intel-mkl for intel sycl
 
 ## aborted attempt to get ROCM to work with AMD APU iGPU
