@@ -15,18 +15,15 @@ git clone https://github.com/ggml-org/llama.cpp
 cd llama.cpp
 git fetch
 WORKING_RELEASE="b10235"
-LATEST_RELEASE="$WORKING_RELEASE" #`git tag --sort=-committerdate|head -1`
+LATEST_RELEASE="$WORKING_RELEASE"   #`git tag --sort=-committerdate|head -1`
 git checkout $LATEST_RELEASE
 
-if [[ -n "$CLEAN" ]]; then
-    rm -fr build/
-    echo Deleted build/
-    sudo apt remove --purge -y ccache
-else
-    sudo apt install -y ccache
-fi
+sudo usermod -aG render $USER
+sudo usermod -aG video $USER
+sudo apt install -y glslang-dev glslc spirv-headers libssl-dev libnccl-dev ccache
+# dpclang-6 intel-mkl for intel sycl
 
-sudo apt install -y glslang-dev glslc spirv-headers
+## aborted attempt to get ROCM to work with AMD APU iGPU
 # wget https://repo.radeon.com/amdgpu-install/latest/ubuntu/noble/amdgpu-install_7.2.4.70204-1_all.deb
 # amdgpu-install --usecase=graphics,rocm,hip --vulkan=radv --opencl=rocr
 # HIP_VISIBLE_DEVICES=1 \
@@ -37,7 +34,13 @@ sudo apt install -y glslang-dev glslc spirv-headers
 # HIP_CXX="$HIP_PATH/llvm/bin/clang" \
 # CMAKE_PREFIX_PATH="$ROCM_PATH/lib/cmake:$CMAKE_PREFIX_PATH" \
 # cmake -B build -DGGML_HIP=ON -DCMAKE_HIP_FLAGS:STRING="-I$ROCM_PATH/include"
-cmake -B build -DGGML_CUDA=ON -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=ON 
+
+## aborted attempt to get SYCL to work with Intel GPU
+# -DGGML_SYCL=ON -DCMAKE_CXX_COMPILER=dpclang++ -DCMAKE_C_COMPILER=gcc -DMKL_DIR=/usr/include/mkl \
+
+cmake -B build "-DGGML_CCACHE=${CACHE:ON}" -DGGML_CUDA=ON \
+    -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_UI=OFF \
+    -DLLAMA_BUILD_SERVER=ON 
 cmake --build build --config Release -j $(grep processor /proc/cpuinfo | wc -l)
 
 restart-llama-server.sh

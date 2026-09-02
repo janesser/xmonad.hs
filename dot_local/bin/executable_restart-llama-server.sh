@@ -26,15 +26,18 @@ set LOG_FILE $LOG_DIR/llama-server.log
 ##  --mlock --no-mmap
 
 llama-server \
-  --models-max 1 \
-  --parallel 1 \
+  --host :: \
+  --models-max 2 \
+  --parallel 4 \
   --no-warmup \
+  --no-ui \
   --offline \
-  --sleep-idle-seconds 3600 \
   --models-preset ~/.llama-cpp-models-preset.ini \
   --verbosity 3 \
   --log-file $LOG_FILE \
   2>/dev/null >/dev/null \
 &; disown
+
+#  --sleep-idle-seconds 3600 \
 
 echo "llama-server (re-)started."
