@@ -1,18 +1,9 @@
 #!/bin/bash
-#
-# Update asdf plugins and the newest version of every tool that has a
-# baseline in .tool-versions. nodejs prefers the current LTS release; java
-# resolves to the latest Temurin build (musl variant stripped so it runs on
-# standard glibc hosts).
-#
-set -uo pipefail
 
-# 1. Refresh plugin metadata (don't fail the whole script if one fails).
+export PATH=~/go/bin:$PATH # in case not yet set
+
 asdf plugin update --all || echo "warning: some plugins failed to update"
 
-# 2. Resolve the version to install for a plugin.
-#    nodejs uses the LTS line when the flag is supported, else falls back.
-#    asdf prints "no ... available" when there's no baseline -> empty output.
 resolve_version() {
     local plugin="$1" v
     case "$plugin" in
