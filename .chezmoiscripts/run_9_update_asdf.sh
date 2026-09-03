@@ -39,4 +39,5 @@ for plugin in $(asdf plugin list | awk '{print $1}'); do
     fi
     echo "update $plugin -> $version"
     asdf install "$plugin" "$version" || echo "warning: $plugin failed to update"
+    asdf set "$plugin" "$version" || echo "warning: $plugin failed to set"
 done

@@ -4,6 +4,8 @@ sudo apt install -y git gitk git-lfs direnv
 
 # snap
 sudo apt install -y snap
+sudo snap install lxd
+
 sudo snap remove --purge kubectl
 sudo snap remove --purge helm
 

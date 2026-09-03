@@ -7,6 +7,9 @@
 rm -fR ~/.pyenv
 rm -fR ~/.local/pipx/venvs
 rm -f ~/.config/fish/completions/pipx.fish
+rm -f ~/.local/bin/uv ~/.local/bin/uvx # remove installer binaries, which are no asdf managed
+
+export PATH=~/go/bin:$PATH # in case not yet set
 
 asdf plugin add uv https://github.com/asdf-community/asdf-uv.git
 asdf install uv latest
