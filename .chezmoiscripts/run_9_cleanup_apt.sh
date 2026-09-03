@@ -6,6 +6,7 @@ sudo apt clean
 
 sudo apt remove --purge -y unattended-upgrades
 sudo apt remove --purge -y tmux
+sudo apt remove --purge -y postfix
 
 # sudo apt -o Dpkg::Options::=--force-confmiss reinstall pi-greeter
 
