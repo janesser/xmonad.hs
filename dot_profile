@@ -89,5 +89,3 @@ else
 fi
 
 export GTK_THEME=Adwaita:dark
-
-systemctl --user restart syndaemon-restart
