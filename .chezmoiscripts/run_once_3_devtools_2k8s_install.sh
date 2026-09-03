@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export PATH=~/go/bin:$PATH # in case not yet set
+
 asdf plugin add kubectl https://github.com/asdf-community/asdf-kubectl.git
 asdf install kubectl latest
 
