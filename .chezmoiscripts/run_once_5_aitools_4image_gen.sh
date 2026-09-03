@@ -1,5 +1,7 @@
 #!/bin/bash
 
+exit 0 # FIXME solidify
+
 lsmod | grep nvidia
 if [[ $? -ne 0 ]]; then
     echo "$(basename $0): No nvidia module loaded in kernel, skipping..."
