@@ -1,5 +1,5 @@
 nodejs 24.20.0
-uv 0.12.9
+uv 0.12.10
 helm 4.2.4
 java temurin-26.0.2+101
 kubectl 1.37.0
