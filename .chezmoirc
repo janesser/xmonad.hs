@@ -1,0 +1,3 @@
+# Keep pi-agent design artifacts out of chezmoi's source-state so the sudoers
+# file is never accidentally applied to /etc (chezmoi can't sudo).
+exclude = ["pi/"]
