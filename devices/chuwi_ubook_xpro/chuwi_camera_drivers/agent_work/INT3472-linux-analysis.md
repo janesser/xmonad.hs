@@ -20,9 +20,9 @@ Captured with `acpi_os_name=Windows 2015 acpi_osi=Windows 2015`. A Windows-side 
 | `_DDN` | `PMIC-CRDG` |
 | **CLDB `control_logic_type`** | **1 = DISCRETE(CRD-D)** (NOT 2 = TPS68470) |
 | GPIO pins | 3 per device; per-pin function data in `_DSM` (GUID `79234640-9e10-4fea-a5c1-b5aa8b19756f`) |
-| Sensors seen | `i2c-OVTI5648:00`, `i2c-OVTI2680:00` (via the IPUCIU/cio2 path) |
+| Sensors seen | `i2c-OVTI5648:00`, `i2c-OVTI2680:00` on **I2C2** (via the DSDT `CIO2` device at `\_SB.PCI0.CIO2`) |
 
-Kernel side in the same boot: `ipu3-cio2` found OV2680 and "Connected 1 cameras"; **no INT3472 regulator activity**. So:
+Kernel side in the same boot: **no INT3472 regulator activity**, and **no live kernel `ipu3-cio2` probe appears in any captured boot log** (the `csi2_data_stream_interface:` lines in `20260819_dmesg_ipu3` are the custom `dump_intel_ipu_data` probe tool reading the ACPI `_DSM`, not a kernel CSI probe). See `agent_work/int3472-probe-failure-analysis.md` §4. So:
 - The BIOS emits INT3472 as **DISCRETE**, so the relevant driver is **`int3472-discrete`**, not `int3472-tps68470`.
 - The `int3472-tps68470` driver never logs → it matched nothing usable (its I2C probe can't work on a GPIO-only device, and its board_data lookup by name fails).
 

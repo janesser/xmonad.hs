@@ -1,0 +1,447 @@
+# =============================================================================
+# chezmoiscripts MANIFEST  (single source of truth for ordering & dependencies)
+# =============================================================================
+#
+# WHY THIS FILE
+#   `.chezmoiscripts/*.sh` scripts run in LEXICOGRAPHIC order of their full
+#   filename, within each phase. The leading keywords pick the PHASE; everything
+#   after that is a HUMAN LAYERING that only works because sorting is string-based:
+#
+#     <phase>_<tier>_<label>_<suborder>[-<os>]-<shell>[:.tmpl]
+#
+#       run_once   -> run-once (chezmoi drops a marker file, so it runs once)
+#       run        -> every apply
+#       run_onchange -> re-run when the referenced source files change (sha256 marker)
+#       _template  -> rendered via templating before being copied/executed
+#       <tier>     -> dependency TIER (0 = foundations .. 5 = ai tools)
+#       <label>    -> human-readable group (essentials, fish, devtools, ...)
+#       <suborder> -> ordering WITHIN the tier (0,1,2,6 ...)
+#
+#   The numbers are NOT parsed by chezmoi — they only order the sort. Because the
+#   sort is string-based, a two-digit tier (e.g. run_once_10_...) would sort
+#   BETWEEN run_once_1_... and run_once_2_..., NOT after run_once_9_. Keep tiers
+#   single-digit (0-9) until this is migrated to a parsed scheme.
+#
+# ENFORCEMENT (optional)
+#   A CI check can assert that every `depends_on` entry sorts before its own
+#   filename. See scripts/check_manifest_order.py (optional helper).
+#
+# LEGEND — tiers
+#   0  foundations / essentials (apt, asdf, python, terminal emulator, precommit)
+#   1  fish shell ecosystem + system daemons (clamfs, pipewire, fish + plugins/theme)
+#   2  desktop apps & browsers (codium, ghcup, logseq, browsers, nextcloud, ...)
+#   3  developer tooling (git/gcm, java, k8s, podman, github-act, jupyter, node, rust, helix)
+#   4  laptop / rp hardware tweaks (lightdm, EDID fix, HP/RPi tweaks)
+#   5  AI tooling (llama.cpp, MCP servers, agentic, image generation)
+#   run 0 / run 9  housekeeping that runs on every apply (assert + cleanup/update)
+#   run_onchange  re-sync apt sources when their source files change
+#
+# DEPENDENCY EDGES (verified by static analysis of each script, Oct 2025)
+#   Only edges whose dependency SORTS BEFORE the dependent are encoded here, so
+#   they stay consistent with chezmoi's filename sort. Reverse edges are documented
+#   in `analysis_notes` and intentionally NOT encoded (they would break the sort).
+#
+# NOTE: `provides` = concrete packages/binaries each script installs (from static
+#   analysis). `depends_on` = scripts that must run earlier for this one to work.
+#   Both are analysis-derived, not from a static binary-dependency solver.
+
+manifest_version: 1
+default_shell: bash
+sort: lexicographic_by_filename
+
+# -----------------------------------------------------------------------------
+# TIER 0 — foundations
+# -----------------------------------------------------------------------------
+- file: run_once_0_essentials_install.sh.tmpl
+  phase: run_once
+  tier: 0
+  template: true
+  desc: "Essential apt packages (xmonad, suckless, utils) + conditional extras/extras/tex/org"
+  provides: [xmonad, xmobar, suckless-tools, xdotool, curl, jq, aptitude, shutter, pandoc, texlive]
+  depends_on: []
+- file: run_once_0_asdf_install.sh
+  phase: run_once
+  tier: 0
+  desc: "Install asdf (go install); snap go --classic; fish PATH shim + asdf completion"
+  provides: [asdf, go]
+  depends_on: []
+  notes: "Calls `fish -c` (needs fish) but fish installs at tier 1 — see analysis_notes.2"
+- file: run_once_0_precommit_hook_install.sh
+  phase: run_once
+  tier: 0
+  desc: "Install git pre-commit hook (uvx if available, else pip)"
+  provides: [pre-commit-hook]
+  depends_on: []
+  notes: "Requires .git (exits 0 if not a repo). Uses uv -> needs asdf/uv; soft dep."
+- file: run_once_0_python_tools_install.sh
+  phase: run_once
+  tier: 0
+  desc: "Remove pyenv/pipx; install uv via asdf-uv; default python 3"
+  provides: [uv]
+  depends_on: [run_once_0_asdf_install.sh]   # verified: uses `asdf plugin add uv`
+- file: run_once_0_xterm_install.sh
+  phase: run_once
+  tier: 0
+  desc: "Install wezterm, set x-terminal-emulator alternative; removes kitty; zellij (cargo, experimental)"
+  provides: [wezterm, x-terminal-emulator]
+  depends_on: []
+
+# -----------------------------------------------------------------------------
+# TIER 1 — fish shell ecosystem + system daemons
+# -----------------------------------------------------------------------------
+- file: run_once_1_clamfs_setup.sh
+  phase: run_once
+  tier: 1
+  desc: "Install clamfs; prepare ~/.downloads tmpfs overlay"
+  provides: [clamfs]
+  depends_on: []
+- file: run_once_1_fish_0install.sh
+  phase: run_once
+  tier: 1
+  desc: "Install fish 4 (PPA), chsh to fish"
+  provides: [fish]
+  depends_on: []
+- file: run_once_1_fish_1completion_chezmoi.sh
+  phase: run_once
+  tier: 1
+  desc: "Fish completion for chezmoi"
+  provides: [fish-completion-chezmoi]
+  depends_on: [run_once_1_fish_0install.sh]  # verified: `chezmoi completion fish`
+- file: run_once_1_fish_2fisher.sh
+  phase: run_once
+  tier: 1
+  desc: "fisher plugin manager + fzf/fd + plugins (foreign-env, chezmoi, direnv, bass)"
+  provides: [fisher, fzf, fd-find]
+  depends_on: [run_once_1_fish_0install.sh]  # verified: fisher runs under fish
+- file: run_once_1_fish_2theme.sh
+  phase: run_once
+  tier: 1
+  desc: "Set fish theme to 'Tomorrow'"
+  provides: [fish-theme-tomorrow]
+  depends_on: [run_once_1_fish_0install.sh]  # verified: `fish_config` needs fish
+- file: run_once_1_pipewire_install.sh
+  phase: run_once
+  tier: 1
+  desc: "pipewire-audio, easyeffects, blueman (amd64 only)"
+  provides: [pipewire, easyeffects, blueman]
+  depends_on: []
+
+# -----------------------------------------------------------------------------
+# TIER 2 — desktop apps & browsers
+# -----------------------------------------------------------------------------
+- file: run_once_2_codium_0install.sh
+  phase: run_once
+  tier: 2
+  desc: "VS Codeodium (extrepo vscodium)"
+  provides: [codium]
+  depends_on: []
+- file: run_once_2_codium_1extensions.sh.tmpl
+  phase: run_once
+  tier: 2
+  template: true
+  desc: "Install codium extensions listed in .codium_extensions"
+  provides: [codium-extensions]
+  depends_on: [run_once_2_codium_0install.sh]  # verified: `codium --install-extension`
+- file: run_once_2_ghcup_install.sh
+  phase: run_once
+  tier: 2
+  desc: "GHCup bootstrap; ghc, haskell-language-server"
+  provides: [ghcup, ghc, haskell-language-server]
+  depends_on: []
+- file: run_once_2_logseq_install.sh
+  phase: run_once
+  tier: 2
+  desc: "flatpak + Logseq from flathub"
+  provides: [logseq, flatpak]
+  depends_on: []
+- file: run_once_2_my-weather-indicator_install.sh
+  phase: run_once
+  tier: 2
+  desc: "Remove old my-weather-indicator; install meteo-qt, register x-weather-client alt"
+  provides: [meteo-qt, x-weather-client]
+  depends_on: []
+- file: run_once_2_nala_install.sh
+  phase: run_once
+  tier: 2
+  desc: "Install nala, fetch, bash+fish completions"
+  provides: [nala]
+  depends_on: []
+- file: run_once_2_nextcloud_install.sh
+  phase: run_once
+  tier: 2
+  desc: "Nextcloud desktop (PPA nextcloud-devs/client); removes pcloud/koofr"
+  provides: [nextcloud-desktop]
+  depends_on: []
+- file: run_once_2_rp_pi-apps_install.sh
+  phase: run_once
+  tier: 2
+  desc: "Pi-Apps + Signal (arm64 only)"
+  provides: [pi-apps]
+  depends_on: []
+- file: run_once_2_x-www-browser_install.sh
+  phase: run_once
+  tier: 2
+  desc: "lynx + librewolf (amd64 via extrepo / arm64 via pi-apps); sets default browser"
+  provides: [librewolf, lynx, x-www-browser]
+  depends_on: []
+- file: run_once_2_x-www-browser_experiments_install.sh
+  phase: run_once
+  tier: 2
+  desc: "Experimental browsers (mullvad/ecosia) — only if $BROWSER_EXPERIMENT is set"
+  provides: [mullvad-browser, ecosia-browser]
+  depends_on: []
+- file: run_once_2_zapzap_install.sh
+  phase: run_once
+  tier: 2
+  desc: "ZapZap from source (poetry, pyqt6, dbus); git clone pinned tag 6.5.2.5"
+  provides: [zapzap]
+  depends_on: []
+
+# -----------------------------------------------------------------------------
+# TIER 3 — developer tooling
+# -----------------------------------------------------------------------------
+- file: run_once_3_devtools_0install.sh
+  phase: run_once
+  tier: 3
+  desc: "git/gitk/git-lfs/direnv, snap+lxd, git-credential-manager; removes snap kubectl/helm"
+  provides: [git, gitk, git-lfs, direnv, snap, lxd, gcm]
+  depends_on: []
+- file: run_once_3_devtools_1java_install.sh
+  phase: run_once
+  tier: 3
+  desc: "asdf java/maven/gradle (removes sdkman)"
+  provides: [java, maven, gradle]
+  depends_on: [run_once_0_asdf_install.sh]   # verified: `asdf plugin add java/maven/gradle`
+- file: run_once_3_devtools_2k8s_install.sh
+  phase: run_once
+  tier: 3
+  desc: "asdf kubectl + helm"
+  provides: [kubectl, helm]
+  depends_on: [run_once_0_asdf_install.sh]   # verified: `asdf plugin add kubectl/helm`
+- file: run_once_3_devtools_3podman_nvidia_cdi.sh
+  phase: run_once
+  tier: 3
+  desc: "podman/compose, registries tweak, nvidia-container-toolkit + generated CDI"
+  provides: [podman, podman-compose, nvidia-container-toolkit, nvidia-cdi]
+  depends_on: []
+- file: run_once_3_devtools_4github_act_install.sh
+  phase: run_once
+  tier: 3
+  desc: "nektos/act (go), podman-docker, golang-go; docker group + podman socket perms"
+  provides: [github-act, podman-docker, golang-go]
+  depends_on: []
+- file: run_once_3_devtools_4jupyterlab.sh
+  phase: run_once
+  tier: 3
+  desc: "jupyterlab via uv tool (git, latex, poetry-kernel plugins)"
+  provides: [jupyterlab]
+  depends_on: []
+- file: run_once_3_devtools_4node.sh
+  phase: run_once
+  tier: 3
+  desc: "asdf nodejs (LTS via nodebuild)"
+  provides: [node]
+  depends_on: [run_once_0_asdf_install.sh]   # verified: `asdf plugin add nodejs`
+- file: run_once_3_devtools_5rust.sh
+  phase: run_once
+  tier: 3
+  desc: "rustup via apt (removes snap rustup)"
+  provides: [rustup]
+  depends_on: []
+- file: run_once_3_devtools_6helix.sh
+  phase: run_once
+  tier: 3
+  desc: "helix (PPA) + bash-language-server/marksman snaps; sets git core.editor"
+  provides: [helix, bash-language-server, marksman]
+  depends_on: []
+
+# -----------------------------------------------------------------------------
+# TIER 4 — laptop / rp hardware tweaks
+# -----------------------------------------------------------------------------
+- file: run_once_4_lightdm-session_fix96.sh.tmpl
+  phase: run_once
+  tier: 4
+  template: true
+  desc: "lightdm-session wrapper fix (raspi-config only)"
+  provides: [lightdm-session]
+  depends_on: []
+- file: run_once_4_rp_hp_v28_edid_fix.sh
+  phase: run_once
+  tier: 4
+  desc: "Force HP V28 EDID into kernel cmdline (arm64 + connected HDMI only)"
+  provides: [edid-firmware-hpv28]
+  depends_on: []
+- file: run_once_4_rp_tweaks.sh
+  phase: run_once
+  tier: 4
+  desc: "mesa-vdpau-drivers + gpu_mem/core_freq config.txt tweaks (raspi-config only)"
+  provides: [mesa-vdpau-drivers, rp-gpu-config]
+  depends_on: []
+
+# -----------------------------------------------------------------------------
+# TIER 5 — AI tooling  (all gated on `lsmod | grep nvidia` at runtime)
+# -----------------------------------------------------------------------------
+- file: run_once_5_aitools_1llama_cpp.sh
+  phase: run_once
+  tier: 5
+  desc: "Build llama.cpp (CUDA), gpustat; runs ollama uninstall first"
+  provides: [llama.cpp, llama-server, gpustat]
+  depends_on: []
+- file: run_once_5_aitools_2mcp.sh
+  phase: run_once
+  tier: 5
+  desc: "ToolHive MCP server (snap task) — file marked UNUSED"
+  provides: [toolhive, mcp]
+  depends_on: []
+- file: run_once_5_aitools_3agentic.sh
+  phase: run_once
+  tier: 5
+  desc: "fd/find, pi coding agent + plugins, ghidra snap; HF model downloads (if mounted)"
+  provides: [pi-agent, fd, ghidra]
+  depends_on: []
+- file: run_once_5_aitools_4image_gen.sh
+  phase: run_once
+  tier: 5
+  desc: "ComfyUI via comfy-cli (CUDA 12.4); downloads Flux 2 Klein weights"
+  provides: [comfyui, comfy-cli]
+  depends_on: []
+
+# -----------------------------------------------------------------------------
+# run — housekeeping, runs on EVERY apply. NOTE: run_9/* sorts BEFORE run_once_*
+# (after "run_", '9' < 'o') — see analysis_notes.1
+# -----------------------------------------------------------------------------
+- file: run_0_assert_non_metered.sh
+  phase: run
+  desc: "Abort the apply if the network is metered (nmcli)"
+  depends_on: []
+- file: run_9_cleanup_apt.sh
+  phase: run
+  tier: 9
+  desc: "apt clean + purge unattended-upgrades, tmux, postfix (+ rpd-* on raspberrypi)"
+  depends_on: []
+- file: run_9_cleanup_hf.sh
+  phase: run
+  tier: 9
+  desc: "hf cache prune (fish; needs HF cache mount)"
+  depends_on: []
+- file: run_9_cleanup_journalctl.sh
+  phase: run
+  tier: 9
+  desc: "journalctl vacuum"
+  depends_on: []
+- file: run_9_cleanup_lxc.sh
+  phase: run
+  tier: 9
+  desc: "delete snapcraft LXC projects"
+  depends_on: []
+- file: run_9_cleanup_npm.sh
+  phase: run
+  tier: 9
+  desc: "npm cache verify"
+  depends_on: []
+- file: run_9_cleanup_podman.sh
+  phase: run
+  tier: 9
+  desc: "podman system prune"
+  depends_on: []
+- file: run_9_cleanup_snap.sh
+  phase: run
+  tier: 9
+  desc: "remove disabled/old snap revisions"
+  depends_on: []
+- file: run_9_cleanup_uv.sh
+  phase: run
+  tier: 9
+  desc: "uv cache clean"
+  depends_on: []
+- file: run_9_update_asdf.sh
+  phase: run
+  tier: 9
+  desc: "asdf plugin update --all + reinstall latest for every plugin"
+  depends_on: []
+- file: run_9_update_fish.sh
+  phase: run
+  tier: 9
+  desc: "remove unmanaged fish conf.d files, fisher update"
+  depends_on: []
+- file: run_9_update_flatpak.sh
+  phase: run
+  tier: 9
+  desc: "flatpak update"
+  depends_on: []
+- file: run_9_update_nala.sh
+  phase: run
+  tier: 9
+  desc: "nala full-upgrade"
+  depends_on: []
+- file: run_9_update_pi.sh
+  phase: run
+  tier: 9
+  desc: "pi update --all"
+  depends_on: []
+- file: run_9_update_rpi-apps.sh
+  phase: run
+  tier: 9
+  desc: "pi-apps updater cli"
+  depends_on: []
+- file: run_9_update_rust.sh
+  phase: run
+  tier: 9
+  desc: "rustup update + install stable"
+  depends_on: []
+- file: run_9_update_uv.sh
+  phase: run
+  tier: 9
+  desc: "uv tool upgrade --all"
+  depends_on: []
+- file: run_9_update_xmonad.sh
+  phase: run
+  tier: 9
+  desc: "stack build xmonad"
+  depends_on: []
+
+# -----------------------------------------------------------------------------
+# run_onchange — re-sync apt sources when referenced files change
+# -----------------------------------------------------------------------------
+- file: run_onchange_0_apt_sources.sh.tmpl
+  phase: run_onchange
+  template: true
+  desc: "Sync apt keyrings/sources on change (sha256 markers per repo); installs extrepo"
+  depends_on: []
+  notes: "Depends on source files etc/apt/{sources.list.d,keyrings}/, not on other scripts."
+
+# =============================================================================
+# STATIC-ANALYSIS NOTES  (from reading every script, Oct 2025)
+# =============================================================================
+#
+# 1. run_* sorts BEFORE run_once_*.  After the "run_" prefix, '9' (0x39) and
+#    '0' (0x30) both sort before 'o' (0x6f) of "once". So the ordering on disk is
+#    run_0_assert...  run_9_cleanup_* / run_9_update_*  then  run_once_0_...
+#    Consequence: housekeeping (run_9_update_*) runs on EVERY apply BEFORE the
+#    run_once_* installs. On a cold first apply several updates target a binary
+#    that does not exist yet:
+#      - run_9_update_nala.sh      -> nala installed by run_once_2_nala_install.sh
+#      - run_9_update_rust.sh      -> rustup installed by run_once_3_devtools_5rust.sh
+#      - run_9_update_asdf.sh      -> asdf  installed by run_once_0_asdf_install.sh
+#      - run_9_update_fish.sh      -> fish  installed by run_once_1_fish_0install.sh
+#      - run_9_update_flatpak.sh   -> flatpak installed by run_once_2_logseq_install.sh
+#      - run_9_cleanup_podman.sh   -> podman  installed by run_once_3_devtools_3podman...
+#      - run_9_cleanup_uv.sh       -> uv      installed by run_once_0_python_tools_install.sh
+#    All non-fatal (no `set -e`); the command just errors and continues. Intentional.
+#
+# 2. Reverse (unencodable) deps: asdf install & python-tools (tier 0) call `fish -c`,
+#    but fish installs at tier 1. This works only because run_once markers persist
+#    across applies; a truly cold first apply runs tier 0 before tier 1 fish.
+#    Marked on run_once_0_asdf_install.sh.notes. Not encoded as depends_on because it
+#    would put a tier-0 script depending on a tier-1 script, breaking the sort.
+#
+# 3. Verified cross-script runtime deps (all encode cleanly — dependency sorts first):
+#      asdf consumers  -> run_once_0_asdf_install.sh : python_tools, java, k8s, node
+#      fish completions-> run_once_1_fish_0install.sh : fish_1completion, fish_2fisher, fish_2theme
+#      codium extensions -> run_once_2_codium_0install.sh
+#    Every other script's dependencies are external (apt/snap/go/cargo/uv/npm/flatpak
+#    /external URLs) or conditional on env vars, so no file-level edge is needed.
+#
+# 4. Unused / dead code found: run_once_5_aitools_2mcp.sh is marked UNUSED in-file;
+#    run_once_5_aitools_4image_gen.sh has `exit 0 # FIXME solidify` at the top.
+#    Consider removing or unflagging when the work is solidified.
