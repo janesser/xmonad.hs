@@ -21,6 +21,13 @@ resolve_version() {
             printf '%s' "$v" | grep -qE '^[v]?[0-9]' \
                 || v="$(asdf latest nodejs 2>/dev/null)"
             ;;
+        zellij)
+            # zellij ships a local cargo plugin (no upstream asdf repo anymore).
+            # Prefer asdf latest; fall back to the plugin's list-all tail if
+            # asdf's latest resolution returns nothing.
+            v="$(asdf latest zellij 2>/dev/null)"
+            [ -z "$v" ] && v="$(asdf plugin zellij list-all 2>/dev/null | tail -n 1)"
+            ;;
         *)
             v="$(asdf latest "$plugin" 2>/dev/null)"
             ;;
@@ -35,6 +42,14 @@ for plugin in $(asdf plugin list | awk '{print $1}'); do
     version="$(resolve_version "$plugin")"
     if [ -z "$version" ]; then
         echo "skip $plugin: no baseline set (add it to .tool-versions)"
+        continue
+    fi
+    # Skip the (potentially very slow, e.g. zellij source build) reinstall when
+    # the currently-installed version already is the newest available.
+    installed_version="$(asdf where "$plugin" 2>/dev/null | xargs -n1 basename 2>/dev/null)"
+    if [ "$installed_version" = "$version" ]; then
+        echo "up to date: $plugin $version"
+        asdf set "$plugin" "$version" || echo "warning: failed to set $plugin"
         continue
     fi
     echo "update $plugin -> $version"

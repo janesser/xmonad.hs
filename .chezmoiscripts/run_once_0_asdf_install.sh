@@ -27,3 +27,13 @@ set --erase _asdf_shims
 EOF
 
 asdf completion fish > ~/.config/fish/completions/asdf.fish
+
+# zellij has no upstream asdf plugin anymore (the plugin repos were removed from
+# the asdf plugin index), so we ship a minimal local cargo plugin in the repo
+# (asdf/zellij) and register it. Registering is idempotent and cheap; the heavy
+# source build happens later in run_9_update_asdf.sh.
+ASDF_PLUGIN_DIR="$ASDF_DATA_DIR/plugins/zellij"
+[ -z "$ASDF_PLUGIN_DIR" ] && ASDF_PLUGIN_DIR="$HOME/.asdf/plugins/zellij"
+mkdir -p "$(dirname "$ASDF_PLUGIN_DIR")"
+cp -a "$CHEZMOI_SOURCE_DIR/asdf/zellij" "$ASDF_PLUGIN_DIR" || cp -a asdf/zellij "$ASDF_PLUGIN_DIR"
+asdf plugin add zellij "$ASDF_PLUGIN_DIR" || true
