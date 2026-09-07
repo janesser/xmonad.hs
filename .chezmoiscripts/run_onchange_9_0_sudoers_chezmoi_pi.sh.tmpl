@@ -1,5 +1,5 @@
 #!/bin/bash
-# run_9_0_sudoers_chezmoi_pi.sh
+# run_onchange_9_0_sudoers_chezmoi_pi.sh.tmpl
 #
 # Install the scoped sudoers drop-in that lets pi-agent run `cz update`
 # passwordlessly (see AGENTS.md for the sudo boundary).
@@ -7,7 +7,17 @@
 #   source: etc/sudoers.d/chezmoi-pi     (NOT applied by chezmoi; etc/ is ignored)
 #   target: /etc/sudoers.d/chezmoi-pi     (root:root, mode 0440)
 #
-# Idempotent: only acts when the file is missing or has changed.
+# --- chezmoi change filter (run only when the SOURCE file changes) -------------
+# This is a `run_onchange_` template. The SHA256 of the sudoers source file is
+# embedded below as a comment, so the *rendered* script changes whenever the
+# source file changes. Chezmoi hashes the rendered script and only runs THIS
+# script when that hash changes. When the source is unchanged, chezmoi skips the
+# script entirely — no `sudo cmp`, no prompt — on every `chezmoi apply`.
+#
+#   chezmoi-pi source hash: {{ include "etc/sudoers.d/chezmoi-pi" | sha256sum }}
+# ------------------------------------------------------------------------------
+#
+# Idempotent (backstop): only writes when the installed file is missing or differs.
 # Consent : asks for a yes/no confirmation before writing anything under /etc.
 
 set -euo pipefail
@@ -21,7 +31,7 @@ if [ ! -f "${SRC}" ]; then
     exit 1
 fi
 
-# Idempotent: already installed and unchanged -> nothing to do.
+# Idempotent backstop: already installed and unchanged -> nothing to do.
 if [ -f "${DEST}" ] && sudo cmp -s "${SRC}" "${DEST}"; then
     echo "✅ ${DEST} already installed and up to date. Nothing to do."
     exit 0

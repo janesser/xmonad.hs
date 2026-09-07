@@ -24,8 +24,11 @@ Rules:
 ## Sudoers file (repo-managed under `etc/`)
 Source: `etc/sudoers.d/chezmoi-pi` (a normal chezmoi file, but `etc/` is in
 `.chezmoiignore`, so it is never auto-applied to `/etc`). Installed, with an
-interactive yes/no confirmation, by the chezmoi run script
-`.chezmoiscripts/run_9_0_sudoers_chezmoi_pi.sh` as part of `cz update`.
+interactive yes/no confirmation, by the chezmoi **`run_onchange`** script
+`.chezmoiscripts/run_onchange_9_0_sudoers_chezmoi_pi.sh.tmpl` as part of `cz
+update`. The script embeds a SHA256 of the sudoers source file, so chezmoi only
+runs it when that source file changes (skipped — no `sudo`, no prompt — on
+every other apply).
 Manual fallback + validation: the "pi-agent scoped sudo for `cz update`" section
 of the top-level README.md.
 

@@ -37,15 +37,19 @@ Lets pi-agent run `cz update` while keeping root out of everything else.
 ### How it gets installed
 
 The drop-in is installed automatically as part of the normal `chezmoi apply`
-(`cz update`) cycle by:
+(`cz update`) cycle by a **`run_onchange`** script:
 
 ```
-.chezmoiscripts/run_9_0_sudoers_chezmoi_pi.sh
+.chezmoiscripts/run_onchange_9_0_sudoers_chezmoi_pi.sh.tmpl
 ```
 
-It is **idempotent** (only acts when the file is missing or changed) and asks for
-an explicit **yes/no confirmation** before writing anything under `/etc`. When
-`cz update` runs without a TTY it aborts and prints the manual install commands.
+It is a chezmoi template whose rendered content embeds a SHA256 of the sudoers
+**source** file (`etc/sudoers.d/chezmoi-pi`). That makes the script only run
+when the source file actually changes — on every other `chezmoi apply` chezmoi
+skips it entirely (no `sudo`, no prompt). It is also **idempotent**: if the
+installed file is already correct it exits immediately. It asks for an explicit
+**yes/no confirmation** before writing anything under `/etc`, and when `cz
+update` runs without a TTY it aborts and prints the manual install commands.
 
 Manual install / validate (fallback, e.g. before the run script has ever run):
 
