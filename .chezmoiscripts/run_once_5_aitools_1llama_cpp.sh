@@ -15,7 +15,8 @@ git clone https://github.com/ggml-org/llama.cpp
 cd llama.cpp
 git fetch
 WORKING_RELEASE="b10235"
-LATEST_RELEASE="$WORKING_RELEASE"   #`git tag --sort=-committerdate|head -1`
+LATEST_RELEASE="$WORKING_RELEASE"
+#LATEST_RELEASE=`git tag --sort=-committerdate|head -1`
 git checkout $LATEST_RELEASE
 
 sudo usermod -aG render $USER
