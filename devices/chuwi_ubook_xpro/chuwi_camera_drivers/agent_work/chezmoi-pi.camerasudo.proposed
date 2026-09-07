@@ -1,0 +1,70 @@
+# /etc/sudoers.d/chezmoi-pi
+# pi-agent: passwordless sudo ONLY for commands chezmoi (cz update) needs.
+# Managed by design story. Review + validate with:
+#   visudo -cf /etc/sudoers.d/chezmoi-pi
+# Source copy lives in this repo under etc/sudoers.d/ (NOT applied by chezmoi:
+# etc/ is in .chezmoiignore). It is installed, with explicit user consent, by
+# .chezmoiscripts/run_9_0_sudoers_chezmoi_pi.sh as part of cz update.
+#
+# ============================================================================
+# PROPOSED ADDITION (NOT YET APPLIED) — camera debug
+# Adds a narrowly-scoped, clearly-commented Cmnd_Alias for debugging the
+# stock IPU3/CIO2 + int3472 discrete-PMIC camera stack on chuwi_ubook_xpro.
+# Kept in the same file (per request); a dedicated file
+# (e.g. /etc/sudoers.d/chezmoi-pi-camera-debug) would be more auditable.
+# ============================================================================
+
+Defaults !requiretty
+
+# --- package / repo / service / group / family writes (any args) ---
+Cmnd_Alias CHEZMOI_PKGS = \
+    /usr/bin/apt, \
+    /usr/bin/add-apt-repository, \
+    /usr/bin/nala, \
+    /usr/bin/snap, \
+    /usr/sbin/usermod, \
+    /usr/sbin/groupadd, \
+    /usr/bin/systemctl, \
+    /usr/bin/update-alternatives, \
+    /usr/bin/mkdir, \
+    /usr/bin/chmod, \
+    /usr/bin/chown, \
+    /usr/bin/tee, \
+    /usr/bin/cp, \
+    /usr/bin/gpg, \
+    /usr/bin/mv, \
+    /usr/bin/sed, \
+    /usr/bin/extrepo, \
+    /usr/bin/dpkg, \
+    /usr/bin/curl, \
+    /usr/bin/rm, \
+    /usr/bin/install, \
+    /usr/bin/cmp, \
+    /home/jan/.local/share/chezmoi/uninstaller/ollama_uninstall.sh \
+
+# --- the only legit uses of bash: the two podman.sock ops ---
+Cmnd_Alias CHEZMOI_BASH = \
+    /usr/bin/bash -c "chmod *", \
+    /usr/bin/bash -c "chown *"
+
+# --- camera debugging (chuwi_ubook_xpro): I2C / media / ACPI / module control ---
+# Stock IPU3/CIO2 + int3472 discrete-PMIC debug only:
+#   modprobe / rmmod   load/unload ov5648, ov2680 (and reload after a DSDT patch)
+#   i2cdetect/i2cset/i2cget/i2ctransfer  probe the PMIC GPIO/register config
+#   media-ctl          enable /dev/media links (requires root: media dev is root-only)
+#   acpidump           dump DSDT/SSDT from /sys/firmware (requires root)
+#   v4l2-ctl / iasl    verify capture / recompile a patched DSDT
+Cmnd_Alias CAMERA_DEBUG = \
+    /usr/sbin/modprobe, \
+    /usr/sbin/rmmod, \
+    /usr/sbin/i2cdetect, \
+    /usr/sbin/i2cset, \
+    /usr/sbin/i2cget, \
+    /usr/sbin/i2ctransfer, \
+    /usr/bin/media-ctl, \
+    /usr/bin/acpidump, \
+    /usr/bin/iasl, \
+    /usr/bin/v4l2-ctl
+
+# --- grant to this user only ---
+jan ALL=(root) NOPASSWD: CHEZMOI_PKGS, CHEZMOI_BASH, CAMERA_DEBUG

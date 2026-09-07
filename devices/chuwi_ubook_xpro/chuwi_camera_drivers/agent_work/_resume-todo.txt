@@ -1,0 +1,25 @@
+## Return-to (revised) — camera debug, NOW WITH SUDO
+
+Status: **sudo NOPASSWD rule installed** — `/etc/sudoers.d/chezmoi-pi-camera-debug`
+(repo copy: `agent_work/chezmoi-pi-camera-debug.proposed`, validated `Analyse OK`).
+NOPASSWD confirmed for the 10 camera-debug tools.
+
+### Verified facts (live, 6.8.0-139, Chuwi UBook XPro)
+- `ipu3-imgu` binds IU (00:05, [8086:1919]); `ipu3-cio2` binds CSI host (00:14.3, [8086:9d32]); `ipu_bridge` up.
+- Front OV2680 (CAM0, i2c-OVTI2680:00, addr 0x10) BINDS + reads id 0x2680. Rear OV5648 (CAM1) i2c-OVTI5648:00 exists but ov5648 module not loaded.
+- intc (int3472-discrete) bound to INT3472:01/:02 (STA=15) but creates **no** rail + **no** Mclk for the camera → OV2680 on reg-dummy, no MCLK.
+- Media link ov2680 2-0010:0 -> ipu3-csi2 1:0 exists but **disabled** -> STREAMON "Link severed".
+- DSDT is raw firmware: INT3471 `_DDN`="IMX135-CRDG2", INT3474 `_DDN`="OV2740-CRDG2" (old names; unpatched).
+- C0* pin VALUES are External decls defined in a power-config SSDT not in the repo → can't resolve GPIO type statically.
+
+### Next experiments (empirical, root)
+1. `sudo i2cdetect -y 2` (I2C2) to see OV2680 (0x10) + any PMIC/other.
+2. Inspect live INT3472 `01`/`02` `/sys` (regulator entries? gpio? clock?).
+3. Try `sudo media-ctl -e ov2680 2-0010:0 -e ipu3-csi2 1:0 -l 'ov2680 2-0010:0,ipu3-csi2 1:0,1'` then STREAMON video1 — observe real failure mode (clock vs power vs link).
+4. Check MCLK path: does ov2680 request a clk? (`grep clk` in dmesg; /sys/class/clk).
+5. If a real rail/clock is missing, decide: DSDT patch (root, rebuild) vs userspace gpio-regulator+clk.
+6. Secondary: `sudo modprobe ov5648`, watch async probe; confirm whether unit has rear cam.
+
+### Blocker cleared
+- sudo for camera debug now available. (Only limitation: don't touch the existing
+  chezmoi-pi rule; camera rule is a separate file.)

@@ -1,0 +1,15 @@
+1. Task A: reconcile sensor IDs (done) - PLAN.md, README.md
+2. Task B: int3472-tps68470 probe failure (done) - agent_work/int3472-probe-failure-analysis.md
+   - Sub-findings:
+     a. Wrong PMIC driver (I2C tps68470 vs DISCRETE/GPIO) -> bind int3472-discrete/intc
+     b. CLDB already control_logic_type=1 (no CLDB change)
+     c. DEEPER: ipu3-cio2 CSI host never binds - proc_thermal (processor_thermal) grabs IP3 at 00:04 [8086:1903] (multimedia controller, class 0x118000). No fwnode graph endpoint -> ov2680 defers 'waiting for fwnode graph endpoint', _DEP eval fails.
+3. DONE: Task B investigation complete -> 2 root causes documented
+4. FIX ATTEMPT IMPLEMENTED (ready to run on the Chuwi device): fix/proc_thermal_release_ip3.sh
+   - Reversible runtime experiment.
+   - test: unbind proc_thermal from 0000:00:04.0 -> bind ipu3-cio2 -> show dmesg
+   - rollback: restore the driver that was bound before the test
+   - NOTE: run on the Chuwi with sudo; local dev box has both driver dirs + an IU at 00:05
+     but NOT the 8086:1903 IP3, so this script is Chuwi-only.
+5. NOT STARTED: (a) int3472-discrete/intc binding (Task A), (b) permanent kernel-side fix for
+   proc_thermal/IP3 preemption if the runtime experiment succeeds.

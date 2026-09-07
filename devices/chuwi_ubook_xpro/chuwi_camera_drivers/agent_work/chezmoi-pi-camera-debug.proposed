@@ -1,0 +1,28 @@
+# /etc/sudoers.d/chezmoi-pi-camera-debug
+# pi-agent: passwordless sudo ONLY for the chuwi_ubook_xpro camera debug stack.
+# SEPARATE from chezmoi-pi by design (auditable; won't collide with chezmoi's
+# file ownership). Review + validate with:
+#   visudo -cf /etc/sudoers.d/chezmoi-pi-camera-debug
+# Install (after explicit user consent), as root:
+#   install -m 0440 /path/to/chezmoi-pi-camera-debug /etc/sudoers.d/chezmoi-pi-camera-debug
+#
+# Stock IPU3/CIO2 + int3472 discrete-PMIC debug only:
+#   modprobe / rmmod   load/unload ov5648, ov2680 (and reload after a DSDT patch)
+#   i2cdetect/i2cset/i2cget/i2ctransfer  probe the PMIC GPIO/register config
+#   media-ctl          enable /dev/media links (requires root: media dev is root-only)
+#   acpidump           dump DSDT/SSDT from /sys/firmware (requires root)
+#   v4l2-ctl / iasl    verify capture / recompile a patched DSDT
+Cmnd_Alias CAMERA_DEBUG = \
+    /usr/sbin/modprobe, \
+    /usr/sbin/rmmod, \
+    /usr/sbin/i2cdetect, \
+    /usr/sbin/i2cset, \
+    /usr/sbin/i2cget, \
+    /usr/sbin/i2ctransfer, \
+    /usr/bin/media-ctl, \
+    /usr/bin/acpidump, \
+    /usr/bin/iasl, \
+    /usr/bin/v4l2-ctl
+
+# --- grant to this user only ---
+jan ALL=(root) NOPASSWD: CAMERA_DEBUG
