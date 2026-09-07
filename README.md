@@ -29,6 +29,63 @@ My opinionated xmonad & chezmoi setup. With all dependencies expanded.
     ~/.local/bin/chezmoi age-keygen -o ~/.config/chezmoi/age-id.txt
     ~/.local/bin/chezmoi apply -k
 
+## pi-agent scoped sudo for `cz update`
+
+Passwordless sudo, **scoped** to only the commands chezmoi's run scripts use.
+Lets pi-agent run `cz update` while keeping root out of everything else.
+
+### How it gets installed
+
+The drop-in is installed automatically as part of the normal `chezmoi apply`
+(`cz update`) cycle by:
+
+```
+.chezmoiscripts/run_9_0_sudoers_chezmoi_pi.sh
+```
+
+It is **idempotent** (only acts when the file is missing or changed) and asks for
+an explicit **yes/no confirmation** before writing anything under `/etc`. When
+`cz update` runs without a TTY it aborts and prints the manual install commands.
+
+Manual install / validate (fallback, e.g. before the run script has ever run):
+
+```
+# 1. Install the drop-in
+sudo install -o root -g root -m 0440 etc/sudoers.d/chezmoi-pi \
+        /etc/sudoers.d/chezmoi-pi
+
+# 2. Validate syntax (must print "OK")
+sudo visudo -cf /etc/sudoers.d/chezmoi-pi
+
+# 3. Confirm what jan is allowed (should list the CHEZMOI_* aliases)
+sudo -l
+
+# 4. Test passwordless: this should NOT ask for a password
+sudo -n true
+```
+
+### What is allowed (as `jan`)
+`apt, add-apt-repository, nala, snap, usermod, groupadd, systemctl,
+update-alternatives, mkdir, chmod, chown, tee, cp, gpg, mv, sed, extrepo,
+dpkg, curl, install, cmp, rm` — plus `bash -c "chmod/chown ..."` for the podman.sock steps
+and the ollama-uninstall script `uninstaller/ollama_uninstall.sh`.
+Anything else is denied.
+
+### Tighten later (optional)
+- `curl *` is broad (arbitrary download path). Scope it:
+  `sed -i 's#/usr/bin/curl$#/usr/bin/curl -f*S*o /usr/share/keyrings/*#' …`
+- `mkdir *` could be limited to the two known system dirs:
+  `/usr/bin/mkdir -p /etc/pipewire, /usr/bin/mkdir -p /var/run/cdi`
+- To remove: `sudo rm /etc/sudoers.d/chezmoi-pi`
+
+### Notes
+- `etc/` is excluded from chezmoi (see `.chezmoiignore`) so this file is never
+  auto-applied to `/etc` — the run script above installs it, with consent.
+- `Defaults !requiretty` (space form) lets unattended (no TTY) runs proceed.
+  Debian `visudo` rejects the colon form `Defaults:!requiretty` as a syntax
+  error. The ollama-uninstall script runs its own `systemctl`/`userdel`/
+  `groupdel`/`rm` as root *inside* itself, so it needs no extra sudoers entry.
+
 ## Awesome packages (ubuntu)
 
 `run_once_0_essentials_install.sh.tmpl`

@@ -21,5 +21,13 @@ Rules:
 - Prefer `cz apply` for config edits; reserve `cz update` for pulling fresh
   upstream changes.
 
-## Sudoers file (source, repo-only)
-Editable copy: `pi/chezmoi-sudo/chezmoi-pi`. Install steps: `pi/chezmoi-sudo/README.md`.
+## Sudoers file (repo-managed under `etc/`)
+Source: `etc/sudoers.d/chezmoi-pi` (a normal chezmoi file, but `etc/` is in
+`.chezmoiignore`, so it is never auto-applied to `/etc`). Installed, with an
+interactive yes/no confirmation, by the chezmoi run script
+`.chezmoiscripts/run_9_0_sudoers_chezmoi_pi.sh` as part of `cz update`.
+Manual fallback + validation: the "pi-agent scoped sudo for `cz update`" section
+of the top-level README.md.
+
+The old `pi/` scaffold has been removed — the sudoers file now lives in the
+natural `etc/` tree, so `pi/` is obsolete.

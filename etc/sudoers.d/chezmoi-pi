@@ -2,7 +2,9 @@
 # pi-agent: passwordless sudo ONLY for commands chezmoi (cz update) needs.
 # Managed by design story. Review + validate with:
 #   visudo -cf /etc/sudoers.d/chezmoi-pi
-# Source copy lives in this repo under pi/chezmoi-sudo/ (excluded from chezmoi).
+# Source copy lives in this repo under etc/sudoers.d/ (NOT applied by chezmoi:
+# etc/ is in .chezmoiignore). It is installed, with explicit user consent, by
+# .chezmoiscripts/run_9_0_sudoers_chezmoi_pi.sh as part of cz update.
 Defaults !requiretty
 
 # --- package / repo / service / group / family writes (any args) ---
@@ -27,6 +29,8 @@ Cmnd_Alias CHEZMOI_PKGS = \
     /usr/bin/dpkg, \
     /usr/bin/curl, \
     /usr/bin/rm, \
+    /usr/bin/install, \
+    /usr/bin/cmp, \
     /home/jan/.local/share/chezmoi/uninstaller/ollama_uninstall.sh \
 
 # --- the only legit uses of bash: the two podman.sock ops ---
