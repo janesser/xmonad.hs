@@ -26,7 +26,16 @@ set LOG_FILE $LOG_DIR/llama-server.log
 ##  --mlock --no-mmap
 
 # FIXME log file is re-used/overwritten by slave process actually loading the model, on the other hand other params aren't passed
-llama-server \
+# FIXME router process starts router process (no typo)
+
+# workaround
+llama serve \
+  --host :: \
+  --model ~/.cache/huggingface/hub/models--ornith-ai--Ornith-1.5-35B-A3B-GGUF/snapshots/12393612fd4f730ff5aadc23e9b8f9648aa49ceb/Ornith-1.5-35B-Q4_K_M.gguf \
+  --log-file $LOG_FILE \
+  &;disown
+
+echo llama-server \
   --host :: \
   --models-max 2 \
   --parallel 2 \
