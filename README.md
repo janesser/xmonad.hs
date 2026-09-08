@@ -527,6 +527,21 @@ and
 
     systemctl enable nvidia-suspend.service
 
+##### llama.cpp server: runs at startup (no login)
+
+`restart-llama-server.sh` is started at every boot — even before anyone logs
+in — by a **system** systemd unit (`/etc/systemd/system/restart-llama-server.service`,
+`WantedBy=multi-user.target`). A system unit (not a user unit) is what lets it
+start without a logged-in session, so no `loginctl enable-linger` is needed.
+
+- Provisioned by `.chezmoiscripts/run_once_5_aitools_2llama_startup.sh` (uses the
+  scoped NOPASSWD sudoers drop-in; `systemctl enable --now`).
+- The huggingface-hub bind-mount lives in `/etc/fstab` (`bind,nofail`), so the
+  hub is already mounted at boot and the script never needs `sudo mount`
+  (mount/umount aren't passwordless here).
+- Restart manually: `systemctl --system restart restart-llama-server`
+- Logs: `journalctl --system -u restart-llama-server -f`
+
 #### generic chat: unsloth
 
 models that work on unsloth and RTX 2060

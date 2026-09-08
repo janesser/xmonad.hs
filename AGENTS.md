@@ -36,3 +36,18 @@ of the top-level README.md.
 
 The old `pi/` scaffold has been removed — the sudoers file now lives in the
 natural `etc/` tree, so `pi/` is obsolete.
+
+## Backend: llama.cpp server at boot
+
+The llama.cpp server is a **backend** service, not a user dotfile. It is started
+at every boot (before any login) by a *system* systemd unit —
+`/etc/systemd/system/restart-llama-server.service` (`WantedBy=multi-user.target`).
+Because it is a system unit, no `loginctl enable-linger` is required.
+
+- Provisioned by `.chezmoiscripts/run_once_5_aitools_2llama_startup.sh`, which
+  installs the unit and adds the huggingface-hub bind-mount to `/etc/fstab`
+  (`bind,nofail`) so the hub is available without passwordless `sudo mount`.
+- Everything runs under the scoped NOPASSWD sudoers drop-in (`install`, `tee`,
+  `cp`, `systemctl`) — see the sudo boundary above.
+- Lifecycle: `systemctl --system enable --now restart-llama-server`,
+  `journalctl --system -u restart-llama-server -f`.
