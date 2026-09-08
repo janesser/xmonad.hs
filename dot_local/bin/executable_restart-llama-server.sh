@@ -25,10 +25,11 @@ set LOG_FILE $LOG_DIR/llama-server.log
 # Run llama-server with default parameters
 ##  --mlock --no-mmap
 
+# FIXME log file is re-used/overwritten by slave process actually loading the model, on the other hand other params aren't passed
 llama-server \
   --host :: \
   --models-max 2 \
-  --parallel 4 \
+  --parallel 2 \
   --no-warmup \
   --no-ui \
   --offline \
