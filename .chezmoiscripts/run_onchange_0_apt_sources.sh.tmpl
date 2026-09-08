@@ -30,6 +30,7 @@ sudo rm -f /etc/apt/keyrings/element-io-archive-keyring.gpg
 sudo apt remove --purge -y element-desktop
 
 sudo apt install -y snap
-sudo snap install glow
 sudo snap install signal-desktop
 sudo snap install element-desktop
+
+sudo snap remove --purge glow # FIXME broken, gives permission denied error
