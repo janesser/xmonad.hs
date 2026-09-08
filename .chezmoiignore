@@ -4,6 +4,7 @@ usr
 discoveries
 devices
 uninstaller
+systemd/system
 
 LICENSE
 COMPILE.md
