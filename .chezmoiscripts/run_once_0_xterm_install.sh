@@ -12,7 +12,10 @@ wezterm shell-completion --shell fish > ~/.config/fish/completions/wezterm.fish
 sudo update-alternatives --set x-terminal-emulator /usr/bin/open-wezterm-here
 
 ## experiment zellij
-cargo install --locked zellij
+## zellij is managed by mise now (dot_config/mise/config.toml); no cargo build
+export PATH="$HOME/.local/bin:$PATH"
+eval "$(mise activate bash)" || true
+mise install zellij || true
 sudo update-alternatives --set x-terminal-emulator $(which zutty)
 # see .config/fish/conf.d/zellij.fish
 

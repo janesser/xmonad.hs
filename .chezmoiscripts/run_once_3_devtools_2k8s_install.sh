@@ -1,9 +1,8 @@
 #!/bin/bash
+#
+# kubectl + helm via mise (replaces asdf). Pinned in config.toml.
 
-export PATH=~/go/bin:$PATH # in case not yet set
-
-asdf plugin add kubectl https://github.com/asdf-community/asdf-kubectl.git
-asdf install kubectl latest
-
-asdf plugin add helm https://github.com/Antiarchitect/asdf-helm.git
-asdf install helm latest
+export PATH="$HOME/.local/bin:$PATH"
+eval "$(mise activate bash)"
+mise install kubectl
+mise install helm

@@ -1,6 +1,11 @@
 #!/usr/bin/fish
+# hf is not a mise tool (installed elsewhere on PATH); activate mise so its
+# shims are on PATH, then prune the huggingface cache.
+if not contains "$HOME/.local/bin" $PATH
+    set -gx PATH "$HOME/.local/bin" $PATH
+end
+eval "$(mise activate fish)"
 
 if mountpoint ~/.cache/huggingface/hub
-    fish_add_path -Pg ~/go/bin ~/.asdf/shims # in case not yet set
     hf cache prune -y
 end

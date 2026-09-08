@@ -2,7 +2,7 @@
 
 # cleanup unmanaged files
 for f in $(cz unmanaged ~/.config/fish/conf.d)
-    if [ "$(basename $f)" != "asdf.fish" ]
+    if [ "$(basename $f)" != "mise.fish" ]
         rm $f
     end
 end

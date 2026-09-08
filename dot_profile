@@ -52,9 +52,8 @@ if [ -d "$HOME/.local/share/flatpak/exports/bin" ]; then
     PATH="$HOME/.local/share/flatpak/exports/bin:$PATH"
 fi
 
-if [ -d "$HOME/.asdf/shims" ]; then
-    PATH="$HOME/.asdf/shims:$PATH"
-fi
+# mise shims are handled by ~/.config/fish/conf.d/mise.fish (interactive) and
+# mise activate in scripts; no static asdf-shims line needed anymore.
 
 EDITOR=hx
 

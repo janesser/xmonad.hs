@@ -1,4 +1,5 @@
 #!/bin/bash
-
-export PATH=~/go/bin:~/.asdf/shims:$PATH # in case not yet set
+# npm comes from the mise-managed node; put mise's shims on PATH.
+export PATH="$HOME/.local/bin:$PATH"
+eval "$(mise activate bash)"
 npm cache verify
