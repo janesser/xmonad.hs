@@ -10,7 +10,9 @@ scoped NOPASSWD sudoers drop-in at `/etc/sudoers.d/chezmoi-pi`, which grants roo
 
 `apt, add-apt-repository, nala, snap, usermod, groupadd, systemctl,
 update-alternatives, mkdir, chmod, chown, tee, cp, gpg, mv, sed, extrepo,
-dpkg, curl`, plus the two podman.sock ops via `bash -c "chmod/chown ..."`.
+dpkg, curl`, plus direct `chmod`/`chown` on the podman.sock path (the
+`CHEZMOI_PKGS` alias authorizes `/usr/bin/chmod`/`/usr/bin/chown` with any
+args; the shell glob is expanded before sudo, so no wildcard reaches it).
 
 Rules:
 - Do **not** use `sudo` for anything outside a chezmoi run script.

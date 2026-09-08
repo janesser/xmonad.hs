@@ -251,7 +251,7 @@ sort: lexicographic_by_filename
 - file: run_once_3_devtools_6helix.sh
   phase: run_once
   tier: 3
-  desc: "helix (PPA) + bash-language-server/marksman snaps; sets git core.editor"
+  desc: "helix (Snap, replaces unmaintained noble-only PPA) + bash-language-server/marksman snaps; sets git core.editor"
   provides: [helix, bash-language-server, marksman]
   depends_on: []
 
