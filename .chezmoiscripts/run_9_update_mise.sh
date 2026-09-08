@@ -1,8 +1,13 @@
 #!/bin/bash
 #
-# Update tool versions managed by mise.
-# Replaces run_9_update_asdf.sh. mise resolves the latest version within each
-# pinned range; we never rewrite the pins here (no --bump).
+# Report tool versions that mise considers out of date. READ-ONLY — this does
+# NOT upgrade anything; it only prints what `mise upgrade` *would* do.
+#
+# Kept as a run hook so `chezmoi apply` surfaces update news without touching
+# the tracked dotfiles (the old version ran `mise upgrade --all`, which drifted
+# ~/.config/mise/config.toml out of sync with dot_config/mise/config.toml).
+#
+# Non-fatal: always exits 0 so an available update never breaks `apply`.
 
 export PATH="$HOME/.local/bin:$PATH"
 eval "$(mise activate bash)" || {
@@ -10,10 +15,10 @@ eval "$(mise activate bash)" || {
     exit 0
 }
 
-mise upgrade --all || echo "warning: some upgrades failed"
+echo "==> mise: checking for out-of-date tools (read-only)..."
+# --dry-run      : print what would be updated, change nothing
+# --dry-run-code : exit non-zero when an update exists (we ignore it on purpose)
+mise upgrade --dry-run --dry-run-code || true
 
-# nektos/act is installed via go (not managed by mise), so keep it fresh too.
-if command -v go >/dev/null 2>&1; then
-    export PATH="$HOME/go/bin:$PATH"
-    go install github.com/nektos/act@latest || echo "warning: act update failed"
-fi
+echo "==> (updates are applied manually; this script reports only)"
+exit 0
