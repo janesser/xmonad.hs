@@ -1,0 +1,6 @@
+# Grace period in seconds after each scheduled time, before the machine powers
+# off (input for run_onchange_9_1_auto_poweroff_timer.sh). 0 = immediate.
+#
+# While waiting, the launcher logs a warning to the journal
+# (check with: journalctl -t auto-poweroff).
+0

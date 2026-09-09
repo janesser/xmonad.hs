@@ -1,0 +1,11 @@
+# Auto-poweroff schedule (input for run_onchange_9_1_auto_poweroff_timer.sh).
+#
+# One wall-clock time per line, 24h "HH:MM". Each becomes one systemd
+# OnCalendar trigger (`*-*-* HH:MM:00`), evaluated in the system's local
+# timezone. Lines starting with '#' and blank lines are ignored.
+#
+# Add as many as you want, e.g.:
+#   03:00
+#   22:30
+
+03:00

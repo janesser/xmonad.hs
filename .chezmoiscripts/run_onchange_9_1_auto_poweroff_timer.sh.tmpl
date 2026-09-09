@@ -1,0 +1,99 @@
+#!/bin/bash
+# run_onchange_9_1_auto_poweroff_timer.sh.tmpl
+#
+# Deploy the chezmoi auto-poweroff systemd timer + service and enable the timer.
+#
+# Inputs (plain files in the ignored source tree, deployed by this script):
+#   systemd/system/auto-poweroff.times    one HH:MM per line, '#' comments
+#   systemd/system/auto-poweroff.delay    grace seconds before poweroff (0=immediate)
+#   systemd/system/auto-poweroff.sh       launcher, installed to /usr/local/bin
+#
+# Deploys to:
+#   /usr/local/bin/auto-poweroff.sh                          (0755 root:root)
+#   /etc/systemd/system/auto-poweroff.service                (0644 root:root)
+#   /etc/systemd/system/auto-poweroff.timer                  (0644 root:root)
+#
+# Sudo is used only for commands allowed by the scoped NOPASSWD sudoers drop-in
+# (AGENTS.md): mkdir, cp, chmod, chown, systemctl.
+#
+# --- chezmoi change filter (re-run when any input changes) -------------------
+# The SHA256 of the inputs is embedded below as a comment, so the *rendered*
+# script changes whenever an input changes and chezmoi re-runs it. On unchanged
+# applies the script is skipped entirely — no `sudo`, no prompt.
+#
+#   inputs hash: {{ print (include "systemd/system/auto-poweroff.times") (include "systemd/system/auto-poweroff.delay") (include "systemd/system/auto-poweroff.sh") | sha256sum }}
+# ------------------------------------------------------------------------------
+
+set -euo pipefail
+
+SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
+SRC="${SRC_DIR}/systemd/system"
+UNIT_DIR=/etc/systemd/system
+BIN_DIR=/usr/local/bin
+TIMER_NAME=auto-poweroff.timer
+SVC_NAME=auto-poweroff.service
+SCRIPT_NAME=auto-poweroff.sh
+SVC_TMP=""
+TIMER_TMP=""
+trap 'rm -f "${SVC_TMP}" "${TIMER_TMP}"' EXIT
+
+for f in "auto-poweroff.times" "auto-poweroff.delay" "${SCRIPT_NAME}"; do
+    [ -f "${SRC}/${f}" ] || { echo "⚠️  missing source: ${SRC}/${f}"; exit 1; }
+done
+
+# --- read config -------------------------------------------------------------
+DELAY="$(grep -vE '^[[:space:]]*#' "${SRC}/auto-poweroff.delay" 2>/dev/null | grep -vE '^[[:space:]]*$' | head -n1 | tr -cd '0-9')"
+DELAY="${DELAY:-0}"
+
+# --- build service unit ------------------------------------------------------
+SVC_TMP="$(mktemp)"
+cat > "${SVC_TMP}" <<EOF
+[Unit]
+Description=Auto poweroff at configured local times (chezmoi)
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=root
+Environment=HOME=/root
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/local/bin/${SCRIPT_NAME} ${DELAY}
+EOF
+
+# --- build timer unit --------------------------------------------------------
+TIMER_TMP="$(mktemp)"
+{
+    echo "[Unit]"
+    echo "Description=Trigger auto-poweroff at configured local times (chezmoi)"
+    echo
+    echo "[Timer]"
+    while IFS= read -r raw || [ -n "${raw}" ]; do
+        t="${raw#"${raw%%[![:space:]]*}"}"   # ltrim
+        t="${t%"${t##*[![:space:]]}"}"        # rtrim
+        [ -z "${t}" ] && continue
+        case "${t}" in \#*) continue ;; esac
+        printf 'OnCalendar=*-*-* %s:00\n' "${t}"
+    done < "${SRC}/auto-poweroff.times"
+    echo "Persistent=false"
+    echo "Unit=${SVC_NAME}"
+    echo
+    echo "[Install]"
+    echo "WantedBy=timers.target"
+} > "${TIMER_TMP}"
+
+# --- install (inputs only change when the schedule/config changes) -----------
+echo "Deploying auto-poweroff (grace delay=${DELAY}s)…"
+sudo mkdir -p "${UNIT_DIR}"
+sudo mkdir -p "${BIN_DIR}"
+sudo cp "${SVC_TMP}"  "${UNIT_DIR}/${SVC_NAME}"
+sudo cp "${TIMER_TMP}" "${UNIT_DIR}/${TIMER_NAME}"
+sudo cp "${SRC}/${SCRIPT_NAME}" "${BIN_DIR}/${SCRIPT_NAME}"
+sudo chmod 0644 "${UNIT_DIR}/${SVC_NAME}" "${UNIT_DIR}/${TIMER_NAME}"
+sudo chmod 0755 "${BIN_DIR}/${SCRIPT_NAME}"
+sudo chown root:root "${UNIT_DIR}/${SVC_NAME}" "${UNIT_DIR}/${TIMER_NAME}" "${BIN_DIR}/${SCRIPT_NAME}"
+
+sudo systemctl --system daemon-reload
+sudo systemctl --system enable --now "${TIMER_NAME}"
+
+echo "✅ auto-poweroff timer enabled."
+echo "Check with: systemctl list-timers ${TIMER_NAME} --all"
