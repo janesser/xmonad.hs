@@ -1,5 +1,11 @@
 encryption = "age"
 
+# Feature toggle: auto-poweroff. Defaults to false everywhere; enabled on this
+# machine via .chezmoi.hostname in .chezmoiscripts. Runtime scripts (e.g. the
+# auto-poweroff timer) read this key from the rendered config to decide whether
+# to activate. Re-render with `cz init` after changing it, then `cz apply`.
+auto_poweroff = {{ if eq .chezmoi.hostname "cyberkleiber" }}true{{ else }}false{{ end }}
+
 [diff]
     # only `cz diff` ignores LastNotified, `cz apply` will still edge on it
     command = "diff"

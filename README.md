@@ -208,6 +208,13 @@ Launcher is `/usr/local/bin/auto-poweroff.sh`. Check it with:
 To pause: `systemctl --system disable --now auto-poweroff.timer`
 (or remove the times and `cz apply`).
 
+**Enable/disable the feature.** A toggle in `.chezmoi.toml.tmpl` controls
+whether the timer is enabled at all. It defaults to `false` and is turned
+`true` only on this machine (matched by hostname). To change it, edit that
+key, run `cz init` (re-renders the runtime config), then `cz apply`. The
+toggle is only `true` here, so on any other machine in this repo the timer
+stays off.
+
 #### Screen & tty lock
 
 I want to lock screen when going somewhere, after some time and on suspend.

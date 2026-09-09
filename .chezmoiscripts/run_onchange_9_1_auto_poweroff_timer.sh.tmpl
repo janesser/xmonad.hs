@@ -16,12 +16,18 @@
 # Sudo is used only for commands allowed by the scoped NOPASSWD sudoers drop-in
 # (AGENTS.md): mkdir, cp, chmod, chown, systemctl.
 #
-# --- chezmoi change filter (re-run when any input changes) -------------------
-# The SHA256 of the inputs is embedded below as a comment, so the *rendered*
-# script changes whenever an input changes and chezmoi re-runs it. On unchanged
-# applies the script is skipped entirely — no `sudo`, no prompt.
+# Toggled by the `auto_poweroff` key in the runtime config
+# ($CHEZMOI_CONFIG_FILE, rendered from .chezmoi.toml.tmpl). It defaults to
+# false and is true on this machine via .chezmoi.hostname. Re-render the config
+# with `cz init`, then `cz apply`.
 #
-#   inputs hash: {{ print (include "systemd/system/auto-poweroff.times") (include "systemd/system/auto-poweroff.delay") (include "systemd/system/auto-poweroff.sh") | sha256sum }}
+# --- chezmoi change filter (re-run when any input OR the toggle changes) ------
+# The SHA256 of the inputs is embedded below as a comment, so the *rendered*
+# script changes whenever an input (or the config template, which carries the
+# toggle) changes and chezmoi re-runs it. On unchanged applies the script is
+# skipped entirely — no `sudo`, no prompt.
+#
+#   inputs hash: {{ print (include "systemd/system/auto-poweroff.times") (include "systemd/system/auto-poweroff.delay") (include "systemd/system/auto-poweroff.sh") (include ".chezmoi.toml.tmpl") | sha256sum }}
 # ------------------------------------------------------------------------------
 
 set -euo pipefail
@@ -44,6 +50,27 @@ done
 # --- read config -------------------------------------------------------------
 DELAY="$(grep -vE '^[[:space:]]*#' "${SRC}/auto-poweroff.delay" 2>/dev/null | grep -vE '^[[:space:]]*$' | head -n1 | tr -cd '0-9')"
 DELAY="${DELAY:-0}"
+
+# --- feature toggle (runtime config) -----------------------------------------
+# Only enable the timer when the auto_poweroff toggle is true. This key lives in
+# .chezmoi.toml.tmpl (rendered to the runtime config); it is false by default
+# and true on this machine. Missing config (pre-`cz init`) falls back to the
+# hostname check so first-time setups still work.
+ENABLE=0
+CONFIG_FILE="${CHEZMOI_CONFIG_FILE:-$HOME/.config/chezmoi/chezmoi.toml}"
+if [ -f "${CONFIG_FILE}" ]; then
+    if grep -qE '^[[:space:]]*auto_poweroff[[:space:]]*=[[:space:]]*true' "${CONFIG_FILE}"; then
+        ENABLE=1
+    fi
+else
+    {{ if eq .chezmoi.hostname "cyberkleiber" }}ENABLE=1{{ else }}ENABLE=0{{ end }}
+fi
+if [ "${ENABLE}" -ne 1 ]; then
+    # Undo a previously-enabled timer so the toggle genuinely disables the feature.
+    sudo systemctl --system disable --now "${TIMER_NAME}" 2>/dev/null || true
+    echo "⏭️  auto_poweroff toggle is false (config: ${CONFIG_FILE}); not enabling timer."
+    exit 0
+fi
 
 # --- build service unit ------------------------------------------------------
 SVC_TMP="$(mktemp)"
@@ -82,7 +109,7 @@ TIMER_TMP="$(mktemp)"
 } > "${TIMER_TMP}"
 
 # --- install (inputs only change when the schedule/config changes) -----------
-echo "Deploying auto-poweroff (grace delay=${DELAY}s)…"
+echo "Deploying auto-poweroff (grace delay=${DELAY}s) — enabled by toggle in ${CONFIG_FILE}."
 sudo mkdir -p "${UNIT_DIR}"
 sudo mkdir -p "${BIN_DIR}"
 sudo cp "${SVC_TMP}"  "${UNIT_DIR}/${SVC_NAME}"
