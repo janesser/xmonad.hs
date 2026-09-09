@@ -88,3 +88,80 @@ B. With sudo: dump the missing power-config SSDT + read the INT3472 `_DSM` to se
    GPIO type/interrupt/pin fields; decide DSDT patch vs. userspace gpio-regulator+clk fix.
 C. Secondary: confirm whether this unit physically has a rear `OV5648` (load `ov5648`, watch
    async probe).
+
+---
+
+## Update (2026-09-08, session 3 — sudo now installed, option A investigation)
+
+**Blocker cleared:** scoped NOPASSWD camera-debug sudo is installed
+(`/etc/sudoers.d/chezmoi-pi-camera-debug`); passwordless `sudo -n` confirmed for the 10
+camera tools. The `chezmoi-pi` rule was left untouched.
+
+### Empirical results (kernel 6.8.0-139-generic)
+
+- **I2C bus 2 has ZERO responding devices.** `sudo i2cdetect -y 2` shows no ACK at `0x10`
+  (OV2680) or `0x4c` (TPS68470 PMIC); even `i2cget 0x4c 0x00` fails. `-- --` = no ACK.
+  → The PMIC + sensor are **unpowered**, so they can't be probed. A2 "live hardware probe"
+  is blocked by a chicken-and-egg (unpowered because of the very bug we're fixing).
+- `int3472-discrete` IS bound to `INT3472:01`/`:02` (STA=15), but those are the GPIO
+  expander instances — NOT the camera PMIC.
+- The actual PMIC `\_SB.PCI0.I2C2.PMIC` (`INT3472`, `_UID=0`, "PMIC-CRDG2", `_ADR=0`) is
+  **NOT bound**: its `/sys/.../INT3472:00/status` = **0**, so it is **hidden** in ACPI.
+- `tps68470_regulator` / `clk_tps68470` are loaded with **0 references** (modprobe'd during
+  debugging, never bound). No `/sys/class/clk/` exists → **no MCLK**.
+- ov2680 still on `regulator-dummy` → AVDD/DOVDD/DVDD not powered.
+
+### Root cause, now precisely pinned
+
+The `I2C2.PMIC` device is **self-contained in the DSDT** — everything is defined **except one
+object**:
+
+```aml
+Device (PMIC) { _ADR=0, _HID=INT3472, _UID=0, _DDN=PMIC-CRDG2
+  _CRS: I2cSerialBusV2(0x004C, ..., "\\_SB.PCI0.I2C2")   // fully defined ✓
+  CLDB: 0x00,0x02,...                                    // control_logic_type = 2 (TPS68470) ✓
+  _DSM: UUID 26257549-9271-4ca4-bb43-c4899d5a4881;
+        Arg2==2 -> 0x02004C0B   (low byte 0x0B = POWER_ENABLE) ✓
+  _STA: If ((SCSS == One)) Return(0x0F) else Return(0)    // gated on SCSS
+}
+```
+
+`SCSS` is declared **`External`** (DSDT line 1369) and **never assigned**, so `_STA=0` →
+the PMIC is hidden → no driver binds → OV2680 dummy rails + no MCLK + disabled media link →
+STREAMON "Link severed". This is far narrower than the day-7/14 "GPIO pin reconstruction"
+hypothesis.
+
+**Windows ground-truth scan** (`20260819_dmesg_ipu3`, dump_intel_ipu_data from the Windows
+boot) confirms the live values:
+- `control_logic_type: 1` (DISCRETE/CRD-D) for the two INT3472 instances
+- `mclk_speed: 19200000` (19.2 MHz), `mclk_port: 0`
+- `sensor_card_sku: 32`
+
+### Two caveats that reshape option A
+
+1. **`SCSS` is likely EC-gated, not a missing SSDT.** If the Windows `SkcController`
+   driver drives the embedded controller to enable camera power, Linux has no equivalent →
+   `SCSS` stays 0 even with a correct DSDT. The real fix may then be an **EC /
+   camera-controller driver**, not an ACPI patch. (`SkcController.sys` is in the Windows
+   driver kit: `UBook XPro Drivers/System devices/skccontroller.inf_amd64_.../`.)
+2. **Board data is vendor-specific.** Even after `SCSS==1`, the TPS68470 MFD driver needs
+   Chuwi's board data to map its output rails → AVDD/DOVDD/DVDD and the MCLK output. Not in
+   the kernel or the Windows kit as a parseable file.
+
+### Decision: recover the ground-truth power config by dumping from Windows
+
+Live recovery under Linux is impossible (PMIC unpowered). Windows is **dual-boot installed**
+(`Boot0003 Windows Boot Manager`, `/dev/sda*`), and its cameras work — so it has the live
+`SCSS=1` power config. Plan:
+
+1. **Boot Windows** (fully reversible).
+2. Dump the ACPI tables there (e.g. `acpidump` in Windows, or ACPI-Studio / export) → the
+   real power-config SSDT with `SCSS=1` and the defined `C0*` values.
+3. Run the same `dump_intel_ipu_data` tool → TPS68470 board data + which pin is MCLK.
+4. With ground truth: decide between (A) patch the Linux DSDT to make the `I2C2.PMIC`
+   visible (`SCSS==1`) + supply board data, or (B) add an EC/camera-controller driver so
+   `SCSS` gets set on Linux.
+
+**⚠ Reboot into Windows needs explicit user go-ahead** (boot-level, daily-driver chezmoi box).
+Prep a safe ACPI-dump procedure before rebooting. Nothing Linux-side is changed by booting
+Windows.

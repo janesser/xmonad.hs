@@ -34,10 +34,10 @@ Cmnd_Alias CAMERA_DEBUG = \
 # (Writing camera power to the port EC needs iopl(3) on 0x62/0x63 — custom root
 #  binary, kept strictly last. Not granted here.)
 Cmnd_Alias CAMERA_EC_DEBUG = \
-    /usr/bin/ls /sys/kernel/debug/ec/, \
-    /usr/bin/cat  /sys/kernel/debug/ec/*/*, \
-    /usr/bin/od   -A x -t x1z /sys/kernel/debug/ec/*/*, \
-    /usr/bin/xxd  /sys/kernel/debug/ec/*/*
+    /usr/bin/ls /sys/kernel/debug/ec/*, \
+    /usr/bin/cat  /sys/kernel/debug/ec/*, \
+    /usr/bin/od   -A x -t x1z /sys/kernel/debug/ec/*, \
+    /usr/bin/xxd  /sys/kernel/debug/ec/*
 
 # --- grant to this user only ---
 jan ALL=(root) NOPASSWD: CAMERA_DEBUG

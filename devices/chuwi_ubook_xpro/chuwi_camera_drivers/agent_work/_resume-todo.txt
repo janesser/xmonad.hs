@@ -23,3 +23,13 @@ NOPASSWD confirmed for the 10 camera-debug tools.
 ### Blocker cleared
 - sudo for camera debug now available. (Only limitation: don't touch the existing
   chezmoi-pi rule; camera rule is a separate file.)
+
+
+=== Session 3 (2026-09-08) — sudo installed; A2 investigation ===
+- sudo NOPASSWD camera-debug rule installed & confirmed (separate from chezmoi-pi rule).
+- I2C bus 2: ZERO responses at 0x4c (PMIC) / 0x10 (OV2680) — both unpowered. A2 live-probe blocked (chicken-and-egg).
+- NEW root cause: `\_SB.PCI0.I2C2.PMIC` (INT3472, UID0, PMIC-CRDG2) is self-contained in DSDT; only gate is `_STA: If (SCSS==1) 0x0F else 0`. SCSS is External/undefined -> PMIC hidden (_STA=0) -> not bound -> dummy rails + no MCLK + disabled link.
+- DSDT _CRS (I2C 0x4c), CLDB (type2), _DSM (0x02004C0B, 0x0B=POWER_ENABLE) all defined.
+- Windows scan (20260819_dmesg_ipu3): control_logic_type=1, mclk=19.2MHz, port0, card_sku=32.
+- Caveat: SCSS likely EC-gated (Windows SkcController.sys drives EC; no Linux equiv) → real fix may be an EC/camera-controller driver, not just ACPI. Board data vendor-specific.
+- PLAN: boot Windows (dual-boot exists) to dump ACPI tables + run dump_intel_ipu_data for ground-truth power config + board data. Reboot needs explicit user go-ahead. Full write-up: _driver-case-live-status.md §Update 2026-09-08.
