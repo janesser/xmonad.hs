@@ -51,3 +51,21 @@ Because it is a system unit, no `loginctl enable-linger` is required.
   `cp`, `systemctl`) — see the sudo boundary above.
 - Lifecycle: `systemctl --system enable --now restart-llama-server`,
   `journalctl --system -u restart-llama-server -f`.
+
+## Auto poweroff at scheduled times
+
+Another root-run **system** systemd unit (timer + oneshot service) that powers
+the machine off at configured local times, installed to `/etc/systemd/system`
+(no login required, like the llama service).
+
+- Inputs (plain files — edit then `cz apply`):
+  `systemd/system/auto-poweroff.times` (one `HH:MM` per line) and
+  `systemd/system/auto-poweroff.delay` (grace seconds, 0 = immediate).
+- Deployed + enabled by `.chezmoiscripts/run_onchange_9_1_auto_poweroff_timer.sh.tmpl`
+  (change-gated via an embedded inputs hash). Launcher is
+  `/usr/local/bin/auto-poweroff.sh`.
+- Uses only sudo commands in the scoped drop-in (`mkdir`, `cp`, `chmod`,
+  `chown`, `systemctl`).
+- Lifecycle: `systemctl --system enable --now auto-poweroff.timer`,
+  `systemctl list-timers auto-poweroff.timer --all`,
+  `journalctl -t auto-poweroff`.

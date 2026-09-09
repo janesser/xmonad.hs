@@ -183,6 +183,28 @@ Check idleHint
     # probably "idleHint=no" while not idle
     # won't work see https://github.com/the-cavalry/light-locker/issues/52
 
+#### Auto poweroff at scheduled times
+
+A root-run systemd **timer + oneshot service** powers the machine off at
+configured local times. It runs at boot without a login (like the llama
+service), installed to `/etc/systemd/system` by
+`run_onchange_9_1_auto_poweroff_timer.sh`.
+
+Edit the inputs (plain files, then `cz apply`):
+
+- `systemd/system/auto-poweroff.times` — one `HH:MM` per line, `#` comments
+  allowed. Each becomes one `OnCalendar` trigger.
+- `systemd/system/auto-poweroff.delay` — grace seconds before shutdown (0 =
+  immediate); a warning is logged to the journal while waiting.
+
+Launcher is `/usr/local/bin/auto-poweroff.sh`. Check it with:
+
+    systemctl list-timers auto-poweroff.timer --all
+    journalctl -t auto-poweroff
+
+To pause: `systemctl --system disable --now auto-poweroff.timer`
+(or remove the times and `cz apply`).
+
 #### Screen & tty lock
 
 I want to lock screen when going somewhere, after some time and on suspend.
