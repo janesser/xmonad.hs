@@ -59,8 +59,10 @@ the machine off at configured local times, installed to `/etc/systemd/system`
 (no login required, like the llama service).
 
 - Inputs (plain files — edit then `cz apply`):
-  `systemd/system/auto-poweroff.times` (one `HH:MM` per line) and
-  `systemd/system/auto-poweroff.delay` (grace seconds, 0 = immediate).
+  `systemd/system/auto-poweroff.times` (one `HH:MM` per line; midnight =
+  `00:00`) and `systemd/system/auto-poweroff.delay` (grace seconds, 0 =
+  immediate). A non-zero delay schedules a *cancellable* shutdown,
+  cancelable with `sudo shutdown -c`.
 - Deployed + enabled by `.chezmoiscripts/run_onchange_9_1_auto_poweroff_timer.sh.tmpl`
   (change-gated via an embedded inputs hash). Launcher is
   `/usr/local/bin/auto-poweroff.sh`.
