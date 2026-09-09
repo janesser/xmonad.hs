@@ -2,6 +2,7 @@
 
 # Kill any existing instances of llama-server
 killall llama-server
+killall llama
 
 if [ "$argv[1]" = "stop" ]
   sudo umount ~/.cache/huggingface/hub
@@ -38,7 +39,7 @@ llama serve \
 echo llama-server \
   --host :: \
   --models-max 2 \
-  --parallel 2 \
+  --parallel 1 \
   --no-warmup \
   --no-ui \
   --offline \
