@@ -8,6 +8,11 @@
 # NOTE: do NOT add `Defaults !requiretty` here. `requiretty` was removed from
 # sudo (1.9.x); listing it makes visudo treat the file as invalid and breaks
 # sudo entirely. Modern sudo no longer requires a tty for these rules.
+#
+# `journalctl` is allowed so `cz apply` can compact the systemd journal
+# (run_9_cleanup_journalctl.sh) without a TTY. It only touches /var/log/journal,
+# which is root:systemd-journal 0750, so the rule is scoped to that binary only
+# (any args) — no shell/file-write access.
 
 # --- package / repo / service / group / family writes (any args) ---
 Cmnd_Alias CHEZMOI_PKGS = \
@@ -33,6 +38,7 @@ Cmnd_Alias CHEZMOI_PKGS = \
     /usr/bin/rm, \
     /usr/bin/install, \
     /usr/bin/cmp, \
+    /usr/bin/journalctl, \
     /home/jan/.local/share/chezmoi/uninstaller/ollama_uninstall.sh \
 
 # --- grant to this user only ---
