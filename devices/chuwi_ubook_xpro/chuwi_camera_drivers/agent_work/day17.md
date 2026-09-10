@@ -36,6 +36,22 @@ Only treat a port instr as real when it sits in a function with a proper prologu
 - The **camera-on register VALUES** (Power0/Power1/PowerEn/Mclk) written by `SensorOn`.
 - `C0P#/C0G#` pin map; `CL00`/`C0TP`/`C0GP` adoption order.
 
+## Follow-up (this session — Ghidra 12.1.3 on a capable box)
+- **Register-access mechanism**: SCC writes go through the shared writer
+  `0x14000dfe4`/`0x14000da94`, which encodes the ushort index + 32-bit value
+  and calls a **runtime-injected HAL** via `(*HAL)[0x14001d7b0](ctx[0x14001df70],
+  instance[0x308],…,0x41808,buffer)` — both addresses are **zeroed in the image**
+  (heap-allocated). So the exact `%dx` port is NOT statically pinned (needs the
+  runtime HAL — see `SCC_register_map.md` §1).
+- **Full SCC register map extracted** (`SCC_register_map.md`): MCLK = reg 0x0d
+  (bit0 enable) + 0x0f (bits2-3 rate); power-rail enable = **0x8a → 0x1a/0x1c**;
+  flash 0x2c-0x30; indicator 0x28; voltage rails 0x3c-0x47 (config-derived values).
+- **Camera-on sequence resolved**: front cam (OV2680, `param_3==5`,
+  `SSCrdG2TiSensor::SensorPowerOn` 0x140006e00): 0x41→0x40→0x42→0x3c→0x3f→0x47→
+  0x44→0x43, plus power enables (0x1a/0x1c=0x8a) and MCLK enable.
+- C0P#/C0G# map + CL00/C0TP/C0GP order remain in the heap-constructed sensor
+  object → runtime inspection (`TODO_port_and_power_values.md`).
+
 ## Bottom line / recommendation
 objdump confirms *architecture* (Super-I/O port-I/O + per-register accessors) but is too
 error-prone to nail the exact port + values. Two clean paths remain — see the response to the user:
