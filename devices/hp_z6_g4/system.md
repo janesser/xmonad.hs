@@ -1,16 +1,5 @@
 # HP Z6 G4 local AI setup
 
-## bios reset procedure
-
-PWSD jumper
-turn on
-reboot
-
-in admin-powershell
-
-    BiosConfigUtil64 /get
-    # "Admin Password Set" will be shown with "No"
-
 ## software
 
 ubuntu 26
