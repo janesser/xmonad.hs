@@ -4,7 +4,7 @@
 # See mise-migration-plan.md.
 [tools]
 nodejs  = "24.20.0"
-uv      = "0.12.10"
+uv      = "0.12.12"
 helm    = "4.2.4"
 kubectl = "1.37.0"
 maven   = "3.9.16"
