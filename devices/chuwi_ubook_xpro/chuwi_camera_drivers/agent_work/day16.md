@@ -183,7 +183,67 @@ register values written during camera power-on and how the base `0x14001b????` i
   `C0P#/C0G#`. The SCC driver is the source of truth for those values and the sequence; the Linux side
   can only *reproduce* them if a Linux access path exists.
 
-## 5. Open questions for the Windows run
+## 7. Windows captures reviewed (driverquery.txt + dbgview.log) — 2026-09-09
+
+`acpidump.win/driverquery.txt` is a full `driverquery /v` (French locale). It confirms the **entire
+Windows camera stack is healthy and running** — this is the baseline the SCC must reproduce from Linux:
+
+- `SkcController` = **"Intel(R) Control Logic"**, Kernel driver, **Running**, at
+  `C:\WINDOWS\system32\drivers\SkcController.sys`. (This is the SCC — same binary as the
+  `SkcController.sys` we RE; on Windows it is a normal, fully-working Kernel driver.)
+- `ov2680` (Camera Sensor OV2680) **Running**; `ov5648` (Camera Sensor OV5648) **Running** — matches
+  CAM0 (OV2680 @0x10) / CAM1 (OV5648 @0x36).
+- `iacamera64` (Intel AVStream Camera) **Running**, `CSI2HostContr` (Intel CSI2 Host Controller)
+  **Running**, `GPIOClx0101` (Microsoft GPIO Class Driver, `msgpioclx.sys`) **Running**, `hidi2c`
+  and `CompositeBus` running.
+
+`acpidump.win/dbgview.log` (27 KB) is **not** useful for the power-on sequence: it is almost entirely
+`[supportdriver] InterruptService(): interrupt` spam from some support driver plus two unrelated
+process traces (`Router Dll` thread attach/detach, `EnterprisePolicy AllowList`). The SCC driver's
+own `DbgPrint` was not enabled, so no `SetRegister`/`GetRegister` / register values were captured.
+**Lesson for the Windows run: enable the SCC driver's debug prints (or use WinDbg breakpoints),
+DebugView alone will not show the register writes.**
+
+## 8. djrscally/miix-510-cameras — approach + mapping to our device
+
+Copilot pointed here; repo cloned to `/tmp/pi-github-repos/runtime-*/*/` (source available there).
+**Same building blocks as our UBook XPro** (OV2680 front @0x10, OV5648 @0x36, TPS68470 PMIC
+@0x48 = INT3472, SkcController SCC) — but a **different power path**, which is why it is only
+partly reusable.
+
+### What djrscally does
+- Miix 510 uses the **classic INT3472 path and does NOT go through the SCC**. The TPMIC has 3
+  **direct GPIO lines into it** defined in ACPI (unnamed); he determined by probing that pins 1,2 =
+  power, 0 = reset and powers it on manually:
+  `sudo gpioset gpiochip0 122=1 143=1`. Only *then* does the PMIC + cameras appear on I2C
+  (`i2cdetect -y 7` → OV2680 @0x10, TPS68470 @0x48; the back cam is really @0x36).
+- Then verifies the sensor via `i2ctransfer w2@0x10 0x30 0x0a r2` → reads `0x26 0x80` (OV2680 id).
+- The kernel already has a **GPIO driver** for the TPS68470 (`tps68470-gpio`), but **no regulator or
+  clock drivers** — he appropriated **old TPS68470 regulator/clock drivers from Intel's LTS 4.14
+  branch** and tweaked them to compile.
+- Drivers in the repo: `ov2680.c`, `ov5648.c`, `surface_camera/cio2-bridge.c` (IPU3-CIO2 bridge that
+  sets **MCLK from an ACPI `SSDB` blob** — fields `mclkspeed`/`mclkport`/`controllogicid`),
+  `utils/debug.c` (media-device ioctl helper), and a big `patches/` set to make software_node work.
+- **Status: incomplete** — front OV2680 works with `surface_camera`+`ov2680`; **ov5648 does not work
+  at all**; libcamera integration still to do; no SCC driver (the Miix doesn't need one).
+
+### How it maps to our device (the key divergence)
+- **Our device has the SCC *in the power path***: the SCC/EC asserts `SCSS` (PMIC visibility) and
+  drives the `Power0`(0x14001b210)/`Power1`(0x14001b220)/`PowerEn`+`Mclk`(0x14001b240) register
+  bank; gate is `CL00 && (C0TP==One)`. On Linux `SCSS/CL00/C0TP` stay 0 → PMIC hidden (`_STA=0`),
+  so `int3472-discrete` can't even probe the PMIC.
+- djrscally's `gpioset` trick **does not apply**: on the Miix the PMIC GPIOs are direct and exposed
+  via `gpiochip0`; on the UBook XPro they are behind the SCC, which itself is unpowered on Linux.
+  **So the SCC power-on is the single missing piece our fix must supply** — a Linux driver that
+  reproduces `SkcController.sys`. That is exactly what §3 (the Windows extraction playbook) is for.
+- **Reusable pieces from djrscally's repo** (once the SCC powers the PMIC on Linux):
+  - the appropriated TPS68470 **regulator + clock** drivers (Intel 4.14 LTS, not in mainline) — the
+    MCLK/DOVDD/DVDD/AVDD the kernel lacks; see `day15` §8 / `day16` §3.
+  - `surface_camera/cio2-bridge.c` MCLK-from-ACPI-`SSDB` approach **if** our CRD DSDT exposes an
+    `SSDB`; our CRD tables instead use SSDTRM GUIDs + `PINR(C0P#,C0G#)`, so this likely needs work.
+  - the diagnostic workflow (`gpioset`→`i2cdetect`→`i2ctransfer`) — only *after* the SCC is live.
+
+## 9. Open questions for the Windows run
 - Does the SCC register access go through `RESOURCE_HUB` IoControl (likely) or direct MMIO/ports?
 - What is the exact runtime base address for `0x14001b????`?
 - Are there register values that differ between `SSTps68470` vs `up6641` variants (we have both in
