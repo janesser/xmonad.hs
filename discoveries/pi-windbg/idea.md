@@ -1,7 +1,27 @@
 # pi-extension: windbg (kernel) as a dynamic-analysis enhancer for pi-ghidra
 
-**Status:** hardened idea — pick up tomorrow on the target box.
+**Status:** **finalized — frozen.** Locked, reviewed, and internally consistent.
+Pick up tomorrow on the target box.
 **Origin:** forge session in `pi-windbg`. Core question answered: *yes, worth it* — but only as a stateful, steerable dynamic layer that complements ghidra's static view. Not a `windbg -c` wrapper.
+
+> **Finalization note:** both prior blockers are now **resolved** — decision #1
+> (pi on the Windows target) and decision #2 (ghidra `functions` export exists,
+> verified live). Both docs are fully frozen. No open architecture questions
+> remain; tomorrow is execution (base/patch-path check, then P1 spike).
+
+**Changelog**
+- v1 (final): status frozen; open-decision section converted to a decision log
+  with recommended defaults; weak-points hardened.
+- v1.1: both blockers resolved. Decision #1 confirmed — pi on the Windows
+  target (local pykd, no bridge). Decision #2 verified live — pi-ghidra
+  exports `functions` (absolute, image-base-inclusive `entry`); correlation is
+  a base compare. Next session narrowed to base/patch-path check + P1 spike.
+- v1.2: target environment corrected to the **local target box** (single-box
+  boot debug, no separate VM). Story 1.0 in the sprint epics aligned.
+- v1.1: both blockers resolved. Decision #1 confirmed — pi on the Windows
+  target (local pykd, no bridge). Decision #2 verified live — pi-ghidra
+  exports `functions` (absolute, image-base-inclusive `entry`); correlation is
+  a base compare. Next session narrowed to base/patch-path check + P1 spike.
 
 ---
 
@@ -28,9 +48,25 @@ We need what the CLI can't give:
 `skccontroller.sys`: driver powers cameras from physically-wired pins.
 Ghidra reveals the pin-reader + all camera-power branches (the whole tree). In a dev box the pins aren't wired, so: bp the pin-reader → patch the pin-read register/memory to each fake pin state → resume → capture which camera path fires. Walk every combo → exhaustively map the pin→camera decision tree from live stacks, correlated onto ghidra's static graph.
 
-## Open decisions (need your call)
-1. **Where does pi run?** On the Windows target box → local pykd module, no bridge (recommended). OR bridged from Linux → you ship a relay service + transport (bigger scope, more failure surface). *Biggest architectural fork.*
-2. **ghidra→windbg seeding seam.** The loop must start from ghidra. Does pi-ghidra already export a machine-readable function list w/ addresses to seed breakpoint candidates? If yes → design around it. If no → exporting that list is budgeted v1 work.
+## Decision log (finalized)
+1. **Backend = windbg.** Locked. Multi-backend deferred.
+2. **Mode = kernel-only v1.** Locked. Userspace is someone else's edge.
+3. **Backbone = pykd.** Locked. Revisit direct `-c` pipe only if pykd falls short.
+4. **Deployment box. CONFIRMED: pi on the Windows target.** Local pykd module,
+   no bridge — everything already lives on the target; no transport failure
+   surface. This fork sets the whole deployment shape; do not re-introduce a
+   Linux relay without a compelling reachability reason.
+5. **ghidra seeding seam. CONFIRMED — export exists (tested live).**
+   pi-ghidra's `functions` action already emits a machine-readable list,
+   per function: `{name, entry, signature, callingConvention, returnType, params, locals}`.
+   `info` adds `imageBase` and `functionCount`. Confirmed against the real
+   `SkcController.sys` (417 functions, 3528 symbols). `propose_bps()` is cheap —
+   **design around the existing export; no v1 list-production work item.**
+   - **Key property:** `entry` is an **absolute, image-base-inclusive** address
+     (Ghidra loads the PE at its compiled base). So correlation is a direct
+     compare (`windbg_runtime == ghidra_entry` when loaded at default base), and
+     any divergence *is* the drift signal — simpler than the plan's
+     `runtime = base + offset` model. See plan §2/§3.
 
 ## Weak points / risks (watch these)
 - **Correlation is make-or-break.** If windbg addresses don't line up with ghidra's, you get great stacks for unlocatable code. Nail the base-address math early.
@@ -39,7 +75,9 @@ Ghidra reveals the pin-reader + all camera-power branches (the whole tree). In a
 - **Pin simulation** needs a *patchable* read path — verify the driver reads pins through a register/memory location you can overwrite, not opaque hardware IO.
 
 ## Next session (tomorrow)
-1. Decide pi-on-box vs Linux bridge (#1).
-2. Check whether pi-ghidra exports a function/addr list (#2).
-3. Confirm fixed driver load base + a patchable pin-read path.
-4. Spike: pykd set_bp → patch reg → run → get_stack, on a trivial kernel object, before touching `skccontroller.sys`.
+1. **Confirm the driver's load base at runtime** (windbg `lm` / `!pe`) equals
+   the compiled image base Ghidra used (`0x140000000`); lock the correlation to
+   this. Confirm a patchable pin-read path exists.
+2. **Run the P1 pykd spike** on a trivial signed test driver with a known path:
+   `set_bp` → patch reg/memory → `run` → `get_stack`, assert the expected
+   function is on the stack, before touching `skccontroller.sys`.

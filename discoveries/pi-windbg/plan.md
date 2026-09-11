@@ -5,6 +5,21 @@ steerable kernel-debug session and correlates it back to pi-ghidra's
 decompilation. **Backend = windbg; v1 = kernel-only.** See `idea.md` for the
 why and the locked decisions.
 
+**Status: finalized — fully frozen. Both Section-9 blockers are resolved**
+(#1 pi-on-box confirmed; #2 ghidra export confirmed live). Structure, phases,
+data model, and typed API are locked. No open architecture questions remain; this
+is ready to execute.
+
+**Changelog**
+- v1 (final): frozen; Section 9 blockers carry recommended defaults; checklist
+  in Section 10 aligned to the idea.md decision log.
+- v1.1: decision #2 verified live — pi-ghidra exports `functions` (absolute,
+  image-base-inclusive `entry`) against the real Skccontroller.sys. Seeding is
+  cheap; correlation reduced to a base compare. Updated §2/§3/§4/§5/§6(P4)/§9.
+- v1.2: target environment corrected to the **local target box** (single-box
+  boot debug, no separate VM), matching decision #1. All VM references in §1,
+  §6(P0), and the risk table (§8) updated.
+
 ---
 
 ## 0. Restated goal (precise)
@@ -24,14 +39,15 @@ values. v1 proves this end-to-end on `skccontroller.sys`.
 ---
 
 ## 1. Target environment
-- **Kernel debug:** single-box boot debugging (`bcdedit /debug`, reboot) on a
-  dedicated test VM, or a Windows VM with a host↔guest shared-serial debug link.
-  Non-negotiable; userspace-only windbg is out of scope.
+- **Kernel debug:** single-box boot debugging on the **local target machine**
+  (`bcdedit /debug`, then reboot into debug mode). Non-negotiable; userspace-only
+  windbg is out of scope. The local box boots into its own debug session — no
+  separate VM.
 - **Automation layer:** **pykd** (ships with windbg/WDK). It scripts the
   debugger in kernel mode — breakpoints, register/memory read+patch, session
   control, symbol lookup — far more than a `windbg -c` pipe.
 - **Target box:** Windows (runs the driver). Everything lives on the target.
-- **Signing:** test VM in test-signing mode so an unsigned `skccontroller.sys`
+- **Signing:** local box in test-signing mode so an unsigned `skccontroller.sys`
   build loads for analysis.
 
 ### pykd facts we build on
@@ -81,17 +97,24 @@ The debugger is a **first-class object pi owns**, not a command runner.
   a targeted memory read (e.g. the pin register) keyed by the hitting bp.
 
 ### Pillar B — Correlation engine
-Map **live runtime addresses → static ghidra offsets**:
+Map **live runtime addresses → static ghidra addresses**.
+Because pi-ghidra `functions[].entry` is absolute/image-base-inclusive, this is a
+*base offset* problem, not an offset-subtraction problem:
 ```
-runtime_addr = module.runtime_base + ghidra_static_offset
+gidra_entry == runtime_addr      when runtime_base == image_base
+runtime_addr = runtime_base + (gidra_entry - image_base)   otherwise
 ```
-- Per module store: `runtime_base` (windbg), `static_image_base` (PE header /
-  .pdb), and a symbol map.
+- Per module store: `image_base` (from pi-ghidra `info.imageBase`, e.g.
+  `0x140000000`), `runtime_base` (windbg `lm`/`!pe`), and a symbol map keyed by
+  absolute address.
 - Import the driver's **.pdb into ghidra** so ghidra symbol names line up with
-  windbg symbol names by offset — the cleanest correlation, preferred over
-  offset-only matching.
-- The engine emits, for any live frame: the runtime addr, the windbg symbol,
-  and the mapped ghidra function + offset + decompiled context.
+  windbg symbol names **by absolute address** — cleanest correlation, preferred
+  over offset-only matching.
+- The engine emits, for any live frame: the runtime addr, the windbg symbol, and
+  the mapped ghidra function + absolute address + decompiled context.
+- **Drift signal:** if `runtime_base != image_base`, every `entry` maps by the
+  delta. A *shifting* base across reboots is what `drift_warning` catches
+  (Section 8).
 
 > Correlation is make-or-break (Section 8). It gets a dedicated phase.
 
@@ -105,12 +128,12 @@ runtime_addr = module.runtime_base + ghidra_static_offset
   "modules": [
     {
       "name": "skccontroller",
-      "runtime_base": "0xffffa03b12300000",
-      "static_image_base": "0x180001000",
+      "image_base": "0x140000000",        // from pi-ghidra info.imageBase
+      "runtime_base": "0xffffa03b12300000", // from windbg lm / !pe
       "static_image_size": "0x14000",
-      "symbols": { "0x1000": "PinInitialize", "0x1480": "CameraPowerUp" },
+      "symbols": { "0x140001480": "CameraPowerUp", "0x140001000": "PinInitialize" },
       "correlated": true,            // set when base map is validated
-      "drift_warning": false         // base changed vs last session
+      "drift_warning": false         // runtime_base drifted vs last session
     }
   ],
   "hypotheses": [
@@ -118,12 +141,14 @@ runtime_addr = module.runtime_base + ghidra_static_offset
   ],
   "breakpoints": [
     {
-      "id": "bp1", "module": "skccontroller", "static_offset": "0x1480",
-      "runtime_addr": "0xffffa03b12301480", "hypothesis": "H1",
+      "id": "bp1", "module": "skccontroller",
+      "static_addr": "0x140001480",      // pi-ghidra entry (absolute)
+      "runtime_addr": "0xffffa03b12301480", // windbg (absolute)
+      "hypothesis": "H1",
       "hit_count": 3,
       "last_hit": {
-        "regs": { "rcx": "0x2", "rax": "0x18001480" },
-        "stack": [ { "addr": "...", "symbol": "skccontroller!CameraPowerUp", "offset": "0x1480" } ],
+        "regs": { "rcx": "0x2", "rax": "0x140001480" },
+        "stack": [ { "addr": "0xffffa03b12301480", "symbol": "skccontroller!CameraPowerUp" } ],
         "memory": { "pin_register": { "addr": "0x...", "value": "0x5" } }
       }
     }
@@ -133,8 +158,12 @@ runtime_addr = module.runtime_base + ghidra_static_offset
 
 Design rules:
 - **Write the file on every mutation** — pi can re-read state each turn.
-- All addresses stored as **strings** (JSON has no 64-bit int).
-- `correlated`/`drift_warning` force the engine to *prove* the map on load.
+- All addresses stored as **strings** (JSON has no 64-bit int) and **absolute**
+  (both windbg runtime and pi-ghidra static live in the same absolute space,
+  so bp seeding is a 1:1 map when `runtime_base == image_base`).
+- `correlated`/`drift_warning` force the engine to *prove* the map on load: if
+  `runtime_base != image_base`, every static addr maps via the delta and the
+  drift is flagged.
 
 ---
 
@@ -150,8 +179,12 @@ Design rules:
 | `read_memory(addr, size, type?)` | read bytes/quadword/string, typed | decoded value |
 | `patch_memory(addr, value)` | overwrite mem/regs (pin simulation) | previous value (for restore) |
 | `list_bps()` / `remove_bp(bp_id)` | manage the hypothesis list | bp list |
-| `correlate(static_offset)` | map a static offset → runtime | `{runtime_addr, symbol, module}` |
-| `propose_bps(functions[])` | seed bps from a ghidra function list | created bp_ids |
+| `correlate(static_addr)` | map a ghidra absolute addr → runtime | `{runtime_addr, symbol, module}` |
+| `propose_bps(functions[])` | seed bps from pi-ghidra `functions` (absolute `entry`) | created bp_ids |
+
+`propose_bps()` takes pi-ghidra function `entry` values (absolute) and, when
+`runtime_base == image_base`, uses them verbatim as bp addresses; otherwise it
+subtracts the expected base. No offset tables needed.
 
 `run()` is the only blocking op; it returns a fully captured snapshot so pi can
 correlate without re-querying the live debugger.
@@ -159,13 +192,26 @@ correlate without re-querying the live debugger.
 ---
 
 ## 5. The ghidra → windbg seeding seam
-The loop must *start* from ghidra. Two options for the input:
-1. **pi-ghidra exports** a machine-readable function list:
-   `[{module, name, static_offset, size}]` — ideal, design around it.
-2. **No export available** → budget v1 work to produce this list
-   (from the .pdb, or from ghidra's function table). Either way, this list is
-   the candidate pool that `propose_bps()` turns into breakpoints via the
-   correlation map (`runtime_addr = base + offset`).
+The loop must *start* from ghidra. **CONFIRMED — no list-production work item.**
+pi-ghidra's `functions` action already exports a machine-readable list
+`[{name, entry, signature, callingConvention, returnType, params, locals}]`;
+`info` adds `imageBase` + `functionCount`. Verified live against the real
+`Skccontroller.sys` (417 functions, 3528 symbols). `propose_bps()` consumes this
+list directly (paged: `limit` cap 2000, `offset`).
+
+**Address model (important).** pi-ghidra `entry` is an **absolute,
+image-base-inclusive** address (Ghidra loads the PE at its compiled image base by
+default). Correlation is therefore a *direct compare*, not offset subtraction:
+
+```
+gidra_entry == runtime_addr   when the driver loads at its compiled image base
+runtime_addr = runtime_base + (gidra_entry - image_base)
+```
+
+So on load windbg records `runtime_base`; if `runtime_base == image_base`
+(`info.imageBase`, e.g. `0x140000000`) the two address spaces line up 1:1 and
+`entry` *is* the bp address. **Any divergence is the drift signal** — that's
+Section 8's `drift_warning`.
 
 Output flows the other way: correlation annotations (which functions actually
 ran, with values) can be written back as ghidra comments/annotations or emitted
@@ -175,8 +221,9 @@ as JSON that pi reads.
 
 ## 6. Development phases / milestones
 
-**P0 — Environment.** Test VM in test-signing mode, `bcdedit /debug` kernel
-debug up, pykd importable. Gate for everything after.
+**P0 — Environment.** Local target box in test-signing mode, `bcdedit /debug`
+kernel debug up (reboot into debug mode), pykd importable. Gate for everything
+after.
 
 **P1 — pykd spike.** On a trivial signed test kernel object with a *known* path:
 `set_bp` → `patch_memory(reg)` → `run()` → `get_stack()` → assert the expected
@@ -191,20 +238,22 @@ callback handling and error translation.
 offset mapping, drift detection on load. Unit-test the math with a synthetic
 module — no debugger needed.
 
-**P4 — Ghidra seam.** Ingest the function list, `propose_bps()`, write-back
-annotations.
+**P4 — Ghidra seam.** Ingest pi-ghidra's already-exported `functions` list,
+`propose_bps()` (absolute-addr seeding), write-back annotations. **No list-
+production work item** — the export exists (Section 5).
 
 **P5 — v1 scenario.** Full `skccontroller.sys` walkthrough: pin-reader bp →
 simulate pin combos → map the pin→camera decision tree, correlated onto ghidra.
 
 **P6 — Polish.** Error handling, docs, and — only if pi runs off-box — the
-relay/transport (Section 8, open decision #1).
+relay/transport; pi-on-box is locked (decision #1, Section 9).
 
 ---
 
 ## 7. Testing & verification
-- **Correlation math** (P3): unit tests, synthetic modules, assert
-  `runtime = base + offset` round-trips.
+- **Correlation math** (P3): unit tests with synthetic modules, assert the
+  base-compare round-trips — `entry == runtime_addr` when `runtime_base ==
+  image_base`, and the delta mapping otherwise.
 - **Known-path test** (P1/P5): force a specific pin combo, assert the captured
   stack contains the *expected* function — a ground-truth check we control.
 - **Drift test:** change the loaded base (e.g. reload), assert the engine flags
@@ -222,21 +271,30 @@ relay/transport (Section 8, open decision #1).
 | Base address drift across reboots | high | Record base per session; detect drift; rebuild map; pin driver load order / confirm fixed base |
 | pykd callback reentrancy / hangs | med | Run debugger commands off the hit-callback thread; wrap in try/finally; timeout `run()` |
 | Pin path not patchable (IO port vs memory) | med | Detect read path; if IO port, bp before the read and read IO space, or drive manually |
-| Kernel-debug disrupts the box | med | Dedicated test VM, never the working box |
+| Kernel-debug disrupts the box | med | Single-box reboot is expected; use a dedicated target box, not your daily-driver workstation |
 | Driver signing blocks load | med | Test-signing mode / signed test driver |
 | pi-off-box relay adds failure surface | med | Defer to P6; prefer pi-on-box (Section 9) |
 
 ---
 
-## 9. Open decisions (blockers — resolve first)
-1. **pi-on-box vs Linux bridge.** pi on the Windows target → local pykd module,
-   no bridge (recommended). pi on Linux → ship a relay service + transport
-   (P6); bigger scope. *This fork decides the whole deployment shape.*
-2. **Does pi-ghidra export a function/addr list?** If yes, P4 is cheap; if no,
-   producing that list is v1 work.
+## 9. Resolved decisions (both closed)
+> Both items from the original "open decisions" are now settled. See `idea.md`
+> §Decision log for the canonical record.
+1. **pi-on-box vs Linux bridge.**
+   - **Recommended: pi on the Windows target** → local pykd module, no bridge.
+   - pi on Linux → relay + transport (deferred to P6). Bigger scope.
+   - *This fork decides the whole deployment shape.* Resolve before P2.
+2. **Does pi-ghidra export a function/addr list?**
+   - **RESOLVED — yes (tested live).** `functions` action emits `{name, entry,
+     signature, …}`; `info` adds `imageBase`. Seeding is cheap; P4 is small.
+   - The `entry` is absolute/image-base-inclusive, so correlation is a direct
+     base compare (Section 5/2). Nothing more to determine here.
 
 ## 10. Immediate next session checklist
-- [ ] Resolve decision #1 (pi location) and #2 (ghidra export).
-- [ ] Confirm fixed driver load base + a patchable pin-read path.
+- [ ] **Decision #1 (pi-on-box)** confirmed — local pykd, no bridge.
+- [ ] **Decision #2 (ghidra export)** confirmed — `functions` export exists.
+- [ ] Confirm fixed driver load base at runtime == compiled image base
+      (`0x140000000`) + a patchable pin-read path.
+- [ ] Run P1 pykd spike on a trivial test driver.
 - [ ] Run P1 pykd spike on a trivial test driver.
 - [ ] If spike passes, start P2 (session manager).
