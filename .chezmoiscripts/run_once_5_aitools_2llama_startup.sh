@@ -30,7 +30,7 @@ fi
 
 # --- 1. systemd system unit -------------------------------------------------
 UNIT_NAME=restart-llama-server.service
-UNIT_SRC="${SRC_DIR}/systemd/system/${UNIT_NAME}"
+UNIT_SRC="${SRC_DIR}/etc/systemd/system/${UNIT_NAME}"
 UNIT_DEST="/etc/systemd/system/${UNIT_NAME}"
 
 if [ ! -f "${UNIT_SRC}" ]; then

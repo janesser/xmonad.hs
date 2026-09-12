@@ -4,9 +4,9 @@
 # Deploy the chezmoi auto-poweroff systemd timer + service and enable the timer.
 #
 # Inputs (plain files in the ignored source tree, deployed by this script):
-#   systemd/system/auto-poweroff.times    one HH:MM per line, '#' comments
-#   systemd/system/auto-poweroff.delay    grace seconds before poweroff (0=immediate)
-#   systemd/system/auto-poweroff.sh       launcher, installed to /usr/local/bin
+#   etc/systemd/system/auto-poweroff.times    one HH:MM per line, '#' comments
+#   etc/systemd/system/auto-poweroff.delay    grace seconds before poweroff (0=immediate)
+#   etc/systemd/system/auto-poweroff.sh       launcher, installed to /usr/local/bin
 #
 # Deploys to:
 #   /usr/local/bin/auto-poweroff.sh                          (0755 root:root)
@@ -27,13 +27,13 @@
 # toggle) changes and chezmoi re-runs it. On unchanged applies the script is
 # skipped entirely — no `sudo`, no prompt.
 #
-#   inputs hash: {{ print (include "systemd/system/auto-poweroff.times") (include "systemd/system/auto-poweroff.delay") (include "systemd/system/auto-poweroff.sh") (include ".chezmoi.toml.tmpl") | sha256sum }}
+#   inputs hash: {{ print (include "etc/systemd/system/auto-poweroff.times") (include "etc/systemd/system/auto-poweroff.delay") (include "etc/systemd/system/auto-poweroff.sh") (include ".chezmoi.toml.tmpl") | sha256sum }}
 # ------------------------------------------------------------------------------
 
 set -euo pipefail
 
 SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
-SRC="${SRC_DIR}/systemd/system"
+SRC="${SRC_DIR}/etc/systemd/system"
 UNIT_DIR=/etc/systemd/system
 BIN_DIR=/usr/local/bin
 TIMER_NAME=auto-poweroff.timer

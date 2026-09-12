@@ -192,10 +192,10 @@ service), installed to `/etc/systemd/system` by
 
 Edit the inputs (plain files, then `cz apply`):
 
-- `systemd/system/auto-poweroff.times` — one `HH:MM` per line, `#` comments
+- `etc/systemd/system/auto-poweroff.times` — one `HH:MM` per line, `#` comments
   allowed. Midnight is `00:00` (systemd has no `24:00`). Each becomes one
   `OnCalendar` trigger.
-- `systemd/system/auto-poweroff.delay` — grace seconds before shutdown (0 =
+- `etc/systemd/system/auto-poweroff.delay` — grace seconds before shutdown (0 =
   immediate). While waiting, a *cancellable* shutdown is scheduled, so the
   pending power-off can be canceled with `sudo shutdown -c` (systemd's `+N`
   schedule is minute-granular, so 300s → a 5-minute countdown).
