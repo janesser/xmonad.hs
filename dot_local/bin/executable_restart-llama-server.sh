@@ -1,8 +1,9 @@
 #!/usr/bin/fish
 
 # Kill any existing instances of llama-server
-killall llama-server
-killall llama
+if killall llama-server || killall llama
+  sleep 10
+end
 
 if [ "$argv[1]" = "stop" ]
   sudo umount ~/.cache/huggingface/hub
@@ -34,6 +35,7 @@ llama serve \
   --host :: \
   --model ~/.cache/huggingface/hub/models--ornith-ai--Ornith-1.5-35B-A3B-GGUF/snapshots/12393612fd4f730ff5aadc23e9b8f9648aa49ceb/Ornith-1.5-35B-Q4_K_M.gguf \
   --log-file $LOG_FILE \
+  >/dev/null 2>/dev/null \
   &;disown
 
 echo llama-server \
