@@ -27,7 +27,8 @@ start_once nm-tray
 
 ### COMM ###
 
-# x-social.sh
+# social / communication clients, centralized in executable_x-social.sh
+source "$HOME/.local/bin/executable_x-social.sh"
 
 #### WEB ####
 
