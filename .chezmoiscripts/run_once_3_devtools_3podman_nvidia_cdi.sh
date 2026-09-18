@@ -4,7 +4,7 @@ sudo apt install -y podman containers-storage podman-compose
 podman completion fish > ~/.config/fish/completions/podman.fish
 
 # https://www.baeldung.com/OPS/PODMAN-PULL-IMAGE-DOCKER-HUB#pulling-images-without-fully-qualified-names
-sudo sed -i 's/# unqualified-search-registries = \[.*\]/unqualified-search-registries = ["docker.io]/' /etc/containers/registries.conf
+sudo sed -i 's/# unqualified-search-registries = \[.*\]/unqualified-search-registries = ["docker.io"]/' /etc/containers/registries.conf
 
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
   && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
