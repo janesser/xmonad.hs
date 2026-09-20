@@ -3,7 +3,7 @@
 # directory (unlike ~/mise.toml or .tool-versions, which only apply inside ~).
 # See mise-migration-plan.md.
 [tools]
-uv      = "0.12.15"
+uv      = "0.12.17"
 helm    = "4.3.0"
 kubectl = "1.37.0"
 maven   = "3.9.16"
