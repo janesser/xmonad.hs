@@ -14,7 +14,12 @@
 # The model is referenced by the exact name llama.cpp reports (the --model path,
 # shortened via a symlink in restart-llama-server.sh).
 server:
-  host: "0.0.0.0"
+  # Dual-stack on Linux (bindv6only=0): accepts IPv4 AND IPv6 clients, so LAN
+  # IPv6 clients (e.g. http://[fd4c:468d:6524::<this host>]:8080) work too.
+  # NOTE: use "[::]" with brackets. Olla concatenates host+":"+port with no
+  # IPv6 bracketing, so a bare "::" becomes ":::8080" which Go rejects
+  # ("too many colons"). Brackets yield the valid "[::]:8080". (Olla 0.0.29.)
+  host: "[::]"
   port: 8080
 
 discovery:
