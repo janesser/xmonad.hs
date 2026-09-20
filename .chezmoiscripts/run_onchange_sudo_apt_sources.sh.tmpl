@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# teamviewer {{ include "./etc/apt/sources.list.d/teamviewer.list" | sha256sum }} {{ include "./etc/apt/keyrings/teamviewer-keyring.gpg" | sha256sum }}
+
+# Consent gate: never prompt without a TTY (fail closed for unattended runs),
+# then require an explicit yes before touching anything under /etc. Mirrors the
+# consent pattern in run_onchange_sudoers_chezmoi_pi.sh.tmpl.
+if [ ! -t 0 ]; then
+    echo "⚠️  No interactive terminal — cannot ask for consent."
+    echo "   Aborting; re-run under an interactive cz apply."
+    exit 1
+fi
+
+echo "This will install apt keyrings/sources under /etc and adjust snap packages."
+read -r -p "Continue? [y/N] " answer || true
+case "${answer}" in
+    [Yy]|[Yy][Ee][Ss]) : ;;
+    *) echo "Aborted (no confirmation)."; exit 0 ;;
+esac
+
+if [ "$CHEZMOI_ARCH" = "amd64" ]; then
+    cd $CHEZMOI_SOURCE_DIR
+    # `install` (coreutils) copies SOURCE->DEST and sets mode/owner explicitly,
+    # unlike `cp`, which would inherit the run umask. apt wants these root:root
+    # 0644 (keyring readable by apt); `install -d` makes the target dirs
+    # exist first, so this stays idempotent. `/usr/bin/install` is in the
+    # CHEZMOI_PKGS passwordless-sudo alias.
+    sudo install -d -m 0755 -o root -g root /etc/apt/keyrings
+    sudo install -d -m 0755 -o root -g root /etc/apt/sources.list.d
+    sudo install -m 0644 -o root -g root -t /etc/apt/keyrings ./etc/apt/keyrings/*
+    sudo install -m 0644 -o root -g root -t /etc/apt/sources.list.d ./etc/apt/sources.list.d/*
+else
+    echo $CHEZMOI_ARCH not supported for additional apt sources.
+fi
+
+sudo apt install -y extrepo
+
+# TODO find signal for arm64, e.g. https://github.com/dennisameling/Signal-Desktop
+
+
+# CLEAN UPs
+
+sudo rm -f /etc/apt/sources.list.d/charm.sources
+sudo rm -f /etc/apt/keyrings/charm.gpg
+sudo apt remove --purge -y glow
+
+sudo rm -f /etc/apt/sources.list.d/signal-xenial.sources
+sudo rm -f /etc/apt/keyrings/signal-desktop-keyring.gpg
+sudo apt remove --purge -y signal-desktop
+
+sudo rm -f /etc/apt/sources.list.d/element-io.sources
+sudo rm -f /etc/apt/keyrings/element-io-archive-keyring.gpg
+sudo apt remove --purge -y element-desktop
+
+sudo apt install -y snap
+sudo snap install signal-desktop
+sudo snap install element-desktop
+
+sudo snap remove --purge glow # FIXME broken, gives permission denied error

@@ -12,13 +12,17 @@ ln -sf /usr/bin/fdfind ~/.pi/agent/bin/fd
 mise install pi
 mise use -g pi
 
+# by settings.json: pi install npm:pi-olla-autodetect
 # by settings.json: pi install npm:pi-web-access
-# by settings.json: pi install npm:@hypabolic/crossbar
 
 sudo snap install ghidra
 # by settings.json: pi install npm:pi-ghidra
+# NOTE: re-running this idempotent setup whenever the manifest
+# data/pi_agent_packages.txt changes is handled by
+# .chezmoiscripts/run_onchange_9_3_pi_agent_modules.sh.tmpl — editing that
+# manifest changes the rendered script hash, so chezmoi re-runs this script
+# on the next apply. The live ~/.pi/agent/settings.json is owned by pi.
 
-pushd $CHEZMOI_SOURCE_DIR
-npx bmad-method install --directory . --modules bmm --tools pi --yes
+npx bmad-method install --directory $CHEZMOI_SOURCE_DIR --modules bmm --tools pi --yes
 
 pi list

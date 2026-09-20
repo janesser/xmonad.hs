@@ -5,5 +5,6 @@
 source "$HOME/.local/share/start_once.func"
 
 start_once x-mail-client
+start_once snap run signal-desktop
 start_once signal-desktop
 start_once zapzap

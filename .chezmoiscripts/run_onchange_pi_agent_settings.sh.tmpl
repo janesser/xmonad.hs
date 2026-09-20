@@ -1,0 +1,41 @@
+#!/bin/bash
+# run_onchange_9_3_pi_agent_modules.sh.tmpl
+#
+# Re-run the pi-agent setup (run_once_5_aitools_3agentic.sh) whenever the
+# chezmoi-managed package manifest (data/pi_agent_packages.txt) changes.
+#
+# run_once_5_aitools_3agentic.sh is idempotent, so re-running it here is safe:
+# it (re)installs pi and re-applies the agent setup on every manifest change.
+#
+# The live ~/.pi/agent/settings.json is owned by pi (`pi install` / `pi remove`)
+# and is NOTchezmoi-managed — editing data/pi_agent_packages.txt is the source
+# of truth; re-running the agentic script keeps everything in sync.
+#
+# Non-fatal: always exits 0 so a failure in the agentic script never breaks
+# `chezmoi apply`.
+#
+# --- chezmoi change filter (re-run only when the manifest changes) -------------
+# The SHA256 of data/pi_agent_packages.txt is embedded below as a comment, so
+# the *rendered* script changes whenever that file changes. Chezmoi hashes the
+# rendered script and only runs THIS script when that hash changes. On
+# unchanged applies the script is skipped entirely — no agentic rerun — so this
+# never re-runs needlessly.
+#
+#   encrypted settings hash: {{ include "dot_pi/agent/encrypted_settings.json.age" | sha256sum }}
+# ------------------------------------------------------------------------------
+
+set -uo pipefail
+
+AGENTIC_SCRIPT="${CHEZMOI_SOURCE_DIR:-.}/.chezmoiscripts/run_once_5_aitools_3agentic.sh"
+
+if [ ! -f "${AGENTIC_SCRIPT}" ]; then
+    echo "⚠️  ${AGENTIC_SCRIPT} not found — skipping pi-agent setup."
+    exit 0
+fi
+
+echo "==> pi: package manifest changed; re-running ${AGENTIC_SCRIPT}..."
+# Run in an isolated subshell so its `rm -fR ~/.pi` / apt / snap steps don't
+# leak into this script's environment; never let it breakchezmoi apply.
+"${AGENTIC_SCRIPT}" || true
+echo "==> pi: agentic setup step finished (non-fatal)."
+exit 0
