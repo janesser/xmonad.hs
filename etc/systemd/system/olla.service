@@ -1,0 +1,22 @@
+[Unit]
+Description=Olla LLM proxy (public :40114 -> llama.cpp backend :8081)
+Documentation=https://thushan.github.io/olla/
+After=network.target restart-llama-server.service
+Wants=restart-llama-server.service
+
+[Service]
+User=jan
+Group=jan
+Environment=HOME=/home/jan
+Environment=USER=jan
+Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/jan/.local/share/mise/shims
+# Start only once the llama.cpp backend is answering on 127.0.0.1:8081.
+WorkingDirectory=/home/jan/.config/olla
+ExecStartPre=/usr/bin/bash -c 'for i in $(seq 1 60); do if curl -fsS http://127.0.0.1:8081/v1/models >/dev/null 2>&1; then exit 0; fi; sleep 1; done; echo "olla: llama.cpp not reachable on 127.0.0.1:8081" >&2; exit 1'
+ExecStart=/home/jan/.local/share/mise/installs/github-thushan-olla/latest/olla --config /home/jan/.config/olla/config.yaml
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

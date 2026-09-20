@@ -293,6 +293,12 @@ sort: lexicographic_by_filename
   desc: "fd/find, pi coding agent + plugins, ghidra snap; HF model downloads (if mounted)"
   provides: [pi-agent, fd, ghidra]
   depends_on: []
+- file: run_once_5_aitools_3olla_startup.sh
+  phase: run_once
+  tier: 5
+  desc: "Olla LLM proxy system unit (boot, no login); waits for llama.cpp backend"
+  provides: [olla, llm-proxy]
+  depends_on: []
 - file: run_once_5_aitools_4image_gen.sh
   phase: run_once
   tier: 5
