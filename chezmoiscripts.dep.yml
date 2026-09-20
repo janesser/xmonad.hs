@@ -287,12 +287,6 @@ sort: lexicographic_by_filename
   desc: "Build llama.cpp (CUDA), gpustat; runs ollama uninstall first"
   provides: [llama.cpp, llama-server, gpustat]
   depends_on: []
-- file: run_once_5_aitools_2mcp.sh
-  phase: run_once
-  tier: 5
-  desc: "ToolHive MCP server (snap task) — file marked UNUSED"
-  provides: [toolhive, mcp]
-  depends_on: []
 - file: run_once_5_aitools_3agentic.sh
   phase: run_once
   tier: 5
@@ -442,6 +436,5 @@ sort: lexicographic_by_filename
 #    Every other script's dependencies are external (apt/snap/go/cargo/uv/npm/flatpak
 #    /external URLs) or conditional on env vars, so no file-level edge is needed.
 #
-# 4. Unused / dead code found: run_once_5_aitools_2mcp.sh is marked UNUSED in-file;
-#    run_once_5_aitools_4image_gen.sh has `exit 0 # FIXME solidify` at the top.
+# 4. Unused / dead code found: run_once_5_aitools_4image_gen.sh has `exit 0 # FIXME solidify` at the top.
 #    Consider removing or unflagging when the work is solidified.
