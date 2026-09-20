@@ -20,7 +20,7 @@ server:
   # IPv6 bracketing, so a bare "::" becomes ":::8080" which Go rejects
   # ("too many colons"). Brackets yield the valid "[::]:8080". (Olla 0.0.29.)
   host: "[::]"
-  port: 8080
+  port: 40114
 
 discovery:
   type: "static"
