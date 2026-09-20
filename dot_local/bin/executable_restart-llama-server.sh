@@ -31,26 +31,26 @@ set LOG_FILE $LOG_DIR/llama-server.log
 # FIXME router process starts router process (no typo)
 
 # workaround
-llama serve \
+echo llama serve \
   --host :: \
   --model ~/.cache/huggingface/hub/models--ornith-ai--Ornith-1.5-35B-A3B-GGUF/snapshots/12393612fd4f730ff5aadc23e9b8f9648aa49ceb/Ornith-1.5-35B-Q4_K_M.gguf \
   --log-file $LOG_FILE \
   >/dev/null 2>/dev/null \
   &;disown
 
-echo llama-server \
+llama-server \
   --host :: \
-  --models-max 2 \
+  --models-max 1 \
   --parallel 1 \
   --no-warmup \
   --no-ui \
   --offline \
   --models-preset ~/.llama-cpp-models-preset.ini \
-  --verbosity 3 \
-  --log-file $LOG_FILE \
   2>/dev/null >/dev/null \
 &; disown
 
+#  --verbosity 3 \
+#  --log-file $LOG_FILE \
 #  --sleep-idle-seconds 3600 \
 
 echo "llama-server (re-)started."
