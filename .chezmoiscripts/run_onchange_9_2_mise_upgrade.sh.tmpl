@@ -1,0 +1,36 @@
+#!/bin/bash
+# run_onchange_9_2_mise_upgrade.sh.tmpl
+#
+# Upgrade mise whenever ~/.config/mise/config.toml changes.
+#
+# `mise upgrade` updates the mise binary itself (the tool runner). It does not
+# touch config.toml, so running it here is safe and keeps mise current after any
+# edit to the mise config. Plain `mise upgrade` only; NOT `mise upgrade --all`
+# (which would update every managed tool and drift ~/.config/mise/config.toml
+# out of sync with dot_config/mise/config.toml).
+#
+# Non-fatal: always exits 0 so an upgrade failure never breaks `chezmoi apply`.
+#
+# --- chezmoi change filter (re-run only when config.toml changes) -------------
+# The SHA256 of dot_config/mise/config.toml is embedded below as a comment, so
+# the *rendered* script changes whenever that file changes. Chezmoi hashes the
+# rendered script and only runs THIS script when that hash changes. On
+# unchanged applies the script is skipped entirely — no `mise upgrade` — so this
+# never re-runs needlessly.
+#
+#   mise config hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
+# ------------------------------------------------------------------------------
+
+set -uo pipefail
+
+export PATH="$HOME/.local/bin:$PATH"
+
+if ! eval "$(mise activate bash)" 2>/dev/null; then
+    echo "⚠️  mise not on PATH; run run_once_0_mise_install.sh first — skipping upgrade."
+    exit 0
+fi
+
+echo "==> mise: config.toml changed; running `mise upgrade`..."
+mise upgrade || true
+echo "==> mise: upgrade step finished (non-fatal)."
+exit 0
