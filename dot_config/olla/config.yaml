@@ -1,0 +1,27 @@
+# Olla config — public entry on :8080 -> llama.cpp backend on 127.0.0.1:8081.
+#
+# llama.cpp runs localhost-only on 8081 (see restart-llama-server.sh) so Olla can
+# own 8080 publicly. Olla binds 0.0.0.0:8080 here.
+#
+# Why type: "openai-compatible" (NOT "llamacpp"):
+#   Olla v0.0.29's "llamacpp" profile parses llama.cpp's *native* /v1/models
+#   "data[]" array whose "meta":{"vocab_type":true,...} is a boolean on this
+#   llama.cpp build (0.4.1-dev, build 11060) but an integer on older ones.
+#   Olla 0.0.29's Go parser expects an integer -> discovery fails and every
+#   request is rejected. The OpenAI "models[]" array has no "meta" and parses
+#   cleanly.
+#
+# The model is referenced by the exact name llama.cpp reports (the --model path,
+# shortened via a symlink in restart-llama-server.sh).
+server:
+  host: "0.0.0.0"
+  port: 8080
+
+discovery:
+  type: "static"
+  static:
+    endpoints:
+      - url: "http://127.0.0.1:8081"   # llama.cpp server (restart-llama-server.sh)
+        name: "local-llamacpp"
+        type: "openai-compatible"
+        priority: 100

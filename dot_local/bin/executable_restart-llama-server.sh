@@ -31,24 +31,29 @@ set LOG_FILE $LOG_DIR/llama-server.log
 # FIXME router process starts router process (no typo)
 
 # workaround
-echo llama serve \
-  --host :: \
-  --model ~/.cache/huggingface/hub/models--ornith-ai--Ornith-1.5-35B-A3B-GGUF/snapshots/12393612fd4f730ff5aadc23e9b8f9648aa49ceb/Ornith-1.5-35B-Q4_K_M.gguf \
+# Bind localhost-only on a private port so the Olla proxy (systemd unit
+# olla.service) can own :8080 publicly. The model is referenced by the short
+# symlink ~/.cache/huggingface/hub/ornith.gguf -> this blob, so callers use a
+# tidy model name instead of the 150-char HF path.
+llama serve \
+  --host 127.0.0.1 \
+  --port 8081 \
+  --model ~/.cache/huggingface/hub/ornith.gguf \
   --log-file $LOG_FILE \
   >/dev/null 2>/dev/null \
   &;disown
 
-llama-server \
-  --host :: \
+echo llama-server \
+  --host 127.0.0.1 \
+  --port 8081 \
   --models-max 1 \
   --parallel 1 \
   --no-warmup \
   --no-ui \
   --offline \
-  --models-preset ~/.llama-cpp-models-preset.ini \
-  2>/dev/null >/dev/null \
 &; disown
 
+#  --models-preset ~/.llama-cpp-models-preset.ini \
 #  --verbosity 3 \
 #  --log-file $LOG_FILE \
 #  --sleep-idle-seconds 3600 \

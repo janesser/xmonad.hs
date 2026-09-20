@@ -11,3 +11,8 @@ java    = "temurin-26.0.2+101"
 zellij  = "0.45.1"
 pi = "latest"
 node  = "26.9.0"
+
+# GitHub release backend: auto-matches platform/arch (e.g. linux_amd64 tarball).
+# Install:  mise install olla   (resolve tool name -> github:thushan/olla)
+# Upgrade:  mise update && mise install olla
+"github:thushan/olla" = "latest"
