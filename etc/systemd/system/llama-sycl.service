@@ -2,8 +2,8 @@
 # .chezmoiscripts/run_once_5_aitools_4llama_sycl_startup.sh
 # to /etc/systemd/system/llama-sycl.service
 #
-# Runs llama.cpp on the Intel GPU (SYCL / oneAPI), serving gemma-4-E4B on
-# 127.0.0.1:8082 so Olla can proxy it publicly on :8082. It mirrors
+# Runs llama.cpp on the Intel GPU (SYCL / oneAPI), serving the SYCL backend
+# model on 127.0.0.1:8082 so Olla can proxy it publicly on :8082. It mirrors
 # restart-llama-server.service (the CUDA backend on :8081) but for the Intel
 # accelerator.
 #
@@ -17,7 +17,7 @@
 # already a mountpoint.
 
 [Unit]
-Description=llama.cpp on Intel GPU (SYCL) — gemma-4-E4B on 127.0.0.1:8082
+Description=llama.cpp on Intel GPU (SYCL) — LiquidAI/LFM2.5-2.6B (Q4_K_M) on 127.0.0.1:8082
 After=local-fs.target media-passeport.mount
 
 [Service]

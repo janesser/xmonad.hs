@@ -13,8 +13,8 @@ Two independent llama.cpp backends, each on its own GPU, each a systemd
 
 | Backend | Port | GPU | Model | Unit | Launcher |
 |---|---|---|---|---|---|
-| CUDA (primary) | `127.0.0.1:8081` | V100 (32 GiB) | `ornith.gguf` (ornith-9B Q4) | `restart-llama-server.service` | `~/.local/bin/restart-llama-server.sh` |
-| SYCL (Intel) | `127.0.0.1:8082` | Iris Xe (3.8 GiB) | `gemma-4-E4B` Q4_0 (~5.5 GiB, spills to CPU) | `llama-sycl.service` | `~/.local/bin/restart-llama-sycl.sh` |
+| CUDA (primary) | `127.0.0.1:8081` | V100 (32 GiB) | `ornith.gguf` (ornith-35B Q4) | `restart-llama-server.service` | `~/.local/bin/restart-llama-server.sh` |
+| SYCL (Intel) | `127.0.0.1:8082` | Iris Xe (3.8 GiB) | `LFM2.5-2.6B.gguf` (LiquidAI LFM2.5-2.6B, Q4_K_M ~1.8 GB, fits with room for KV cache) | `llama-sycl.service` | `~/.local/bin/restart-llama-sycl.sh` |
 
 Both source `~/projs/llama.cpp` at **`origin/master`** (only build with `--cache-list`;
 pinned tag `b11064` predates ggml-org/llama.cpp PR #20775). Verified:
@@ -24,10 +24,15 @@ pinned tag `b11064` predates ggml-org/llama.cpp PR #20775). Verified:
 ~/.local/bin/llama-server-sycl --cache-list   # → SYCL0: Intel Iris Xe Graphics, exit 0
 
 # end-to-end through Olla (routes by reported model name):
-curl http://127.0.0.1:40114/olla/openai/v1/chat/completions \
+curl http://127.0.0.1:40114/olla/openai/v1/completions \
   -H 'Content-Type: application/json' \
-  -d '{"model":"gemma-4-E4B…","messages":[{"role":"user","content":"6x7?"}]}'
-# → gemma answers over the Intel GPU (endpoint local-llamacpp-sycl, :8082)
+  -d '{"model":"/home/jan/.cache/huggingface/hub/LFM2.5-2.6B.gguf","prompt":"The meaning of life is","max_tokens":24}'
+# → LFM2.5-2.6B answers over the Intel GPU (endpoint local-llamacpp-sycl, :8082)
+
+NOTE: Olla matches requests by the *exact* reported model id (the full --model
+path, tidy via the launcher symlink) — a bare "LFM2.5-2.6B" returns
+model_not_found. Both backends expose a tidy symlink in the HF cache:
+ornith.gguf (CUDA) and LFM2.5-2.6B.gguf (SYCL).
 ```
 
 **Crash recovery verified:** SIGKILL the SYCL server → systemd `Restart=on-failure`
@@ -48,9 +53,12 @@ is in `/etc/fstab`.
   run script). Not started by default (heavy ~3.8 GiB load) — start it explicitly
   or it comes up at boot.
 
-**Model fit:** gemma-4-E4B (Q4_0, ~5.5 GiB) is the *smaller* of the two cached gemma
-models; the 26B-A4B needs ~14 GiB and would not fit the Iris Xe. The extra layers
-spill to CPU/RAM (functional, ~7-8 tok/s) — fine for smoke tests, slow for heavy use.
+**Model fit:** LFM2.5-2.6B (dense 2.6B, Q4_K_M ~1.8 GB weights) fits the Iris Xe
+shared-memory budget with room to spare for the KV cache — unlike the 8B
+gemma-4-E4B (~3.8 GB weights) or the 26B-A4B (~14 GB), which would spill heavily.
+Serve from the cached blob via a tidy symlink (`LFM2.5-2.6B.gguf`), not the raw
+`--hf-repo` path, so Olla/pi-agent see a stable, readable model id instead of the
+~90-char blob hash. (Handled by `restart-llama-sycl.sh`.)
 
 ---
 
@@ -108,8 +116,8 @@ finds the Iris Xe. (`lib.sh`'s `llama_sycl_ready` checks `…/build_sycl/bin/lla
   already present so first boot is instant (no oneAPI download at boot — oneAPI is
   lazy-bootstrapped by the launcher's `llama_sycl_ready` guard only if missing).
 - **Fallback:** the backends are **parallel, not failover** — they serve *different*
-  models (ornith vs gemma), so there is no same-model CUDA→SYCL hand-off. If CUDA is
-  down, gemma on :8082 still serves; and vice-versa. To make one model serve on both,
+  models (ornith vs LFM2.5-2.6B), so there is no same-model CUDA→SYCL hand-off. If CUDA is
+  down, LFM2.5-2.6B on :8082 still serves; and vice-versa. To make one model serve on both,
   re-run the same model under the other backend and point both endpoints at it.
 
 ---
@@ -119,7 +127,7 @@ finds the Iris Xe. (`lib.sh`'s `llama_sycl_ready` checks `…/build_sycl/bin/lla
 ```bash
 # SYCL backend
 systemctl --system status llama-sycl.service
-systemctl --system start  llama-sycl.service      # loads gemma (~25 s on warm box)
+systemctl --system start  llama-sycl.service      # loads LFM2.5-2.6B (~7 s on warm box)
 journalctl --system -u llama-sycl.service -f
 ~/.local/bin/restart-llama-sycl.sh                 # manual foreground run (Ctrl-C to stop)
 

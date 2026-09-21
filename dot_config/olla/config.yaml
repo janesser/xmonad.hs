@@ -3,7 +3,7 @@
 # Two llama.cpp backends, localhost-only, so Olla can own the public port:
 #
 #   * :8081  CUDA / NVIDIA V100  (restart-llama-server.sh)  -> ornith-35B
-#   * :8082  SYCL / Intel DG1-IrisXe (restart-llama-sycl.sh) -> gemma-4-E4B
+#   * :8082  SYCL / Intel DG1-IrisXe (restart-llama-sycl.sh) -> LFM2.5-2.6B (Q4_K_M)
 #
 # Olla binds 0.0.0.0:8080 (actually :40114) here and routes each request to the
 # endpoint whose reported model matches. Both endpoints are static below.
@@ -17,7 +17,9 @@
 #   cleanly.
 #
 # The model is referenced by the exact name llama.cpp reports (the --model path,
-# shortened via a symlink in restart-llama-server.sh).
+# shortened via a symlink in the launcher: restart-llama-server.sh for the CUDA
+# backend (ornith.gguf), restart-llama-sycl.sh for the SYCL backend
+# (LFM2.5-2.6B.gguf). Olla matches requests to an endpoint by this exact id.
 server:
   # Dual-stack on Linux (bindv6only=0): accepts IPv4 AND IPv6 clients, so LAN
   # IPv6 clients (e.g. http://[fd4c:468d:6524::<this host>]:8080) work too.
