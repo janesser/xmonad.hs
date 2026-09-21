@@ -52,6 +52,48 @@ Because it is a system unit, no `loginctl enable-linger` is required.
 - Lifecycle: `systemctl --system enable --now restart-llama-server`,
   `journalctl --system -u restart-llama-server -f`.
 
+## btop: dual GPU (Iiris Xe + NVIDIA) visibility
+
+btop only shows the NVIDIA box for the Intel Iris Xe / DG1 (gpu1). This is a
+**btop bug fixed by patching + rebuilding btop**, not a config issue.
+
+- **Root cause (btop 1.4.6):** `src/linux/intel_gpu_top/intel_gpu_top.c`
+  hardcodes `const char* device = "i915"`. Recent kernels instantiate the i915
+  perf PMU by PCI address (`/sys/devices/i915_0000_2f_00.0/events`), so
+  `discover_engines()` scans the missing `/sys/devices/i915/events` and
+  `pmu_init()` reads the missing `/sys/bus/event_source/devices/i915/type` → the
+  Iris Xe (gpu1) silently vanishes. V100 (gpu0, NVML) is unaffected.
+- **Fix (patched):** `discover_engines()` scans `/sys/devices` for an
+  `i915*` dir exposing `events/` and reassigns `engines->device` to the resolved
+  instance name (e.g. `i915_0000_2f_00.0`) so `pmu_init()` finds the perf
+  event source type. `free()` added on both the `err` path and `free_engines()`.
+- **`CAP_PERFMON` also required:** `perf_event_open()` on the i915 PMU needs
+  `CAP_PERFMON` (`kernel.perf_event_paranoid = 4`). Granted via
+  `setcap cap_perfmon+ep /usr/bin/btop` (targeted, preserves system-wide hardening).
+- **Deployed:** `/usr/bin/btop` = `1.4.6+975e395` (patched), `cap_perfmon=ep`,
+  root:root. Built from source, installed over the system binary.
+- **Source clone (MR dev):** `~/projs/btop` — a **full** clone on branch
+  `btop-intel-gpu-fix` with the fix committed. Patch also at
+  `/tmp/btop-intel-gpu-fix.patch`. Full clone preferred over the previous
+  shallow one so an MR can be built locally.
+- **Deploy run script:**
+  `.chezmoiscripts/run_once_5_aitools_3btop_intel_gpu_cap.sh` (run_once,
+  intentionally untracked). Clones only if no `.git`, builds as the user, then
+  `sudo install` + scoped `sudo setcap`. Skips everything if `has_intel_gpu` is
+  false (gpu.func). `cz update` needs no network once the clone exists.
+- **Config:** `~/.config/btop/btop.conf` (`shown_gpus = "nvidia amd intel"`,
+  `shown_boxes = "cpu mem net proc gpu0 gpu1"`) — tracked by chezmoi; both GPUs
+  render as separate boxes once the patched binary + cap are in place.
+- **Verification (headless, no live TUI):** run with `--debug` and confirm the
+  log has **no** `Failed to find Intel GPU engines` and **no**
+  `Failed to initialize PMU` (success is silent in btop). Sysfs proof: the
+  `i915_*` dir exposes `events/` and
+  `/sys/bus/event_source/devices/i915_0000_2f_00.0/type` exists.
+- **Sudo boundary:** the `setcap` line already lives at the `CHEZMOI_PKGS`
+  alias (AGENTS.md line 13: `/usr/sbin/setcap cap_perfmon+ep /usr/bin/btop`,
+  exact match — sudoers forbids intra-arg wildcards). `setcap` is in
+  `/usr/sbin`, not `/usr/bin`.
+
 ## Auto poweroff at scheduled times
 
 Another root-run **system** systemd unit (timer + oneshot service) that powers
