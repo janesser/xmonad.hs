@@ -42,3 +42,35 @@ grant_render_video_groups() {
     sudo usermod -aG video "$USER"
     echo "$(basename "$0"): added $USER to render + video groups (log out/in for it to take effect)."
 }
+
+# grant_btop_intel_gpu_perf() — grant /usr/bin/btop CAP_PERFMON so it can attach
+# to the i915 GPU perf PMU and surface Intel Iris Xe usage in btop's GPU meter.
+#   * Safeguard "where required": only meaningful with an Intel GPU present
+#     (that is what calls for it — see has_intel_gpu()). Callers should guard on
+#     has_intel_gpu() and skip the whole thing on ARM / NVIDIA-only / headless
+#     boxes, so we never hand out CAP_PERFMON unnecessarily.
+#   * Idempotent: only (re)applies when the capability is not already set, so
+#     repeated cz updates don't churn. getcap only *reads* (no sudo).
+#   * setcap needs sudo and a scoped NOPASSWD rule for /usr/bin/setcap in the
+#     chezmoi-pi drop-in (add it there before relying on this on a fresh box).
+#     If that rule is not yet installed the sudo call is denied; we warn and
+#     continue rather than aborting cz update — the next update applies it once
+#     the drop-in has been refreshed.
+grant_btop_intel_gpu_perf() {
+    if [ ! -x /usr/bin/btop ]; then
+        echo "$(basename "$0"): /usr/bin/btop not installed — nothing to do."
+        return 0
+    fi
+
+    if getcap /usr/bin/btop 2>/dev/null | grep -q 'cap_perfmon'; then
+        echo "$(basename "$0"): /usr/bin/btop already has cap_perfmon — nothing to do."
+        return 0
+    fi
+
+    if sudo setcap cap_perfmon+ep /usr/bin/btop 2>/dev/null; then
+        echo "$(basename "$0"): granted /usr/bin/btop cap_perfmon for Iris Xe GPU counters."
+    else
+        echo "⚠️  setcap denied — the scoped /usr/bin/setcap sudoers rule is not yet"
+        echo "     installed. Iris Xe cap will be applied on the next cz update once it is."
+    fi
+}

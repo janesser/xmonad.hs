@@ -14,6 +14,13 @@
 # which is root:systemd-journal 0750, so the rule is scoped to that binary only
 # (any args) — no shell/file-write access.
 
+# The setcap line lets btop surface Intel Iris Xe GPU usage: btop reads the
+# i915 GPU perf PMU (perf_event_open), which needs CAP_PERFMON. It is an EXACT
+# match (sudoers forbids intra-arg wildcards) — only the one call made by
+# .chezmoiscripts/run_once_5_aitools_3btop_intel_gpu_cap.sh is authorized, and
+# only on /usr/bin/btop. Guarded there by has_intel_gpu() so ARM / NVIDIA-only /
+# headless boxes never get it. See that script's header for the full story.
+
 # --- package / repo / service / group / family writes (any args) ---
 Cmnd_Alias CHEZMOI_PKGS = \
     /usr/bin/apt, \
@@ -38,6 +45,7 @@ Cmnd_Alias CHEZMOI_PKGS = \
     /usr/bin/rm, \
     /usr/bin/install, \
     /usr/bin/cmp, \
+    /usr/sbin/setcap cap_perfmon+ep /usr/bin/btop, \
     /usr/bin/journalctl, \
     /home/jan/.local/share/chezmoi/uninstaller/ollama_uninstall.sh \
 
