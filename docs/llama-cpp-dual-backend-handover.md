@@ -1,105 +1,146 @@
-# llama.cpp Dual-GPU Build — Handover
+# llama.cpp Dual-GPU Backends — Handover
 
-**Date:** 2026-09-20
-**Repo:** `~/.local/share/chezmoi` (dotfiles) · **Target machine:** X11 desktop, NVIDIA Tesla V100 (32 GB) + Intel DG1 (Iris Xe)
-**Spec:** `_bmad-output/implementation-artifacts/spec-dual-backend-llama-cpp-build.md` (status: *in-progress*)
-
----
-
-## 1. Where things stand (TL;DR)
-
-✅ **Functionally complete and working — but ONLY on disk.** Both backends build from
-`origin/master` and both wrappers serve `--cache-list` (`hf cache list`) on their own GPU.
-
-✅ **The fix IS now persisted** (applied 2026-09-20): the build script checks out
-`origin/master` and generates the correct wrappers (dedicated `llama-server` binary,
-auto SYCL device select). Verified end-to-end — both wrappers serve `--cache-list`.
-
-Note the build still runs from `origin/master` (unpinned); see the pinning question in §5.
+**Last updated:** 2026-09-21
+**Repo:** `~/.local/share/chezmoi` (dotfiles) · **Target:** X11 desktop, NVIDIA Tesla V100-SXM2-32GB + Intel Iris Xe (DG1-class, 3.8 GiB shared)
+**Spec:** `_bmad-output/implementation-artifacts/spec-dual-backend-llama-cpp-build.md`
 
 ---
 
-## 2. What works now (verify)
+## 1. TL;DR (working, persisted 2026-09-21)
+
+Two independent llama.cpp backends, each on its own GPU, each a systemd
+`Restart=on-failure` system unit, both reachable through **Olla** on `0.0.0.0:40114`:
+
+| Backend | Port | GPU | Model | Unit | Launcher |
+|---|---|---|---|---|---|
+| CUDA (primary) | `127.0.0.1:8081` | V100 (32 GiB) | `ornith.gguf` (ornith-9B Q4) | `restart-llama-server.service` | `~/.local/bin/restart-llama-server.sh` |
+| SYCL (Intel) | `127.0.0.1:8082` | Iris Xe (3.8 GiB) | `gemma-4-E4B` Q4_0 (~5.5 GiB, spills to CPU) | `llama-sycl.service` | `~/.local/bin/restart-llama-sycl.sh` |
+
+Both source `~/projs/llama.cpp` at **`origin/master`** (only build with `--cache-list`;
+pinned tag `b11064` predates ggml-org/llama.cpp PR #20775). Verified:
 
 ```bash
-# CUDA (V100)
-~/.local/bin/llama-server-cuda --cache-list          # → CUDA0: Tesla V100-SXM2-32GB, 18 models, exit 0
-~/.local/bin/llama-server-cuda --list-devices
+~/.local/bin/llama-server-cuda --cache-list   # → CUDA0: Tesla V100-SXM2-32GB, exit 0
+~/.local/bin/llama-server-sycl --cache-list   # → SYCL0: Intel Iris Xe Graphics, exit 0
 
-# SYCL (Intel DG1 / Iris Xe)
-~/.local/bin/llama-server-sycl --cache-list          # → SYCL0: Intel Iris Xe Graphics, 18 models, exit 0
-~/.local/bin/llama-server-sycl --list-devices
-
-# General tools (all repointed to the CUDA build)
-llama / llama-bench / llama-fit-params / llama-server   # → $HOME/projs/llama.cpp/build_cuda/bin/*
+# end-to-end through Olla (routes by reported model name):
+curl http://127.0.0.1:40114/olla/openai/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"gemma-4-E4B…","messages":[{"role":"user","content":"6x7?"}]}'
+# → gemma answers over the Intel GPU (endpoint local-llamacpp-sycl, :8082)
 ```
 
-**Build state (on disk):**
-- Source: `~/projs/llama.cpp` at `origin/master` = `ce8caa6e6` (llama.cpp build **11065**).
-- `build_cuda/` (master, ccache build, ~fast recompile) and `build_sycl/` (master, oneAPI).
-- oneAPI at `~/.local/intel/oneapi` (icx 2026.0.0). CUDA toolkit 12.4, V100 driver loaded.
-- Removed the orphaned `build/` tree (stale b11064) — reclaimed **807 MB**.
-
-**HF cache:** hub is bind-mounted at `~/.cache/huggingface/hub`; 18 models listed by both backends.
+**Crash recovery verified:** SIGKILL the SYCL server → systemd `Restart=on-failure`
+re-spawns it (new pid, :8082 back up). **Reboot:** all three units `enabled`; HF hub
+bind-mount (`/media/passeport/huggingface-hub/` → `~/.cache/huggingface/hub`, `bind,nofail`)
+is in `/etc/fstab`.
 
 ---
 
-## 3. The critical gap (top next item)
+## 2. What each backend is and why
 
-The working state is on **ephemeral paths**; the repo does not reproduce it. `git status`
-shows staged changes, but the staged `run_once_5_aitools_1llama_cpp.sh` still:
+- **CUDA backend** (`restart-llama-server.service` → `restart-llama-server.sh`):
+  the original V100 server on :8081. `ExecStartPre` refuses to start without a
+  CUDA device. Olla's `ExecStartPre` also polls `http://127.0.0.1:8081/v1/models`.
+- **SYCL backend** (`llama-sycl.service` → `restart-llama-sycl.sh`):
+  the Intel-GPU server on :8082. Installed + enabled by
+  `.chezmoiscripts/run_once_5_aitools_4llama_sycl_startup.sh` (mirrors the CUDA
+  run script). Not started by default (heavy ~3.8 GiB load) — start it explicitly
+  or it comes up at boot.
 
-| Concern | Staged (broken) | Working (on disk) |
-|---|---|---|
-| Source checkout | `git tag … | head -1` → **b11064** | **`origin/master`** (needs `--cache-list`) |
-| Wrapper `exec` target | `…/build_cuda/bin/llama` (unified) | **`…/build_cuda/bin/llama-server`** (has `--cache-list`) |
-| SYCL selector | `ONEAPI_DEVICE_SELECTOR=level_zero:0` (fails: "No device of requested type") | **auto-select** (DG1 not a Level-Zero device here) |
-
-**To persist (next commit):** in `run_once_5_aitools_1llama_cpp.sh`
-1. checkout `origin/master` instead of the latest *tag*;
-2. in `write_generated_files`, make the wrappers exec the dedicated `llama-server`
-   binary and drop the forced `level_zero:0` selector (auto, overridable via env).
-
-Until that is done, the safe state is: **leave `~/projs/llama.cpp` at master and do not run the script.**
+**Model fit:** gemma-4-E4B (Q4_0, ~5.5 GiB) is the *smaller* of the two cached gemma
+models; the 26B-A4B needs ~14 GiB and would not fit the Iris Xe. The extra layers
+spill to CPU/RAM (functional, ~7-8 tok/s) — fine for smoke tests, slow for heavy use.
 
 ---
 
-## 4. What is persisted in the repo (staged, uncommitted)
+## 3. Architecture (files, tracked vs runtime-generated)
 
-- `dot_local/bin/symlink_llama` / `symlink_llama-bench` / `symlink_llama-fit-params`
-  → repointed to `…/build_cuda/bin/*` (was `…/build/bin/*`, stale b11064).
-- `dot_local/bin/symlink_llama-server` → `…/build_cuda/bin/llama-server` (done earlier).
-- `.chezmoiscripts/run_once_5_aitools_1llama_cpp.sh` — the *pre-wrapper-fix* rewrite
-  (runtime-owns the GPU detection + CUDA build; generates the wrappers/lib). **needs §3 fix.**
-- `_bmad-output/implementation-artifacts/spec-dual-backend-llama-cpp-build.md` — spec.
+**Tracked in the repo (committed):**
+- `dot_local/bin/executable_restart-llama-server.sh` / `executable_restart-llama-sycl.sh`
+  → applied by chezmoi to `~/.local/bin/restart-llama-server.sh` / `-sycl`
+  (chezmoi `executable_` prefix ⇒ destination name + `+x`).
+- `etc/systemd/system/restart-llama-server.service` / `llama-sycl.service` / `olla.service`.
+- `dot_config/olla/config.yaml` — static discovery: `:8081` (priority 100) + `:8082` (priority 90).
+- `.chezmoiscripts/run_once_5_aitools_{1llama_cpp,2llama_startup,3olla_startup,4llama_sycl_startup}.sh`
+  (registered in `chezmoiscripts.dep.yml`).
+- `dot_local/bin/symlink_{llama,llama-bench,llama-fit-params,llama-server}` → `…/build_cuda/bin/*`.
 
-> `~/.local/bin/llama-server-{cuda,sycl}` and `~/.local/share/llama-cpp/lib.sh` are
-> **runtime-generated, not git-tracked.** Editing them on disk does not change the repo;
-> they are (re)written by the run script. That is exactly why §3 must fix the generator.
+**Runtime-generated, NOT git-tracked** (regenerated by `run_once_5_aitools_1llama_cpp.sh`):
+- `~/.local/bin/llama-server-cuda`, `~/.local/bin/llama-server-sycl`,
+  `~/.local/share/llama-cpp/lib.sh`.
+  → **Edit the generator, not these.** The SYCL launcher (`restart-llama-sycl.sh`) is
+  a repo file (see above), not generated.
 
----
-
-## 5. Open / remaining
-
-1. ✅ Persist the §3 fix into `run_once_5_aitools_1llama_cpp.sh` (master checkout + correct wrappers) — **done 2026-09-20**.
-2. **Commit** the staged changes (symlinks, spec, script) — the pending step.
-3. **Pinning decision:** `origin/master` is unpinned (moves over time). A newer tagged release
-   with `--cache-list` does **not** exist in this mirror (tags stop at `b11064`), so master is
-   the only option here. Choose: keep master, or pin a fixed commit if the mirror ever gets one.
-4. Spec is `in-progress`; remaining BMAD steps (review / finalize) if this continues under bmad-build.
+**Builds:** `~/projs/llama.cpp` (`origin/master`), `…/build_cuda/` and `…/build_sycl/`.
+oneAPI at `~/.local/intel/oneapi` (icx 2026.0.0).
 
 ---
 
-## 6. How the key problems were solved (for the next person)
+## 4. The oneAPI env gotcha (the real SYCL fix)
 
-- **`hf cache list` is not a command** — the real flag is `llama-server --cache-list`
-  (or `-cl`). The *unified* `llama` binary rejects it at the top level (first token = command).
-  So the `llama-server-*` wrappers must exec the **dedicated `llama-server`** binary, not `llama`.
-- **`--cache-list` needs `origin/master`.** It was added in ggml-org/llama.cpp PR #20775; the
-  pinned tag `b11064` predates it. (`common/hf-cache.cpp`, `common/arg.cpp` register `-cl`.)
-- **SYCL `level_zero:0` fails** on this box ("No device of requested type"); the DG1 is not
-  exposed as a Level-Zero device. **Auto-select** targets the Iris Xe cleanly.
-- **SYCL binary needs oneAPI on the lib path** (`libsvml.so`, etc.) — the wrappers source
-  `~/.local/intel/oneapi/setvars.sh` before exec (already implemented).
-- **`-q` in a middle `grep`** silently truncates pipelines — only the *last* grep in a chain
-  may use `-q`. (`has_intel_gpu` in the run script.)
+The SYCL backend fails with **"No device of requested type available"** unless oneAPI
+is set up correctly. Two traps, both now handled by `restart-llama-sycl.sh`:
+
+1. **Wrong `setvars.sh`.** `lib.sh` sets `ONEAPI_SETVARS` to the **top-level**
+   `~/.local/intel/oneapi/setvars.sh` (sources UMF + all components). Do **not**
+   override it with the compiler *component* vars.sh
+   (`compiler/latest/env/vars.sh`) — that one skips UMF setup and the runtime
+   enumerates no device.
+2. **Subshell sourcing.** Sourcing `setvars.sh` **inside a pipe** (`… | tail`) runs it
+   in a subshell, so `LD_LIBRARY_PATH` (which carries `libsvml.so`, etc.) never
+   propagates to the exec'd server → "error while loading shared libraries: libsvml.so".
+   Source it un-piped, then `exec`.
+
+Auto device select: **leave `ONEAPI_DEVICE_SELECTOR` unset** (auto). Forcing
+`level_zero:0` fails — the DG1 is not exposed as a Level-Zero device here; auto-select
+finds the Iris Xe. (`lib.sh`'s `llama_sycl_ready` checks `…/build_sycl/bin/llama-server` + `icx`.)
+
+---
+
+## 5. Resilience (task 3)
+
+- **Crash:** `Restart=on-failure` + `RestartSec` on all three units. systemd reaps the
+  main process on exit; `KillMode=process` (SYCL) / `main` (CUDA/Olla) keeps the
+  exec'd llama-server as the tracked main process (no fork/disown → no cgroup cleanup
+  killing the server).
+- **Reboot:** all units `enabled`; HF bind-mount in `/etc/fstab`; llama.cpp build
+  already present so first boot is instant (no oneAPI download at boot — oneAPI is
+  lazy-bootstrapped by the launcher's `llama_sycl_ready` guard only if missing).
+- **Fallback:** the backends are **parallel, not failover** — they serve *different*
+  models (ornith vs gemma), so there is no same-model CUDA→SYCL hand-off. If CUDA is
+  down, gemma on :8082 still serves; and vice-versa. To make one model serve on both,
+  re-run the same model under the other backend and point both endpoints at it.
+
+---
+
+## 6. Operations
+
+```bash
+# SYCL backend
+systemctl --system status llama-sycl.service
+systemctl --system start  llama-sycl.service      # loads gemma (~25 s on warm box)
+journalctl --system -u llama-sycl.service -f
+~/.local/bin/restart-llama-sycl.sh                 # manual foreground run (Ctrl-C to stop)
+
+# Olla
+systemctl --system restart olla                    # re-reads config.yaml (picks up new endpoints)
+systemctl --system status ollaservice
+
+# After editing a tracked file that provisions a service, re-apply + reload:
+cz apply && sudo systemctl daemon-reload
+```
+
+Notes: `sudo` here needs a TTY for non-drop-in commands; the scoped NOPASSWD
+drop-in (`/etc/sudoers.d/chezmoi-pi`) covers install/restart of these units.
+
+---
+
+## 7. Open / remaining
+
+1. **Pinning:** `origin/master` is unpinned (moves over time). No tagged release with
+   `--cache-list` exists in the mirror (tags stop at `b11064`). Keep master, or pin a
+   fixed commit if the mirror later gets one.
+2. **Optional CUDA→SYCL same-model fallback** (see §5) — not implemented; parallel
+   backends serve different models today.
+3. Spec remains `in-progress` if this continues under bmad-build.
