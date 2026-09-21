@@ -33,23 +33,16 @@ LIB="$LIB_DIR/lib.sh"
 
 log() { echo "$(basename "$0"): $*"; }
 
-# --- GPU presence (lspci needs no driver loaded, so never false-negative) -----
-# Rule: only the LAST grep in a pipeline may use -q. An intermediate -q exits
-# after its first match and emits only that one line, so a later grep can miss
-# the real device (this bit us: the DG1 VGA line came after an earlier match
-# and got dropped). has_nvidia and has_intel are independent checks.
-has_nvidia()  { lspci 2>/dev/null | grep -qiE 'nvidia'; }
-has_intel_gpu() {
-    # decoupled: the display-class prefilter must pass ALL matching lines (no
-    # -q); only the final vendor grep uses -q.
-    lspci 2>/dev/null | grep -iE 'vga|3d|display' | grep -qi 'intel corporation'
-}
+# Shared GPU-presence + render/video-group safeguards (single source of truth,
+# see dot_local/private_share/gpu.func -> ~/.local/share/gpu.func). Source it
+# rather than re-implementing has_nvidia/has_intel_gpu/grant_render_video_groups
+# here — the same helpers are sourced by run_once_3_devtools_3podman_nvidia_cdi.sh.
+source "$HOME/.local/share/gpu.func"
 
-grant_render_video_groups() {
-    sudo usermod -aG render "$USER"
-    sudo usermod -aG video "$USER"
-    log "added $USER to render + video groups (log out/in for it to take effect)."
-}
+# Detection itself is now centralised in gpu.func. lspci needs no driver loaded,
+# so these are never false-negatives. The "only the LAST grep in a pipeline may
+# use -q" rule (which once hid the Intel DG1 behind an earlier NVIDIA match) lives
+# in gpu.func as the single documented home.
 
 # --- builders ---------------------------------------------------------------
 # NOTE: the source dir is passed EXPLICITLY to cmake (-B build $LLAMA_DIR) so a

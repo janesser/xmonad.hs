@@ -1,0 +1,44 @@
+#!/bin/bash
+# gpu.func — shared GPU-presence + access safeguards for chezmoi run scripts.
+#
+# Sourced (NOT executed) by installer scripts that must detect a accelerator
+# without a false negative and grant the calling user access to it. Rendered by
+# chezmoi to ~/.local/share/gpu.func (see the start_once.func convention).
+#
+# DANGER — grep -q in a pipeline:
+#   Only the LAST grep in a pipeline may use -q. An intermediate -q exits after
+#   its first match and emits only that one line, so a later grep in the same
+#   pipeline can miss the real device. (This bit us: a DG1 VGA line arrived
+#   after an earlier match and was dropped, hiding the Intel GPU.)
+#
+# lspci needs no driver loaded, so every check below is a never-false-negative
+# *presence* test — it reports hardware, not whether the driver/permissions are
+# ready. A negative result is authoritative; a positive result just means "worth
+# trying".
+
+# has_nvidia -> true if an NVIDIA GPU is present (driver not required).
+has_nvidia() {
+    lspci 2>/dev/null | grep -qiE 'nvidia'
+}
+
+# has_intel_gpu -> true if an Intel GPU is present.
+#   The display-class prefilter must pass ALL matching lines (no -q); only the
+#   final vendor grep uses -q. Otherwise the prefilter's -q would stop after the
+#   first vga/3d/display line and could miss an Intel device.
+has_intel_gpu() {
+    lspci 2>/dev/null | grep -iE 'vga|3d|display' | grep -qi 'intel corporation'
+}
+
+# has_any_gpu -> true if either vendor is present.
+has_any_gpu() {
+    has_nvidia || has_intel_gpu
+}
+
+# grant_render_video_groups -> add $USER to the render + video groups so both
+# NVIDIA (CUDA) and Intel (Level-Zero / oneAPI) devices are usable. Safe to call
+# repeatedly (usermod -aG is idempotent). Requires sudo.
+grant_render_video_groups() {
+    sudo usermod -aG render "$USER"
+    sudo usermod -aG video "$USER"
+    echo "$(basename "$0"): added $USER to render + video groups (log out/in for it to take effect)."
+}

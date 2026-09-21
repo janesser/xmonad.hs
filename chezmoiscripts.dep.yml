@@ -27,7 +27,7 @@
 #   filename. See scripts/check_manifest_order.py (optional helper).
 #
 # LEGEND — tiers
-#   0  foundations / essentials (apt, asdf, python, terminal emulator, precommit)
+#   0  foundations / essentials (apt, mise, python, terminal emulator, precommit)
 #   1  fish shell ecosystem + system daemons (clamfs, pipewire, fish + plugins/theme)
 #   2  desktop apps & browsers (codium, ghcup, logseq, browsers, nextcloud, ...)
 #   3  developer tooling (git/gcm, java, k8s, podman, github-act, jupyter, node, rust, helix)
@@ -36,7 +36,7 @@
 #   run 0 / run 9  housekeeping that runs on every apply (assert + cleanup/update)
 #   run_onchange  re-sync apt sources when their source files change
 #
-# DEPENDENCY EDGES (verified by static analysis of each script, Oct 2025)
+# DEPENDENCY EDGES (verified by static analysis of each script, 2026-09)
 #   Only edges whose dependency SORTS BEFORE the dependent are encoded here, so
 #   they stay consistent with chezmoi's filename sort. Reverse edges are documented
 #   in `analysis_notes` and intentionally NOT encoded (they would break the sort).
@@ -59,26 +59,25 @@ sort: lexicographic_by_filename
   desc: "Essential apt packages (xmonad, suckless, utils) + conditional extras/extras/tex/org"
   provides: [xmonad, xmobar, suckless-tools, xdotool, curl, jq, aptitude, shutter, pandoc, texlive]
   depends_on: []
-- file: run_once_0_asdf_install.sh
+- file: run_once_0_mise_install.sh
   phase: run_once
   tier: 0
-  desc: "Install asdf (go install); snap go --classic; fish PATH shim + asdf completion"
-  provides: [asdf, go]
+  desc: "Install mise (drop-in for asdf); fish completion + shell integration; git apt dep"
+  provides: [mise]
   depends_on: []
-  notes: "Calls `fish -c` (needs fish) but fish installs at tier 1 — see analysis_notes.2"
 - file: run_once_0_precommit_hook_install.sh
   phase: run_once
   tier: 0
   desc: "Install git pre-commit hook (uvx if available, else pip)"
   provides: [pre-commit-hook]
   depends_on: []
-  notes: "Requires .git (exits 0 if not a repo). Uses uv -> needs asdf/uv; soft dep."
+  notes: "Requires .git (exits 0 if not a repo). Uses uv -> needs mise; soft dep."
 - file: run_once_0_python_tools_install.sh
   phase: run_once
   tier: 0
-  desc: "Remove pyenv/pipx; install uv via asdf-uv; default python 3"
+  desc: "Remove pyenv/pipx/uv shims; install uv via mise; default python 3 (pinned in config.toml)"
   provides: [uv]
-  depends_on: [run_once_0_asdf_install.sh]   # verified: uses `asdf plugin add uv`
+  depends_on: [run_once_0_mise_install.sh]   # verified: `mise install uv` after `mise activate`
 - file: run_once_0_xterm_install.sh
   phase: run_once
   tier: 0
@@ -209,15 +208,15 @@ sort: lexicographic_by_filename
 - file: run_once_3_devtools_1java_install.sh
   phase: run_once
   tier: 3
-  desc: "asdf java/maven/gradle (removes sdkman)"
+  desc: "java/maven/gradle via mise (removes sdkman); pinned in config.toml"
   provides: [java, maven, gradle]
-  depends_on: [run_once_0_asdf_install.sh]   # verified: `asdf plugin add java/maven/gradle`
+  depends_on: [run_once_0_mise_install.sh]   # verified: `mise install java` after `mise activate`
 - file: run_once_3_devtools_2k8s_install.sh
   phase: run_once
   tier: 3
-  desc: "asdf kubectl + helm"
+  desc: "kubectl + helm via mise (replaces asdf); pinned in config.toml"
   provides: [kubectl, helm]
-  depends_on: [run_once_0_asdf_install.sh]   # verified: `asdf plugin add kubectl/helm`
+  depends_on: [run_once_0_mise_install.sh]   # verified: `mise install kubectl` after `mise activate`
 - file: run_once_3_devtools_3podman_nvidia_cdi.sh
   phase: run_once
   tier: 3
@@ -239,9 +238,9 @@ sort: lexicographic_by_filename
 - file: run_once_3_devtools_4node.sh
   phase: run_once
   tier: 3
-  desc: "asdf nodejs (LTS via nodebuild)"
+  desc: "nodejs via mise (LTS via nodebuild); pinned to 24.20.0 in config.toml"
   provides: [node]
-  depends_on: [run_once_0_asdf_install.sh]   # verified: `asdf plugin add nodejs`
+  depends_on: [run_once_0_mise_install.sh]   # verified: `mise install nodejs` after `mise activate`
 - file: run_once_3_devtools_5rust.sh
   phase: run_once
   tier: 3
@@ -284,7 +283,7 @@ sort: lexicographic_by_filename
 - file: run_once_5_aitools_1llama_cpp.sh
   phase: run_once
   tier: 5
-  desc: "Build llama.cpp (CUDA), gpustat; runs ollama uninstall first"
+  desc: "Build llama.cpp dual-backend (CUDA + SYCL); per-backend servers; centralised gpu.func"
   provides: [llama.cpp, llama-server, gpustat]
   depends_on: []
 - file: run_once_5_aitools_3agentic.sh
@@ -299,12 +298,13 @@ sort: lexicographic_by_filename
   desc: "Olla LLM proxy system unit (boot, no login); waits for llama.cpp backend"
   provides: [olla, llm-proxy]
   depends_on: []
-- file: run_once_5_aitools_4image_gen.sh
+- file: run_once_5_aitools_2llama_startup.sh
   phase: run_once
   tier: 5
-  desc: "ComfyUI via comfy-cli (CUDA 12.4); downloads Flux 2 Klein weights"
-  provides: [comfyui, comfy-cli]
+  desc: "Install boot systemd unit + HF-hub fstab bind-mount for the llama.cpp backend"
+  provides: [restart-llama-server, huggingface-hub-bind]
   depends_on: []
+  notes: "System unit (no login required); guarded to machines that ship restart-llama-server.sh."
 
 # -----------------------------------------------------------------------------
 # run — housekeeping, runs on EVERY apply. NOTE: run_9/* sorts BEFORE run_once_*
@@ -354,11 +354,12 @@ sort: lexicographic_by_filename
   tier: 9
   desc: "uv cache clean"
   depends_on: []
-- file: run_9_update_asdf.sh
+- file: run_9_update_mise.sh
   phase: run
   tier: 9
-  desc: "asdf plugin update --all + reinstall latest for every plugin"
+  desc: "mise upgrade --dry-run (READ-ONLY report; never mutates tracked config)"
   depends_on: []
+  notes: "Non-fatal (always exits 0); keeps run_9 surfaces update news without drifting config."
 - file: run_9_update_fish.sh
   phase: run
   tier: 9
@@ -374,11 +375,7 @@ sort: lexicographic_by_filename
   tier: 9
   desc: "nala full-upgrade"
   depends_on: []
-- file: run_9_update_pi.sh
-  phase: run
-  tier: 9
-  desc: "pi update --all"
-  depends_on: []
+
 - file: run_9_update_rpi-apps.sh
   phase: run
   tier: 9
@@ -403,15 +400,38 @@ sort: lexicographic_by_filename
 # -----------------------------------------------------------------------------
 # run_onchange — re-sync apt sources when referenced files change
 # -----------------------------------------------------------------------------
-- file: run_onchange_0_apt_sources.sh.tmpl
+- file: run_onchange_auto_poweroff_timer.sh.tmpl
+  phase: run_onchange
+  template: true
+  desc: "Deploy auto-poweroff systemd timer+service and enable the timer (gated by toggle)"
+  provides: [auto-poweroff.timer, auto-poweroff.service, auto-poweroff.sh]
+  depends_on: []
+  notes: "Inputs are etc/systemd/system/auto-poweroff.{times,delay,sh}; sudo in scoped drop-in."
+- file: run_onchange_mise_config.sh.tmpl
+  phase: run_onchange
+  template: true
+  desc: "Upgrade the mise binary when ~/.config/mise/config.toml changes (plain upgrade only)"
+  depends_on: [run_once_0_mise_install.sh]
+- file: run_onchange_pi_agent_settings.sh.tmpl
+  phase: run_onchange
+  template: true
+  desc: "Re-run pi-agent setup when the package manifest (data/pi_agent_packages.txt) changes"
+  depends_on: [run_once_5_aitools_3agentic.sh]
+- file: run_onchange_sudo_apt_sources.sh.tmpl
   phase: run_onchange
   template: true
   desc: "Sync apt keyrings/sources on change (sha256 markers per repo); installs extrepo"
   depends_on: []
   notes: "Depends on source files etc/apt/{sources.list.d,keyrings}/, not on other scripts."
+- file: run_onchange_sudo_sudoers_chezmoi_pi.sh.tmpl
+  phase: run_onchange
+  template: true
+  desc: "Install the scoped pi-agent NOPASSWD sudoers drop-in /etc/sudoers.d/chezmoi-pi"
+  depends_on: []
+  notes: "Interactive consent gate; installs root:root 0440 from etc/sudoers.d/chezmoi-pi."
 
 # =============================================================================
-# STATIC-ANALYSIS NOTES  (from reading every script, Oct 2025)
+# STATIC-ANALYSIS NOTES  (from reading every script, 2026-09)
 # =============================================================================
 #
 # 1. run_* sorts BEFORE run_once_*.  After the "run_" prefix, '9' (0x39) and
@@ -422,25 +442,25 @@ sort: lexicographic_by_filename
 #    that does not exist yet:
 #      - run_9_update_nala.sh      -> nala installed by run_once_2_nala_install.sh
 #      - run_9_update_rust.sh      -> rustup installed by run_once_3_devtools_5rust.sh
-#      - run_9_update_asdf.sh      -> asdf  installed by run_once_0_asdf_install.sh
 #      - run_9_update_fish.sh      -> fish  installed by run_once_1_fish_0install.sh
 #      - run_9_update_flatpak.sh   -> flatpak installed by run_once_2_logseq_install.sh
 #      - run_9_cleanup_podman.sh   -> podman  installed by run_once_3_devtools_3podman...
 #      - run_9_cleanup_uv.sh       -> uv      installed by run_once_0_python_tools_install.sh
 #    All non-fatal (no `set -e`); the command just errors and continues. Intentional.
 #
-# 2. Reverse (unencodable) deps: asdf install & python-tools (tier 0) call `fish -c`,
-#    but fish installs at tier 1. This works only because run_once markers persist
-#    across applies; a truly cold first apply runs tier 0 before tier 1 fish.
-#    Marked on run_once_0_asdf_install.sh.notes. Not encoded as depends_on because it
-#    would put a tier-0 script depending on a tier-1 script, breaking the sort.
+# 2. Reverse (unencodable) deps: mise & python-tools (tier 0) call `mise activate`
+#    before tier 1 fish is installed. This works only because run_once markers
+#    persist across applies; a truly cold first apply runs tier 0 before tier 1 fish.
+#    Not encoded as depends_on because it would put a tier-0 script depending on a
+#    tier-1 script, breaking the sort.
 #
 # 3. Verified cross-script runtime deps (all encode cleanly — dependency sorts first):
-#      asdf consumers  -> run_once_0_asdf_install.sh : python_tools, java, k8s, node
+#      mise consumers  -> run_once_0_mise_install.sh : python_tools, java, k8s, node
 #      fish completions-> run_once_1_fish_0install.sh : fish_1completion, fish_2fisher, fish_2theme
 #      codium extensions -> run_once_2_codium_0install.sh
 #    Every other script's dependencies are external (apt/snap/go/cargo/uv/npm/flatpak
 #    /external URLs) or conditional on env vars, so no file-level edge is needed.
 #
-# 4. Unused / dead code found: run_once_5_aitools_4image_gen.sh has `exit 0 # FIXME solidify` at the top.
-#    Consider removing or unflagging when the work is solidified.
+# 4. Clean as of this regen: the old asdf scripts, run_9_update_pi, and the
+#    run_once_5_aitools_4image_gen (dead `exit 0`) entry were removed from the
+#    manifest and no longer exist on disk. No dead-code flags remaining.

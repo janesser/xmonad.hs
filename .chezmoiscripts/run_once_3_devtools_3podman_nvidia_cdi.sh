@@ -9,7 +9,10 @@
 
 # lspci needs no sudo and detects the GPU even with no driver installed (the
 # exact decision point here); nvidia-smi would need the driver present already.
-if ! lspci 2>/dev/null | grep -iq nvidia; then
+# Detection is centralised in ~/.local/share/gpu.func (sourced below); has_nvidia
+# is the never-false-negative presence test shared with the llama.cpp build script.
+source "$HOME/.local/share/gpu.func"
+if ! has_nvidia; then
     echo "$(basename $0): No NVIDIA GPU detected, skipping podman-nvidia setup..."
     # Remove only what *this* script would have installed. Deliberately NOT
     # touching nvidia-cuda-toolkit (installed elsewhere for CUDA builds).
