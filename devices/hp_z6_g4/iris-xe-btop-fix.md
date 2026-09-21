@@ -74,11 +74,51 @@ The whole thing is gated on `pmu_init()` succeeding — the existing preconditio
 for the Iris Xe box to appear at all — so `btop` still needs
 `CAP_PERFMON` (`setcap cap_perfmon+ep /usr/bin/btop`).
 
-Verified standalone on this host: `hwmon_find()` matched the DG1, power read
-~2.9 W, temp 45 °C. (The perf path still needs `CAP_PERFMON`; `pmu_init` is
-the pre-existing precondition that already works with the setcap in place.)
+### Verified end-to-end (live, on this host)
+Running the capped binary's real driver path (`pmu_init` + `pmu_sample`,
+sample interval ~1.5 s) against `i915_0000_2f_00.0`:
 
-### Commits (on `btop-intel-gpu-fix`, branch `main ← janesser:btop-intel-gpu-fix`)
+| signal | value | meaning |
+|---|---|---|
+| `pmu_init` | `0` | perf-PMU attach succeeds **only** with `CAP_PERFMON`; without it `perf_event_open` returns `EACCES` (`num_gts=-13`) and the box is dead |
+| `r_gpu.present` | `0` | confirms no RAPL `energy-gpu` → the hwmon fallback is the active path |
+| hwmon | `hwmon5` (`/sys/class/hwmon/hwmon5`) | i915 sensor device found and PCI-matched |
+| power | `4.64 µJ / 1.5 s → ~3.1 W` | live idle draw |
+| temp | `temp1_input=50000` | `→ 50.0 °C` (driver divides by 1000) |
+
+Both GPUs now render as separate boxes with util, frequency, **power (W)** and
+temperature: `gpu0` = V100, `gpu1` = Iris Xe.
+
+### Deployment gotchas (why a bare `cz apply` showed nothing)
+Two independent failures hid the change. Do **not** assume `cz update`/`cz apply`
+reaches either:
+
+1. **The build is skipped after the first run.** The run script only builds when
+   `~/projs/btop/build/btop` is absent. It already existed (the old
+   discovery-only build), so later `cz apply` runs logged *"already built"* and
+   never compiled or installed the new code. **Deploy the evolved binary
+   manually** once the branch is ready (see below).
+2. **The `CAP_PERFMON` grant had silently failed at initial setup** —
+   `getcap /usr/bin/btop` came back empty. With `perf_event_paranoid=4` and no
+   capability, `pmu_init()` fails (`EACCES`) and the Iris Xe box never gets real
+   data (or at all). Re-apply it: `sudo setcap cap_perfmon+ep /usr/bin/btop`
+   (persists as a file attribute).
+
+Deploy run (branch already built locally at `~/projs/btop/build`):
+
+```
+sudo install -m755 ~/projs/btop/build/btop /usr/bin/btop
+sudo setcap cap_perfmon+ep /usr/bin/btop
+```
+
+Both commands use the scoped `chezmoi-pi` NOPASSWD drop-in (`install`,
+`setcap cap_perfmon+ep /usr/bin/btop`). Note `install` (and `cp`) replace the
+inode and **strip** the file capability, so `setcap` must follow the install.
+
+### Deploy state
+- `/usr/bin/btop` = `1.4.6+975e395` (built from `btop-intel-gpu-fix`), `cap_perfmon=ep`.
+- Build/MR source: `~/projs/btop`, branch `btop-intel-gpu-fix`.
+- Manually deployed (see gotchas above) — `cz apply` does not rebuild it.
 - `1455a80` read DG1/Iris Xe power+temp via i915 hwmon (driver + collect wiring)
 - `fc0f87d` derive DG1 power from the perf-sampled interval + RAPL/temp guards
 
@@ -94,8 +134,7 @@ top-level `has_intel_gpu()` guard, plus a defence-in-depth assertion inside
 present.
 
 - Deployed binary: `/usr/bin/btop` = `1.4.6+975e395`, `cap_perfmon=ep`.
-  Next deploy target after the power/temp evolution: `1.4.6+1455a80`.
-- Build/MR source: `~/projs/btop`, branch `btop-intel-gpu-fix`.
+- Build/MR source: `~/projs/btop`, branch `btop-intel-gpu-fix` (latest commit `fc0f87d`).
 
 ## Merge request
 Upstream PR **[#1848](https://github.com/aristocratos/btop/pull/1848)** —
