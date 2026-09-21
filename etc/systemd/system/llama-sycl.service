@@ -1,0 +1,38 @@
+# Installed by
+# .chezmoiscripts/run_once_5_aitools_4llama_sycl_startup.sh
+# to /etc/systemd/system/llama-sycl.service
+#
+# Runs llama.cpp on the Intel GPU (SYCL / oneAPI), serving gemma-4-E4B on
+# 127.0.0.1:8082 so Olla can proxy it publicly on :8082. It mirrors
+# restart-llama-server.service (the CUDA backend on :8081) but for the Intel
+# accelerator.
+#
+# NOTE: this service is NOT enabled by default — loading the ~3.8 GB model adds
+# to an already memory-constrained box. Enable it when you want the Intel
+# backend:
+#   systemctl --system enable --now llama-sycl.service
+#
+# The huggingface-hub bind-mount onto ~/.cache/huggingface/hub is added to
+# /etc/fstab by run_once_5_aitools_2llama_startup.sh, so at boot the hub is
+# already a mountpoint.
+
+[Unit]
+Description=llama.cpp on Intel GPU (SYCL) — gemma-4-E4B on 127.0.0.1:8082
+After=local-fs.target media-passeport.mount
+
+[Service]
+User=jan
+Environment=HOME=/home/jan
+Environment=USER=jan
+Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/jan/.local/share/mise/shims
+# The launcher execs llama-server, so systemd tracks it as the main process
+# (Type=simple): restart + clean kill are handled by systemd, with no
+# fork/disown/cgroup-cleanup dance.
+Type=simple
+ExecStartPre=/usr/bin/bash -c '. "$HOME/.local/share/llama-cpp/lib.sh"; if [ -x "$BUILD_SYCL/bin/llama-server" ]; then echo "llama-sycl: SYCL build present at $BUILD_SYCL"; else echo "llama-sycl: SYCL build missing — the launcher will bootstrap it on first use"; fi'
+ExecStart=/usr/bin/bash /home/jan/.local/bin/restart-llama-sycl.sh 8082
+Restart=on-failure
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target

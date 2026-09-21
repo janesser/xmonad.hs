@@ -1,7 +1,12 @@
-# Olla config — public entry on :8080 -> llama.cpp backend on 127.0.0.1:8081.
+# Olla config — public entry on :8080 -> llama.cpp backend.
 #
-# llama.cpp runs localhost-only on 8081 (see restart-llama-server.sh) so Olla can
-# own 8080 publicly. Olla binds 0.0.0.0:8080 here.
+# Two llama.cpp backends, localhost-only, so Olla can own the public port:
+#
+#   * :8081  CUDA / NVIDIA V100  (restart-llama-server.sh)  -> ornith-35B
+#   * :8082  SYCL / Intel DG1-IrisXe (restart-llama-sycl.sh) -> gemma-4-E4B
+#
+# Olla binds 0.0.0.0:8080 (actually :40114) here and routes each request to the
+# endpoint whose reported model matches. Both endpoints are static below.
 #
 # Why type: "openai-compatible" (NOT "llamacpp"):
 #   Olla v0.0.29's "llamacpp" profile parses llama.cpp's *native* /v1/models
@@ -27,6 +32,10 @@ discovery:
   static:
     endpoints:
       - url: "http://127.0.0.1:8081"   # llama.cpp server (restart-llama-server.sh)
-        name: "local-llamacpp"
+        name: "local-llamacpp-cuda"
         type: "openai-compatible"
         priority: 100
+      - url: "http://127.0.0.1:8082"   # llama.cpp server on the Intel GPU (restart-llama-sycl.sh)
+        name: "local-llamacpp-sycl"
+        type: "openai-compatible"
+        priority: 90

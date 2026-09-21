@@ -299,6 +299,13 @@ sort: lexicographic_by_filename
   provides: [restart-llama-server, huggingface-hub-bind]
   depends_on: []
   notes: "System unit (no login required); guarded to machines that ship restart-llama-server.sh."
+- file: run_once_5_aitools_4llama_sycl_startup.sh
+  phase: run_once
+  tier: 5
+  desc: "Install boot systemd unit (llama-sycl.service) for llama.cpp on the Intel GPU (SYCL) on :8082"
+  provides: [llama-sycl]
+  depends_on: []
+  notes: "System unit (no login required); guarded to machines that ship restart-llama-sycl.sh. NOT enabled by default: the ~3.8 GB gemma load adds to an already memory-constrained box. Enable when you want the Intel backend."
 - file: run_once_5_aitools_3olla_startup.sh
   phase: run_once
   tier: 5
