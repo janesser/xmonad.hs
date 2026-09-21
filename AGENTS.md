@@ -78,9 +78,14 @@ btop only shows the NVIDIA box for the Intel Iris Xe / DG1 (gpu1). This is a
   shallow one so an MR can be built locally.
 - **Deploy run script:**
   `.chezmoiscripts/run_once_5_aitools_3btop_intel_gpu_cap.sh` (run_once,
-  intentionally untracked). Clones only if no `.git`, builds as the user, then
-  `sudo install` + scoped `sudo setcap`. Skips everything if `has_intel_gpu` is
-  false (gpu.func). `cz update` needs no network once the clone exists.
+  intentionally untracked). **Policy: patched btop only where an Intel GPU
+  exists; every other host keeps the vanilla system btop untouched.** Two
+  layers enforce this — a top-level `has_intel_gpu` guard (log + exit 0), plus a
+  defence-in-depth assertion inside `ensure_btop()` that refuses to overwrite
+  `/usr/bin/btop` if `has_intel_gpu` is false. Clones only if no `.git`, builds
+  as the user, then `sudo install` + scoped `sudo setcap`. `cz update` needs no
+  network once the clone exists. (Dry-run both branches by hiding/lspci to test
+  the non-Intel path.)
 - **Config:** `~/.config/btop/btop.conf` (`shown_gpus = "nvidia amd intel"`,
   `shown_boxes = "cpu mem net proc gpu0 gpu1"`) — tracked by chezmoi; both GPUs
   render as separate boxes once the patched binary + cap are in place.

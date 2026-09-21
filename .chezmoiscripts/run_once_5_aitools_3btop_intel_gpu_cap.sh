@@ -30,6 +30,16 @@
 # lives in /usr/sbin, not /usr/bin, so the sudoers rule must name the resolved
 # path /usr/sbin/setcap — sudo matches on the resolved path.
 #
+# POLICY (vanilla vs. patched btop):
+#   This script installs the i915-patched btop ONLY on a host that actually
+#   has an Intel GPU. On any other host (NVIDIA-only, ARM, headless) it does
+#   nothing: the vanilla system btop package is left exactly as-is, and no
+#   cap_perfmon is handed out. Two layers enforce this:
+#     1. Top-level guard: `has_intel_gpu` -> log + exit 0 on a non-Intel host.
+#     2. ensure_btop() assertion: refuses to overwrite /usr/bin/btop if
+#        has_intel_gpu is false (defence in depth, so a vanilla btop can never
+#        be clobbered even if layer 1 were ever bypassed).
+#
 # Build steps (git/cmake/make) run as the user (no sudo needed); only the
 # final install + setcap use scoped sudo. This script is run_once, so the
 # (slow) build happens on the first cz update; subsequent updates are no-ops.
@@ -50,7 +60,18 @@ log() { echo "$(basename "$0"): $*"; }
 # the system binary. Returns non-zero on failure (logged, never fatal, so a
 # failed build during cz update leaves the working system btop in place for a
 # retry on the next update).
+#
+# POLICY: this binary is ONLY installed where an Intel GPU is present (see the
+# top-level guard below). This assertion is defence in depth — it makes it
+# impossible to clobber a vanilla system btop on a non-Intel host even if the
+# top-level guard were ever removed. On NVIDIA-only / ARM / headless hosts we
+# leave the vanilla btop package exactly as it is.
 ensure_btop() {
+    if ! has_intel_gpu; then
+        log "REFUSING to install patched btop: no Intel GPU on this host; keeping vanilla system btop."
+        return 1
+    fi
+
     if [ ! -x "$BTOP_DIR/build/btop" ]; then
         # Clone the pinned tag once (idempotent). A full clone is preferred over
         # the shallow one so MR/inspection works locally; either way we only
@@ -192,7 +213,9 @@ BTOP_PATCH
 }
 
 if ! has_intel_gpu; then
-    log "No Intel GPU detected, skipping btop patch + cap_perfmon grant..."
+    # Non-Intel host: use the vanilla system btop untouched. No build, no
+    # install, no cap_perfmon grant, no changes to /usr/bin/btop.
+    log "No Intel GPU on this host — using vanilla system btop (no patch, no cap grant)."
     exit 0
 fi
 
