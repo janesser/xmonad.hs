@@ -1,6 +1,9 @@
 # chezmoi ↔ Evolution sources: the `LastNotified` drift problem
 
-**Status:** Understood the mechanism; decision pending (user to pick a path).
+**Status:** Resolved — user picked the re-add path; implemented as a standalone
+script (see below). The inherent contradiction is only worked around, not
+solved: the live sources still carry `LastNotified`, so `status`/`diff` can
+still flag them after Evolution rewrites the key.
 **Related:** `dot_config/private_evolution/private_sources/`
 
 ## Context
@@ -70,8 +73,31 @@ both live in a managed file *and* keep `status` clean)
 
 ## Decision
 
-Pending user choice. Recommended: stay on #1 unless the drifting lines in
-`status` are actually a nuisance, in which case #2 is the cheapest clean fix.
+Resolved 2026-09-13: user chose the re-add path (effectively option #2). A
+standalone script, `update-evolution-sources.sh`,
+re-strips `LastNotified`, re-adds the changed sources to chezmoi (removing
+`LastNotified` from the committed templates), then restores it. This differs
+from #2 only by *also* restoring the live value (so the running app keeps its
+cookie between runs) and by only touching sources that genuinely changed.
+
+### Implemented: `update-evolution-sources.sh`
+
+- **Source:** `dot_local/bin/executable_update-evolution-sources.sh` →
+  `~/.local/bin/update-evolution-sources.sh` (run manually, not a
+  `.chezmoiscripts` hook).
+- Reuses the two existing hooks for strip/restore (single source of truth).
+- **Re-encryption guard (important):** `age` ciphertext is non-deterministic,
+  and `chezmoi re-add` re-encrypts a *dirty* destination's source on every
+  call, so blindly re-adding leaves git noise even with no content change.
+  The script therefore `chezmoi cat`s the decrypted committed template and
+  `diff`s it (both sides with `LastNotified` stripped) against the live file,
+  re-adding **only on a genuine difference**. Verified idempotent: first run
+  strips `LastNotified` from the 2 templates that carry it, subsequent runs
+  re-add nothing.
+- `status`/`diff` cleanliness is NOT guaranteed by this script — once
+  Evolution writes a fresh `LastNotified`, the live file is dirty again.
+
+## Notes / gotchas
 
 ## Verification commands
 
@@ -87,7 +113,7 @@ chezmoi --help | grep -iE 'post|after'   # only run_after_* exists, no later hoo
 
 - Neither run script is wired into `.chezmoiscripts` and nothing else invokes
   them — the trigger that runs them before/after apply is unclear; verify it
-  actually fires.
+  actually fires. (`update-evolution-sources.sh` invokes them directly instead.)
 - The before-script uses `for f in $(find …)` — word-splitting breaks on
   filenames with spaces. Current Evolution source names (hex/hyphen) are safe,
   but `find -print0 | while IFS= read -r -d ''` would be more robust.
