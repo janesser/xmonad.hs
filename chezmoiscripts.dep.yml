@@ -292,12 +292,6 @@ sort: lexicographic_by_filename
   desc: "fd/find, pi coding agent + plugins, ghidra snap; HF model downloads (if mounted)"
   provides: [pi-agent, fd, ghidra]
   depends_on: []
-- file: run_once_5_aitools_3olla_startup.sh
-  phase: run_once
-  tier: 5
-  desc: "Olla LLM proxy system unit (boot, no login); waits for llama.cpp backend"
-  provides: [olla, llm-proxy]
-  depends_on: []
 - file: run_once_5_aitools_2llama_startup.sh
   phase: run_once
   tier: 5
@@ -305,6 +299,12 @@ sort: lexicographic_by_filename
   provides: [restart-llama-server, huggingface-hub-bind]
   depends_on: []
   notes: "System unit (no login required); guarded to machines that ship restart-llama-server.sh."
+- file: run_once_5_aitools_3olla_startup.sh
+  phase: run_once
+  tier: 5
+  desc: "Olla LLM proxy system unit (boot, no login); waits for llama.cpp backend; install guarded on llama backend being present"
+  provides: [olla, llm-proxy]
+  depends_on: [run_once_5_aitools_2llama_startup.sh]
 
 # -----------------------------------------------------------------------------
 # run — housekeeping, runs on EVERY apply. NOTE: run_9/* sorts BEFORE run_once_*

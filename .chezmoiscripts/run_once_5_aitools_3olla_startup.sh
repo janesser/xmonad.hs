@@ -17,6 +17,20 @@
 set -euo pipefail
 
 SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
+
+# Guard: Ola is a *proxy* for the llama.cpp backend (public :40114 -> :8081) and
+# its unit has Wants=/After=restart-llama-server.service. Install it only on the
+# desktop that actually runs the llama backend; otherwise we'd ship a boot
+# service that can never reach its target and would just loop on
+# Restart=on-failure. This mirrors run_once_5_aitools_2llama_startup.sh, which
+# guards the llama install on the same launcher below. Sudo is used only for
+# commands in the scoped NOPASSWD sudoers drop-in.
+SCRIPT=~/.local/bin/restart-llama-server.sh
+if [ ! -f "${SCRIPT}" ]; then
+    echo "$(basename "$0"): ${SCRIPT} not found — skipping Ola startup install."
+    exit 0
+fi
+
 UNIT_NAME=olla.service
 UNIT_SRC="${SRC_DIR}/etc/systemd/system/${UNIT_NAME}"
 UNIT_DEST="/etc/systemd/system/${UNIT_NAME}"
