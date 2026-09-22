@@ -13,7 +13,7 @@ Two independent llama.cpp backends, each on its own GPU, each a systemd
 
 | Backend | Port | GPU | Model | Unit | Launcher |
 |---|---|---|---|---|---|
-| CUDA (primary) | `127.0.0.1:8081` | V100 (32 GiB) | `ornith.gguf` (ornith-35B Q4) | `restart-llama-server.service` | `~/.local/bin/restart-llama-server.sh` |
+| CUDA (primary) | `127.0.0.1:8081` | V100 (32 GiB) | `ornith.gguf` (ornith-35B Q4) | `llama-cuda.service` | `~/.local/bin/restart-llama-cuda.sh` |
 | SYCL (Intel) | `127.0.0.1:8082` | Iris Xe (3.8 GiB) | `LFM2.5-2.6B.gguf` (LiquidAI LFM2.5-2.6B, Q4_K_M ~1.8 GB, fits with room for KV cache) | `llama-sycl.service` | `~/.local/bin/restart-llama-sycl.sh` |
 
 Both source `~/projs/llama.cpp` at **`origin/master`** (only build with `--cache-list`;
@@ -44,7 +44,7 @@ is in `/etc/fstab`.
 
 ## 2. What each backend is and why
 
-- **CUDA backend** (`restart-llama-server.service` → `restart-llama-server.sh`):
+- **CUDA backend** (`llama-cuda.service` → `restart-llama-cuda.sh`):
   the original V100 server on :8081. `ExecStartPre` refuses to start without a
   CUDA device. Olla's `ExecStartPre` also polls `http://127.0.0.1:8081/v1/models`.
 - **SYCL backend** (`llama-sycl.service` → `restart-llama-sycl.sh`):
@@ -65,10 +65,10 @@ Serve from the cached blob via a tidy symlink (`LFM2.5-2.6B.gguf`), not the raw
 ## 3. Architecture (files, tracked vs runtime-generated)
 
 **Tracked in the repo (committed):**
-- `dot_local/bin/executable_restart-llama-server.sh` / `executable_restart-llama-sycl.sh`
-  → applied by chezmoi to `~/.local/bin/restart-llama-server.sh` / `-sycl`
+- `dot_local/bin/executable_restart-llama-cuda.sh` / `executable_restart-llama-sycl.sh`
+  → applied by chezmoi to `~/.local/bin/restart-llama-cuda.sh` / `-sycl`
   (chezmoi `executable_` prefix ⇒ destination name + `+x`).
-- `etc/systemd/system/restart-llama-server.service` / `llama-sycl.service` / `olla.service`.
+- `etc/systemd/system/llama-cuda.service` / `llama-sycl.service` / `olla.service`.
 - `dot_config/olla/config.yaml` — static discovery: `:8081` (priority 100) + `:8082` (priority 90).
 - `.chezmoiscripts/run_once_5_aitools_{1llama_cpp,2llama_startup,3olla_startup,4llama_sycl_startup}.sh`
   (registered in `chezmoiscripts.dep.yml`).

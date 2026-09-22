@@ -1,7 +1,7 @@
 #!/bin/bash
 # restart-llama-sycl.sh — launch llama.cpp on the Intel GPU (SYCL / oneAPI).
 #
-# Mirrors restart-llama-server.sh for the Intel backend: binds localhost-only on
+# Mirrors restart-llama-cuda.sh for the Intel backend: binds localhost-only on
 # port 8082 so Olla can own :8082 publicly and proxy the SYCL backend model.
 #
 # The model is passed via llama.cpp's --hf-repo (`-hf`) form

@@ -41,7 +41,7 @@ natural `etc/` tree, so `pi/` is obsolete.
 
 The llama.cpp server is a **backend** service, not a user dotfile. It is started
 at every boot (before any login) by a *system* systemd unit —
-`/etc/systemd/system/restart-llama-server.service` (`WantedBy=multi-user.target`).
+`/etc/systemd/system/llama-cuda.service` (`WantedBy=multi-user.target`).
 Because it is a system unit, no `loginctl enable-linger` is required.
 
 - Provisioned by `.chezmoiscripts/run_once_5_aitools_2llama_startup.sh`, which
@@ -49,8 +49,8 @@ Because it is a system unit, no `loginctl enable-linger` is required.
   (`bind,nofail`) so the hub is available without passwordless `sudo mount`.
 - Everything runs under the scoped NOPASSWD sudoers drop-in (`install`, `tee`,
   `cp`, `systemctl`) — see the sudo boundary above.
-- Lifecycle: `systemctl --system enable --now restart-llama-server`,
-  `journalctl --system -u restart-llama-server -f`.
+- Lifecycle: `systemctl --system enable --now llama-cuda`,
+  `journalctl --system -u llama-cuda -f`.
 
 ## btop: dual GPU (Iiris Xe + NVIDIA) visibility
 

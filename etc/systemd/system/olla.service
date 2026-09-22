@@ -1,8 +1,8 @@
 [Unit]
 Description=Olla LLM proxy (public :40114 -> llama.cpp backend :8081 CUDA + :8082 SYCL)
 Documentation=https://thushan.github.io/olla/
-After=network.target restart-llama-server.service
-Wants=restart-llama-server.service
+After=network.target llama-cuda.service
+Wants=llama-cuda.service
 
 [Service]
 User=jan

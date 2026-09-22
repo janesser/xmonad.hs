@@ -561,8 +561,8 @@ and
 
 ##### llama.cpp server: runs at startup (no login)
 
-`restart-llama-server.sh` is started at every boot — even before anyone logs
-in — by a **system** systemd unit (`/etc/systemd/system/restart-llama-server.service`,
+`restart-llama-cuda.sh` is started at every boot — even before anyone logs
+in — by a **system** systemd unit (`/etc/systemd/system/llama-cuda.service`,
 `WantedBy=multi-user.target`). A system unit (not a user unit) is what lets it
 start without a logged-in session, so no `loginctl enable-linger` is needed.
 
@@ -571,8 +571,8 @@ start without a logged-in session, so no `loginctl enable-linger` is needed.
 - The huggingface-hub bind-mount lives in `/etc/fstab` (`bind,nofail`), so the
   hub is already mounted at boot and the script never needs `sudo mount`
   (mount/umount aren't passwordless here).
-- Restart manually: `systemctl --system restart restart-llama-server`
-- Logs: `journalctl --system -u restart-llama-server -f`
+- Restart manually: `systemctl --system restart llama-cuda`
+- Logs: `journalctl --system -u llama-cuda -f`
 
 #### generic chat: unsloth
 

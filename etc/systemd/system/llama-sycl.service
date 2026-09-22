@@ -4,7 +4,7 @@
 #
 # Runs llama.cpp on the Intel GPU (SYCL / oneAPI), serving the SYCL backend
 # model on 127.0.0.1:8082 so Olla can proxy it publicly on :8082. It mirrors
-# restart-llama-server.service (the CUDA backend on :8081) but for the Intel
+# llama-cuda.service (the CUDA backend on :8081) but for the Intel
 # accelerator.
 #
 # NOTE: this service is NOT enabled by default — loading the ~3.8 GB model adds

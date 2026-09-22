@@ -2,7 +2,7 @@
 # run_once_5_aitools_3olla_startup.sh
 #
 # Make Olla run at system boot WITHOUT a login required, consistent with
-# restart-llama-server.service:
+# llama-cuda.service:
 #
 #   1. Install a SYSTEM systemd unit to /etc/systemd/system that runs Olla as
 #      `jan` at boot (WantedBy=multi-user.target). A *system* unit — not a
@@ -19,13 +19,13 @@ set -euo pipefail
 SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
 
 # Guard: Ola is a *proxy* for the llama.cpp backend (public :40114 -> :8081) and
-# its unit has Wants=/After=restart-llama-server.service. Install it only on the
+# its unit has Wants=/After=llama-cuda.service. Install it only on the
 # desktop that actually runs the llama backend; otherwise we'd ship a boot
 # service that can never reach its target and would just loop on
 # Restart=on-failure. This mirrors run_once_5_aitools_2llama_startup.sh, which
 # guards the llama install on the same launcher below. Sudo is used only for
 # commands in the scoped NOPASSWD sudoers drop-in.
-SCRIPT=~/.local/bin/restart-llama-server.sh
+SCRIPT=~/.local/bin/restart-llama-cuda.sh
 if [ ! -f "${SCRIPT}" ]; then
     echo "$(basename "$0"): ${SCRIPT} not found — skipping Ola startup install."
     exit 0

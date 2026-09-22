@@ -1,8 +1,8 @@
 # Installed by
 # .chezmoiscripts/run_once_5_aitools_2llama_startup.sh
-# to /etc/systemd/system/restart-llama-server.service
+# to /etc/systemd/system/llama-cuda.service
 #
-# Runs jan's ~/.local/bin/restart-llama-server.sh at system boot, BEFORE any
+# Runs jan's ~/.local/bin/restart-llama-cuda.sh at system boot, BEFORE any
 # login. This is a *system* unit (not a user unit): only a system unit starts
 # at boot without a logged-in session, so no `loginctl enable-linger` is
 # required.
@@ -13,7 +13,7 @@
 # the script never needs `sudo mount` (which has no password here) at boot.
 
 [Unit]
-Description=Restart llama.cpp server via ~/.local/bin/restart-llama-server.sh
+Description=Restart llama.cpp server via ~/.local/bin/restart-llama-cuda.sh
 # Wait for filesystems (incl. the passeport automount), the NVIDIA persistence
 # daemon, and the NVIDIA kernel driver to be ready.
 #
@@ -38,9 +38,9 @@ Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/
 # Retry a few times: even with the driver ordered above, the CUDA userspace
 # backend needs a moment to initialize after the driver binds. A short local
 # loop avoids depending on systemd's 30s RestartSec to recover the probe.
-ExecStartPre=/usr/bin/bash -c 'for i in $(seq 1 8); do if llama serve --list-devices 2>/dev/null | grep -q CUDA; then exit 0; fi; echo "restart-llama-server: CUDA not ready, attempt $${i}/8, retrying..." >&2; sleep 2; done; echo "restart-llama-server: no CUDA device after 8 attempts, refusing to fall back to CPU" >&2; exit 1'
+ExecStartPre=/usr/bin/bash -c 'for i in $(seq 1 8); do if llama serve --list-devices 2>/dev/null | grep -q CUDA; then exit 0; fi; echo "llama-cuda: CUDA not ready, attempt $${i}/8, retrying..." >&2; sleep 2; done; echo "llama-cuda: no CUDA device after 8 attempts, refusing to fall back to CPU" >&2; exit 1'
 # The script forks `llama serve` in the background and exits itself.
-ExecStart=/usr/bin/fish /home/jan/.local/bin/restart-llama-server.sh
+ExecStart=/usr/bin/fish /home/jan/.local/bin/restart-llama-cuda.sh
 Type=oneshot
 RemainAfterExit=yes
 # Only the launcher (fish) is tracked; leave the orphaned llama server running

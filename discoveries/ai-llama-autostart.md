@@ -43,7 +43,7 @@ Evidence:
   ```
   fuse_worker invoked oom-killer: gfp_mask=0x140cca(GFP_HIGHUSER_MOVABLE), order=0
   oom-kill:constraint=CONSTRAINT_NONE,…,global_oom,task_memcg=/system.slice/
-            restart-llama-server.service,task=llama,pid=2166
+            llama-cuda.service,task=llama,pid=2166
   ```
   `fuse_worker` (the passeport **automount** worker) hit a page fault while the
   box was already near full; the OOM killer picked the biggest consumer — the
@@ -57,7 +57,7 @@ instead of loading the model onto RAM.
 
 ## 2. Double-launch — still present, secondary (was the old v1 theory)
 
-`~/.local/bin/restart-llama-server.sh` still runs **two** backgrounded
+`~/.local/bin/restart-llama-cuda.sh` still runs **two** backgrounded
 `llama serve` blocks (the script even carries FIXMEs about it):
 
 * **Block A** — the keeper: binds `:::8080`, actually serves.
@@ -128,7 +128,7 @@ LABEL="passeport"   /media/passeport   btrfs   defaults,nofail,x-systemd.automou
 
 ## 4. Boot CUDA-init race — discovered 2026-09-12 (fixed)
 
-`restart-llama-server.service` orders after `nvidia-persistenced.service`, but
+`llama-cuda.service` orders after `nvidia-persistenced.service`, but
 that's **not enough**: `nvidia-persistenced` is a *userspace* daemon that has
 **no `After=` on the kernel driver** — it starts before the `nvidia` module
 finishes initializing.
@@ -137,7 +137,7 @@ Boot timeline (2026-09-12, boot -0) proving the race:
 ```
 20:02:44  kernel: nvidia: loading out-of-tree module …          ← driver starts
 20:02:45  Starting nvidia-persistenced.service                  ← daemon up
-20:02:45  Starting restart-llama-server.service                 ← our service, concurrent
+20:02:45  Starting llama-cuda.service                 ← our service, concurrent
 20:02:46  [drm] Initialized nvidia-drm … on 0000:21:00.0         ← driver FINISHES
 20:02:46  no CUDA device found, refusing to fall back to CPU     ← probe FAILS mid-init
 ```
@@ -152,7 +152,7 @@ retried probe so it no longer depends on the 30 s restart to win the race.
 
 ## 5. What was applied and deployed (2026-09-12)
 
-Unit `etc/systemd/system/restart-llama-server.service` (installed to
+Unit `etc/systemd/system/llama-cuda.service` (installed to
 `/etc/systemd/system`, `daemon-reload`ed; live, llama serving on :8080):
 
 ```ini
@@ -166,19 +166,19 @@ Wants=nvidia-persistenced.service
 # CUDA device is available, so we never silently fall back to CPU → OOM.
 ExecStartPre=/usr/bin/bash -c 'for i in $(seq 1 8); do
   if llama serve --list-devices 2>/dev/null | grep -q CUDA; then exit 0; fi
-  echo "restart-llama-server: CUDA not ready, attempt ${i}/8, retrying…" >&2
+  echo "llama-cuda: CUDA not ready, attempt ${i}/8, retrying…" >&2
   sleep 2
 done
-echo "restart-llama-server: no CUDA device after 8 attempts, refusing to fall back to CPU" >&2
+echo "llama-cuda: no CUDA device after 8 attempts, refusing to fall back to CPU" >&2
 exit 1'
-ExecStart=/usr/bin/fish ~/.local/bin/restart-llama-server.sh
+ExecStart=/usr/bin/fish ~/.local/bin/restart-llama-cuda.sh
 Type=oneshot
 RemainAfterExit=yes
 Restart=on-failure
 RestartSec=30s
 ```
 
-Script `dot_local/bin/executable_restart-llama-server.sh` (working tree, staged):
+Script `dot_local/bin/executable_restart-llama-cuda.sh` (working tree, staged):
 - `killall llama-server` / `killall llama` → `if killall llama-server || killall llama; sleep 10; end`
   (settle freed sockets/processes before starting — mitigates the orphan-port race).
 - Block A now redirects its stdout/stderr (`>/dev/null 2>/dev/null`).
@@ -204,7 +204,7 @@ Script `dot_local/bin/executable_restart-llama-server.sh` (working tree, staged)
 
 ## 7. How to verify
 ```
-journalctl --system -u restart-llama-server.service -f
+journalctl --system -u llama-cuda.service -f
 ss -ltnp | grep 8080
 nvidia-smi
 ```
@@ -214,9 +214,9 @@ the unit should come up cleanly on the first probe attempt (driver ordered via
 `sys-bus-pci-drivers-nvidia.device`).
 
 ## 8. Files touched
-* **Deployed unit:** `etc/systemd/system/restart-llama-server.service`
+* **Deployed unit:** `etc/systemd/system/llama-cuda.service`
   (→ `/etc/systemd/system/` via `.chezmoiscripts/run_once_5_aitools_2llama_startup.sh`).
-* **Script:** `dot_local/bin/executable_restart-llama-server.sh` (working tree).
+* **Script:** `dot_local/bin/executable_restart-llama-cuda.sh` (working tree).
 * **Provisioning:** `.chezmoiscripts/run_once_5_aitools_2llama_startup.sh`
   (`UNIT_SRC` retargeted to `etc/systemd/system` after the move).
 * **Inputs moved:** `systemd/system/*` → `etc/systemd/system/` (chezmoi layout);

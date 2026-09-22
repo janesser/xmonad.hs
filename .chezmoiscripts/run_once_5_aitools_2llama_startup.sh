@@ -1,7 +1,7 @@
 #!/bin/bash
 # run_once_5_aitools_2llama_startup.sh
 #
-# Make ~/.local/bin/restart-llama-server.sh start at system boot, WITHOUT a
+# Make ~/.local/bin/restart-llama-cuda.sh start at system boot, WITHOUT a
 # login required:
 #
 #   1. Install a SYSTEM systemd unit to /etc/systemd/system that runs the
@@ -13,14 +13,14 @@
 #      password here).
 #
 # Both installs are idempotent and guarded: this only does anything on the
-# desktop that actually ships restart-llama-server.sh + the passeport drive.
+# desktop that actually ships restart-llama-cuda.sh + the passeport drive.
 # Sudo is used only for commands in the scoped NOPASSWD sudoers drop-in
 # (install, rm, tee, cp, systemctl).
 
 set -euo pipefail
 
 SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
-SCRIPT=~/.local/bin/restart-llama-server.sh
+SCRIPT=~/.local/bin/restart-llama-cuda.sh
 
 # Guard: only on machines that actually run llama (desktop with passeport).
 if [ ! -f "${SCRIPT}" ]; then
@@ -29,7 +29,7 @@ if [ ! -f "${SCRIPT}" ]; then
 fi
 
 # --- 1. systemd system unit -------------------------------------------------
-UNIT_NAME=restart-llama-server.service
+UNIT_NAME=llama-cuda.service
 UNIT_SRC="${SRC_DIR}/etc/systemd/system/${UNIT_NAME}"
 UNIT_DEST="/etc/systemd/system/${UNIT_NAME}"
 

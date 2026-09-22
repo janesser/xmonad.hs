@@ -50,7 +50,7 @@ for model in "${MODELS[@]}"; do
     fi
 
     # Restart llama server after each attempt
-    ~/.local/bin/restart-llama-server.sh
+    ~/.local/bin/restart-llama-cuda.sh
     
     # Optional: Add a small delay between calls to prevent rate limiting
     sleep 1

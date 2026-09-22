@@ -237,7 +237,7 @@ write_generated_files
 log "Done. Backend-specific commands:"
 log "  llama-server-cuda   # NVIDIA / CUDA  (build_cuda)"
 log "  llama-server-sycl   # Intel  / SYCL  (build_sycl, built lazily on first run)"
-# NOTE: the boot service (restart-llama-server) is CUDA-only by design; the
+# NOTE: the boot service (llama-cuda) is CUDA-only by design; the
 # SYCL server is started with the llama-server-sycl command above.
 #
 # CUDA init error on suspend/resume (fixed upstream):
