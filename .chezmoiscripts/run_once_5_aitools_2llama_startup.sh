@@ -46,6 +46,27 @@ else
     echo "✅ Installed ${UNIT_DEST}"
 fi
 
+# --- 1b. retire the renamed-old unit (idempotent; no-op on fresh machines) --
+# chezmoi only manages files present in the repo, so on a machine that already
+# ran the previous deploy the old unit is still installed AND enabled. Leaving
+# it would let systemd start both the renamed-away unit and the new one on
+# :8081. Disable it, then drop the unit file and its multi-user.target.wants
+# link. Sudo is used only for systemctl/rm in the scoped NOPASSWD drop-in.
+OLD_UNIT_NAME=restart-llama-server.service
+OLD_UNIT_DEST="/etc/systemd/system/${OLD_UNIT_NAME}"
+OLD_WANTS_LINK="/etc/systemd/system/multi-user.target.wants/${OLD_UNIT_NAME}"
+if sudo systemctl list-unit-files "${OLD_UNIT_NAME}" 2>/dev/null | grep -q "${OLD_UNIT_NAME}"; then
+    sudo systemctl disable "${OLD_UNIT_NAME}" >/dev/null 2>&1 || true
+    sudo rm -f "${OLD_UNIT_DEST}" "${OLD_WANTS_LINK}"
+    echo "✅ Retired old unit ${OLD_UNIT_NAME} (disabled + unit file and wants link removed)."
+fi
+# Drop the stale old launcher from the user tree (no sudo needed).
+OLD_LAUNCHER=~/.local/bin/restart-llama-server.sh
+if [ -f "${OLD_LAUNCHER}" ]; then
+    rm -f "${OLD_LAUNCHER}"
+    echo "✅ Removed stale launcher ${OLD_LAUNCHER}"
+fi
+
 sudo systemctl daemon-reload
 
 # --- 2. huggingface-hub bind mount in /etc/fstab ----------------------------
