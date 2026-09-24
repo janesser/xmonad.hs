@@ -1,197 +1,62 @@
-# jetson nano
+# jetson_nano_b210
 
-NVidia has dropped support for Jetson Nano since Jetson Linux R32.7.6.
+NVIDIA Jetson Nano, model **B210** (4 GB), Tegra **X1** (`tegra210`). NVIDIA
+dropped Jetson Nano support after **Jetson Linux R32.7.6** (JetPack 4.6.6).
 
-NOTE the driver package available may help built new kernels.
+This box is configured for **CUDA / TensorRT** so we can run small LLMs with
+`llama.cpp`. See **`INSTALL.md`** for the authoritative, step-by-step setup —
+image choice, flashing, first boot, CUDA verification, and running a model. Read
+it before anything else.
 
-<https://www.reddit.com/r/JetsonNano/comments/1eaw3a9/some_new_os_for_jetson_nano_4gb_original/>
+## The one thing to understand
 
-<https://developer.ridgerun.com/wiki/index.php/Jetson_Nano/Development/Building_the_Kernel_from_Source>
-<https://developer.nvidia.com/embedded/jetson-linux-archive>
-<https://developer.nvidia.com/embedded/linux-tegra-r3276>
+CUDA here is **proprietary and pinned to L4T `4.9.337-tegra`** — it will never
+move to a newer kernel. So this box has **no recent kernel and no normal
+distro-upgrade cycle**; you modernize userland, you don't `do-release-upgrade`.
+If CUDA isn't required, the other routes live below.
 
-<https://github.com/pythops/jetson-image>
-<https://github.com/armbian/build/pull/2720>
+## Options (and their status)
 
-## Yocto kernel 4.x
+- **L4T / JetPack 4.6.6 image — the CUDA path. ✅ Recommended.** Stock JP4.6.1
+  (Ubuntu 18.04, proven) or the **mischa-robots `ubuntu22`** image (same L4T
+  R32.7.6 / CUDA 10.2, but on Ubuntu 22.04 — in private beta, no public download
+  yet). Full CUDA/cuDNN/TensorRT + `llama.cpp` support. → `INSTALL.md`
+- **Armbian (vanilla kernel) — deferred.** Boots only after a QSPI-bootloader
+  reflash + a `venc` DTB patch; no NVIDIA GPU/CUDA (pure arm64 CPU), and Armbian
+  no longer maintains this board. Interesting only if you *drop* CUDA.
+- **OE4T / Yocto `meta-tegra` — deferred.** Reproducible L4T images; same CUDA
+  ceiling. Your kirkstone build produced a fine SD image that won't survive an
+  upgrade cycle — by design. → <https://github.com/janesser/kirkstone-jetson-nano>
 
-See compilation setup here: <https://github.com/janesser/kirkstone-jetson-nano.git>
+## Config files — pending verification
 
-## Ensuring fallback kernel
+The bundled `etc/` configs (`modprobe.d/tegra-udrm.conf`, `lightdm/*`,
+`X11/default-display-manager`, `modules`) have **not** been verified against the
+chosen OS image (L4T R32.7.6 / JetPack 4.6.6, Ubuntu 18.04 or 22.04). They were
+written against an unknown earlier base and will likely need adjustment — e.g.
+lightdm's `[SeatDefaults]` section is stale (should be `[Seat:seat0]` on newer
+lightdm). Treat `cz apply` here as a starting point to inspect and fix, not as
+known-good.
 
-Armbian vanilla kernel won't boot
-TODO place custom build
+## Still-applicable notes (L4T 4.9 environment)
 
-    # NOTE Some nvidia packages, overwrite present files, like i.e. /boot/Image
-    sudo apt install --reinstall nvidia-l4t-kernel nvidia-l4t-kernel-headers nvidia-l4t-kernel-dtbs nvidia-l4t-firmware
-    uname -r # 4.9.337-tegra
-    
-    cd /boot
-    sudo cp Image vmlinuz-4.9.337-tegra
-    sudo cp initrd initrd.img-4.9.337-tegra
-    
-    sudo ln -sf vmlinuz-6.12.63-current-arm64 Image
-    sudo ln -sf initrd.img-6.12.63-current-arm64 initrd.img
-    sudo ln -sf initrd.img-6.12.63-current-arm64 initrd
+- **Fallback kernel** — if you ever rebuild the L4T kernel, the `nvidia-l4t-kernel`
+  packages clobber `/boot/Image`. Keep a working `4.9` kernel bootable (see git
+  history for the extlinux primary/backup setup).
+- **jtop** — `sudo pip install -U jetson-stats && sudo jtop --install-service`;
+  handy for clocks / nvpmodel power modes.
+- **podman on 4.9** — overlayfs needs ≥ 4.12, so use the `vfs` storage driver
+  (`/usr/share/containers/storage.conf`, `driver = "vfs"`). NVIDIA CDI:
+  `sudo nvidia-ctk cdi generate --mode csv --output=/var/run/cdi/nvidia.yaml`.
+- **Window manager** — `cz apply` sets up lightdm (`etc/lightdm`,
+  `etc/X11/default-display-manager`); pick your WM at login.
+- **DRM/KMS (Wayland)** — load `sudo modprobe tegra-udrm modeset=1`; the packaged
+  `etc/modprobe.d/tegra-udrm.conf` enables it. Without it `eglinfo` reports no
+  display and Wayland can't start.
 
-    sudo ln -sf vmlinuz-4.9.337-tegra Image.backup
-    sudo ln -sf initrd.img-4.9.337-tegra initrd.img.backup
-    sudo ln -sf initrd.img-4.9.337-tegra initrd.backup
+## Sources
 
-### edit /etc/extlinux/extlinux.conf to be like
-
-    TIMEOUT 30
-    DEFAULT backup
-
-    MENU TITLE L4T boot options
-
-    LABEL primary
-        MENU LABEL primary kernel
-        LINUX /boot/Image
-        INITRD /boot/initrd
-        APPEND ${cbootargs} quiet root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 systemd.unified_cgroup_hierarchy=0
-
-    LABEL backup
-        MENU LABEL backup kernel
-        LINUX /boot/Image.backup
-        INITRD /boot/initrd.backup
-        APPEND ${cbootargs} quiet root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 systemd.unified_cgroup_hierarchy=0
-
-## No simple answers (with armbian jetson nano)
-
-<https://www.armbian.com/jetson-nano/>
-
-Automatic scripts maintain this, which actually won't boot.
-One will be stuck on Nvidia Logo, no visible kernel boot.
-
-### Apply images to sdcards
-
-    unzip -p ~/Downloads/jetson-nano-jp461-sd-card-image.zip sd-blob-b01.img | sudo dd bs=8M of=/dev/mmcblk1 status=progress oflag=sync
-    xzcat ~/Downloads/Armbian_community_26.2.0-trunk.44_Jetson-nano_trixie_current_6.12.60_minimal.img.xz | sudo dd of=/dev/mmcblk1 bs=8M oflag=dsync status=progress
-
-### Mount partition from image file
-
-<https://askubuntu.com/questions/69363/mount-single-partition-from-image-of-entire-disk-device>
-
-    unxz ~/Downloads/Armbian_community_26.2.0-trunk.44_Jetson-nano_trixie_current_6.12.60_minimal.img.xz
-    fdisk -lu ~/Downloads/Armbian_community_26.2.0-trunk.44_Jetson-nano_trixie_current_6.12.60_minimal.img
-
-    # calculate offset 540672 times block-size 512 = 276824064
-    losetup # check free loop-device
-    sudo losetup -o 276824064 /dev/loop22 ~/Downloads/Armbian_community_26.2.0-trunk.44_Jetson-nano_trixie_current_6.12.60_minimal.img
-    sudo mount /dev/loop22 /mnt # check you have the rootfs mounted
-    sudo dd if=/dev/loop22 of=/dev/mmcblk1p15 bs=4M oflag=dsync status=progress
-    sudo fsck /dev/mmcblk1p15 # expand image-size to partition-size
-
-### Attempt to fix armbian kernel situation INCOMPLETE
-
-<https://shallowsky.com/linux/extlinux.html>
-
-Copied working kernel onto armbian partition.
-Still boots from L4T partition.
-
-#### Install docker
-
-    sudo apt install nvidia-docker2 docker-buildx
-
-<https://forums.developer.nvidia.com/t/docker-fail-to-start-jetson-nano-after-clean-install-of-jetpack-6-2-fix-it/324760>
-
-    sudo systemctl stop docker
-    sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
-    sudo update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
-    sudo systemctl start docker
-
-<https://github.com/NVIDIA/nvidia-container-toolkit/issues/137>
-<https://github.com/docker/cli/issues/4238>
-
-Append `systemd.unified_cgroup_hierarchy=0` to `/boot/extlinux/extlinux.conf`.
-
-#### Build (custom?) armbian kernel
-
-<https://github.com/armbian/build>
-
-    cd ~/projs
-    git clone https://github.com/armbian/build.git
-    cd build
-    
-    # https://docs.armbian.com/Developer-Guide_Build-Commands/
-    ./compile.sh kernel-config BOARD=jetson-nano BRANCH=current KERNEL_BTF=no KERNEL_GIT=shallow # need around 15GB free disk space
-    ./compile.sh kernel BOARD=jetson-nano BRANCH=current KERNEL_BTF=no KERNEL_GIT=shallow
-    ./compile.sh kernel-dbt BOARD=jetson-nano BRANCH=current KERNEL_BTF=no KERNEL_GIT=shallow
-
-### Attempt to take over armbian in apt-sources ABORTED
-
-Big leap with around 200 broken packages. See example `/var/lib/aptitude/pkgstate` in git history.
-Once it comes to installation, there is a fundamental difference between ubuntu 18 and recent armbian/debian in regards of the `/bin /sbin /lib` folder.
-
-<https://wiki.debian.org/UsrMerge>
-
-## Unlock do-release-upgrade L4T image
-
-Set 'lts' in `/etc/update-manager/`
-
-There are victims of upgrade
-
-* (nv) tensorrt (can be restored ?)
-* (nv) opencv / visionworks
-* (nv) wayland / weston
-* unity
-
-Reached ubuntu 24 noble.
-
-Some fixes after do-release-upgrade
-
-<https://askubuntu.com/questions/1445364/do-release-upgrade-results-in-error-apt-glib-critical-apstreamcli-libapps>
-<https://unix.stackexchange.com/questions/464445/problem-with-appstreamcli-when-running-apt-update>
-
-## jetson-stats
-
-    mkdir -p ~/projs ; cd ~/projs
-    git clone https://github.com/rbonghi/jetson_stats.git
-    cd jetson_stats
-    ./scripts/install_jtop_torun_without_sudo.sh
-    sudo jtop --install-service
-    sudo jtop
-    # eventually enable jetson-clocks
-    # eventually switch to 5W mode
-
-## podman with CDI
-
-### with 4.9 kernel
-
-overlayfs aka fuse in usespace requires 4.12
-
-    sudo apt install -y podman containers-storage
-    sudo nano /usr/share/containers/storage.conf
-    # driver = "vfs"
-    podman system reset -f
-    sudo nvidia-ctk cdi generate --mode csv --output=/var/run/cdi/nvidia.yaml
-    nvidia-ctk cdi list
-
-### podman commit image_copy_tmp_dir
-
-<https://github.com/containers/podman/issues/22342>
-
-    sudo nano /usr/share/containers/storage.conf
-    # image_copy_tmp_dir = "/home/podman_image_copy_tmp_dir"
-    podman info # should display new value immediately
-
-## lightdm
-
-    sudo dpkg-reconfigure lightdm
-    sudo nano /etc/lightdm/lightdm.conf.d/99-custom.conf
-        [SeatDefaults]
-        user-session=
-        session-wrapper=lightdm-session
-    sudo systemctl stop gdm
-    sudo systemctl restart lightdm
-    # pick you favorite window-manager on login
-
-### eglinfo no display found
-
-<https://ttt.io/glsl-jetson-nano> -> points to OE4T egl capability
-<https://forums.developer.nvidia.com/t/egl-eglgetdisplay-failing-on-tx2-jetpack-4-2-2/179511>
-
-    sudo modprobe tegra-udrm modeset=1
-
-<https://github.com/OE4T/meta-tegra/blob/f7780e99f4c1b678bdfcdd707f139ab48510a372/recipes-graphics/mesa/mesa.bbappend#L3>
+- <https://developer.nvidia.com/embedded/jetson-linux-archive>
+- <https://developer.nvidia.com/embedded/linux-tegra-r3276>
+- <https://github.com/mischa-robots/jetson-nano-ubuntu22>
+- <https://github.com/kreier/llama.cpp-jetson.nano>
