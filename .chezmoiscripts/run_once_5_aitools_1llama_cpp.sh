@@ -184,7 +184,7 @@ sudo -n usermod -aG render "$USER" 2>/dev/null || true
 sudo -n usermod -aG video "$USER" 2>/dev/null || true
 
 if ! llama_sycl_ready; then
-    build_sycl origin/master || log "SYCL build failed — fix the above and re-run."
+    build_sycl "${LLAMA_REF:-v0.5.0}" || log "SYCL build failed — fix the above and re-run."
 else
     log "SYCL build already up to date; running."
 fi
@@ -220,15 +220,16 @@ fi
 
 grant_render_video_groups
 
-# Build from origin/master (unpinned) rather than a release tag: the --cache-list
-# (HF cache) flag the wrappers rely on landed only in master (PR #20775); the
-# latest release tag (b11064) predates it.
-LLAMA_REF="origin/master"
+# Build from the pinned release tag v0.5.0 rather than unpinned master, so the
+# CUDA/SYCL builds are reproducible. v0.5.0 (the latest release) already carries
+# the --cache-list (HF cache) flag the wrappers rely on, so nothing is lost vs.
+# master.
+LLAMA_REF="v0.5.0"
 log "Building $LLAMA_REF"
 
 # --- CUDA (built here, during apply) ----------------------------------------
 if has_nvidia; then
-    build_cuda "$LATEST_RELEASE" || log "CUDA build failed — investigate above and re-run."
+    build_cuda "$LLAMA_REF" || log "CUDA build failed — investigate above and re-run."
 fi
 
 # --- generate SYCL helper + launchers (lazy; SYCL itself builds on demand) ---
