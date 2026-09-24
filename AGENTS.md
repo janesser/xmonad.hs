@@ -72,29 +72,37 @@ btop only shows the NVIDIA box for the Intel Iris Xe / DG1 (gpu1). This is a
   instantaneous power is derived from the perf-sampled energy delta in
   `btop_collect` (see `src/linux/btop_collect.cpp`).
 - **`CAP_PERFMON` also required:** `perf_event_open()` on the i915 PMU needs
-  `CAP_PERFMON` (`kernel.perf_event_paranoid = 4`). Granted via
-  `setcap cap_perfmon+ep /usr/bin/btop` (targeted, preserves system-wide hardening).
-- **Deployed:** `/usr/bin/btop` = `1.4.7+2ad5308`, `cap_perfmon=ep`,
-  root:root. Built from the committed fix in `~/projs/btop` (its current HEAD),
-  installed over the system binary.
-- **Source clone (MR dev):** `~/projs/btop` — a **full** clone on branch
-  `btop-intel-gpu-fix` with the fix committed. This is the **single source of
-  truth** for the btop fix; the deploy script builds from it (no separate tag
-  or patch file). Full clone preferred over the previous shallow one so an MR
-  can be built locally.
+  `cap_perfmon` on the binary (`kernel.perf_event_paranoid = 4` blocks it). The
+  patched binary lives at `~/.local/bin/btop` (user-owned), so the cap is
+  granted with `sudo setcap cap_perfmon+ep ~/.local/bin/btop` — this needs
+  jan's sudo **password**, since the scoped NOPASSWD setcap rule only ever named
+  `/usr/bin/btop` (now the restored vanilla package). Don't broaden the sudoers
+  to cover the local path (see the sudo boundary).
+- **Deployed:** `~/.local/bin/btop` = `1.4.7+2ad5308`, `cap_perfmon=ep`,
+  `jan:jan` — built from the committed fix in `~/projs/btop` (its current HEAD).
+  `/usr/bin/btop` is the restored vanilla `1.4.6-2` apt package (left untouched).
+- **Dev clone (MR dev):** `~/projs/btop` — a **full** clone on branch
+  `btop-intel-gpu-fix` with the fix committed; develop and inspect here, and
+  push the branch to `janesser` when the fix advances. It is **not** used to
+  build (the deploy uses a separate clean clone — see below). Full clone
+  preferred over the previous shallow one so an MR can be built locally.
 - **Deploy run script:**
   `.chezmoiscripts/run_once_5_aitools_3btop_intel_gpu_cap.sh` (run_once,
-  intentionally untracked). **Policy: patched btop only where an Intel GPU
-  exists; every other host keeps the vanilla system btop untouched.** Two
-  layers enforce this — a top-level `has_intel_gpu` guard (log + exit 0), plus a
-  defence-in-depth assertion inside `ensure_btop()` that refuses to overwrite
-  `/usr/bin/btop` if `has_intel_gpu` is false. Clones only if no `.git`, then
-  builds the clone's current HEAD as the user and installs with `sudo install`
-  + scoped `sudo setcap`. Rebuilds whenever the clone HEAD advances, tracked by
-  a stamp at `~/.local/share/btop_deployed_commit` so a moving branch always
-  deploys a fresh binary and a failed build never masks a stale one. `cz update`
-  needs no network once the clone exists. (Dry-run both branches by hiding/lspci
-  to test the non-Intel path.)
+  **tracked in git**). **Policy: patched btop only where an Intel GPU exists;
+  every other host keeps the vanilla system btop untouched.** Two layers enforce
+  this — a top-level `has_intel_gpu` guard (log + exit 0), plus a defence-in-depth
+  assertion inside `ensure_btop()` that refuses to install if `has_intel_gpu` is
+  false. For reproducibility the build uses a **dedicated clean clone** at
+  `~/projs/btop-intel-gpu` of the fork's `btop-intel-gpu-fix` branch — never the
+  developer's working clone (which may be mid-rebase) and never upstream
+  aristocratos/btop (which has no fix). On a fresh box it clones the fork over
+  SSH (HTTPS fallback); it keeps the clone current with `git fetch` + checkout
+  and rebuilds only when the fork branch advances (stamp at
+  `~/.local/share/btop_deployed_commit`). Installs to `~/.local/bin/btop` (no
+  root). The `cap_perfmon` grant is the only sudo step and, targeting the
+  user-local path, needs jan's password (not the NOPASSWD drop-in). `cz update`
+  needs network only to fetch the fork (or the existing clone). (Dry-run both
+  branches by hiding/lspci to test the non-Intel path.)
 - **Config:** `~/.config/btop/btop.conf` (`shown_gpus = "nvidia amd intel"`,
   `shown_boxes = "cpu mem net proc gpu0 gpu1"`) — tracked by chezmoi; both GPUs
   render as separate boxes once the patched binary + cap are in place.

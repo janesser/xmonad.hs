@@ -10,24 +10,31 @@
 #      fails to discover the engines and the Iris Xe box silently vanishes — and
 #      on DG1 / IGPUs (which expose no RAPL energy-gpu PMU) power + temperature
 #      must be read from the i915 hwmon sensor instead. The fix lives committed
-#      in the ~/projs/btop clone (branch btop-intel-gpu-fix): discover_engines()
+#      in the full ~/projs/btop clone (branch btop-intel-gpu-fix): discover_engines()
 #      resolves the concrete i915_* device by scanning /sys/devices and
 #      propagates the instance name into engines->device, and hwmon power/temperature
 #      is read and sampled for instantaneous power. We build that committed fix
-#      from source and install it over /usr/bin/btop.
+#      from source and install it to ~/.local/bin/btop.
 #
-#   2. CAP_PERFMON on /usr/bin/btop. btop attaches to the i915 perf PMU via
+#   2. CAP_PERFMON on ~/.local/bin/btop. btop attaches to the i915 perf PMU via
 #      perf_event_open(); a normal user gets EPERM unless it holds CAP_PERFMON
 #      (kernel.perf_event_paranoid >= 4 blocks it). No external package is
 #      needed — just the capability on the binary.
 #
-# SOURCE OF TRUTH:
-#   The i915/DG1 fix is developed and committed in the full ~/projs/btop clone
-#   (branch btop-intel-gpu-fix). This script builds that clone — it does NOT
-#   pin a btop tag and apply a separate patch, so there is a single place the
-#   fix lives. The build dir is reused; the script rebuilds whenever the clone's
-#   HEAD advances (tracked by a stamp file), so a moving branch always deploys a
-#   fresh binary.
+# REPRODUCIBILITY (single source of truth):
+#   The build uses a CLEAN, DEDICATED clone of the fix branch (see BTOP_DIR
+#   below), NOT the developer's working clone at ~/projs/btop. Reasons:
+#     * A fresh box has no fix anywhere, so we clone the fork's fix branch from
+#       the network (the dev clone, or the pinned patch, is NOT assumed to
+#       exist). Cloning upstream aristocratos/btop would yield a vanilla binary
+#       with no fix.
+#     * The developer's working clone may be mid-rebase / dirty; a dirty tree
+#       can produce a broken build. The dedicated clone is always clean and is
+#       kept current with `git fetch` + checkout, so the deploy is deterministic
+#       for a given fork state.
+#   The fork branch is `btop-intel-gpu-fix`. This is the one place to move when
+#   the fix advances — push the branch to janesser and the next cz update builds
+#   it. No separate pinned SHA to hand-edit.
 #
 # SAFEGUARD "where required":
 #   Only run this on a box that actually has an Intel GPU (has_intel_gpu()).
@@ -42,26 +49,33 @@
 #   nothing: the vanilla system btop package is left exactly as-is, and no
 #   cap_perfmon is handed out. Two layers enforce this:
 #     1. Top-level guard: `has_intel_gpu` -> log + exit 0 on a non-Intel host.
-#     2. ensure_btop() assertion: refuses to overwrite /usr/bin/btop if
-#        has_intel_gpu is false (defence in depth, so a vanilla btop can never
-#        be clobbered even if layer 1 were ever bypassed).
+#     2. ensure_btop() assertion: refuses to install if has_intel_gpu is false
+#        (defence in depth — patched btop is only ever produced on an Intel
+#        GPU host, never handed out unnecessarily).
 #
-# Root is only ever used for commands allowed by the scoped chezmoi-pi sudoers
-# drop-in (see AGENTS.md): `install` (to place the binary) and
-# `/usr/sbin/setcap cap_perfmon+ep /usr/bin/btop` (exact match). NOTE: setcap
-# lives in /usr/sbin, not /usr/bin, so the sudoers rule must name the resolved
-# path /usr/sbin/setcap — sudo matches on the resolved path.
+# Root usage: `install` to ~/.local/bin is user-owned and needs NO sudo. The
+# only privileged step is `setcap`, and because the binary lives under the
+# user's home (not /usr/bin/btop) it is NOT covered by the scoped NOPASSWD
+# setcap rule (which only ever named /usr/bin/btop). So this needs jan's normal
+# sudo password (the `(ALL:ALL) ALL` rule), not the passwordless drop-in.
 #
-# Build steps (git/cmake/make) run as the user (no sudo needed); only the
-# final install + setcap use scoped sudo. This script is run_once, so the
-# (slow) build happens on the first cz update; subsequent updates are no-ops
-# until the clone's HEAD moves.
+# Build steps (git/cmake/make) run as the user (no sudo needed). This script is
+# run_once, so the (slow) build happens on the first cz update; subsequent
+# updates are no-ops unless the fork branch advances (tracked by a stamp). The
+# setcap step is gated by a getcap check, so once the cap is granted it is
+# never requested again.
 
 set -o pipefail
 
-BTOP_DIR="$HOME/projs/btop"
-# Stamp of the clone HEAD that is currently installed at /usr/bin/btop. Rebuild
-# whenever the clone advances past this commit.
+# Dedicated clean clone of the fix branch (separate from the developer's working
+# clone at ~/projs/btop).
+BTOP_DIR="$HOME/projs/btop-intel-gpu"
+BTOP_BRANCH="btop-intel-gpu-fix"
+# Fork is reachable over SSH (matches the dev clone's janesser auth); HTTPS is a
+# fallback for a fresh box that hasn't set up its key yet.
+BTOP_FORK_SSH="git@github.com:janesser/btop.git"
+BTOP_FORK_HTTPS="https://github.com/janesser/btop.git"
+# Stamp of the fork HEAD that is currently installed at ~/.local/bin/btop.
 BTOP_STAMP="$HOME/.local/share/btop_deployed_commit"
 
 # Detection + the capability helper live in gpu.func (rendered to
@@ -70,16 +84,10 @@ source "$HOME/.local/share/gpu.func"
 
 log() { echo "$(basename "$0"): $*"; }
 
-# ensure_btop -> build the i915/DG1-patched btop from the ~/projs/btop clone and
-# install it over the system binary. Returns non-zero on failure (logged, never
+# ensure_btop -> build the i915/DG1-patched btop from the dedicated clone and
+# install it to ~/.local/bin/btop. Returns non-zero on failure (logged, never
 # fatal, so a failed build during cz update leaves the working system btop in
 # place for a retry on the next update).
-#
-# POLICY: this binary is ONLY installed where an Intel GPU is present (see the
-# top-level guard below). This assertion is defence in depth — it makes it
-# impossible to clobber a vanilla system btop on a non-Intel host even if the
-# top-level guard were ever removed. On NVIDIA-only / ARM / headless hosts we
-# leave the vanilla btop package exactly as it is.
 ensure_btop() {
     if ! has_intel_gpu; then
         log "REFUSING to install patched btop: no Intel GPU on this host; keeping vanilla system btop."
@@ -87,14 +95,21 @@ ensure_btop() {
     fi
 
     if [ ! -d "$BTOP_DIR/.git" ]; then
-        # A full clone is preferred over a shallow one so MR/inspection works
-        # locally; we only clone if there is no .git yet, so cz update needs no
-        # network when the clone already exists.
-        log "Cloning btop -> $BTOP_DIR"
-        if ! git clone https://github.com/aristocratos/btop.git "$BTOP_DIR"; then
-            log "ERROR: could not clone btop (check network) and re-run."
-            return 1
+        log "Cloning btop fix branch '$BTOP_BRANCH' -> $BTOP_DIR"
+        if ! git clone --branch "$BTOP_BRANCH" "$BTOP_FORK_SSH" "$BTOP_DIR" 2>/dev/null; then
+            log "SSH clone failed; trying HTTPS."
+            if ! git clone --branch "$BTOP_BRANCH" "$BTOP_FORK_HTTPS" "$BTOP_DIR"; then
+                log "ERROR: could not clone btop fix branch (check network/auth) and re-run."
+                return 1
+            fi
         fi
+    fi
+
+    # Keep the dedicated clone current WITHOUT disturbing the developer's clone.
+    # A failed fetch is non-fatal — we build whatever is already checked out.
+    if ! ( cd "$BTOP_DIR" && git fetch origin --prune 2>/dev/null \
+                && git checkout -B "$BTOP_BRANCH" "origin/$BTOP_BRANCH" 2>/dev/null ); then
+        log "WARNING: could not update $BTOP_DIR (continuing with the local checkout)."
     fi
 
     local head head_short
@@ -120,12 +135,13 @@ ensure_btop() {
         log "btop $head_short already built; reusing."
     fi
 
-    # Install over the system binary (scoped sudo 'install').
-    if ! sudo install -m755 "$BTOP_DIR/build/btop" /usr/bin/btop; then
-        log "ERROR: could not install patched btop to /usr/bin/btop."
+    # Install into the user's local bin. This path is user-owned, so no root is
+    # needed here (the old design installed over /usr/bin/btop).
+    if ! install -m755 "$BTOP_DIR/build/btop" "$HOME/.local/bin/btop"; then
+        log "ERROR: could not install patched btop to ~/.local/bin/btop."
         return 1
     fi
-    log "installed patched btop ($head_short) to /usr/bin/btop"
+    log "installed patched btop ($head_short) to ~/.local/bin/btop"
     return 0
 }
 
@@ -138,7 +154,19 @@ fi
 
 ensure_btop || log "btop patch/install was not applied — see errors above; re-run cz update."
 
-# Grant /usr/bin/btop CAP_PERFMON (idempotent; needs scoped sudo setcap).
-grant_btop_intel_gpu_perf
+# Grant CAP_PERFMON so btop can attach to the i915 perf PMU (perf_event_paranoid
+# is high on this box, so the cap is required for the DG1 engine/power counters).
+# The binary is user-owned, so this needs a sudo password — the scoped NOPASSWD
+# setcap rule only ever covered /usr/bin/btop, which we no longer touch. The
+# getcap check makes it idempotent: once the cap is set, future cz updates do
+# not prompt. If it fails here (e.g. headless cz update), grant it once manually:
+#   sudo setcap cap_perfmon+ep ~/.local/bin/btop
+if getcap "$HOME/.local/bin/btop" 2>/dev/null | grep -q 'cap_perfmon'; then
+    log "cap_perfmon already on ~/.local/bin/btop."
+elif sudo setcap cap_perfmon+ep "$HOME/.local/bin/btop"; then
+    log "granted cap_perfmon on ~/.local/bin/btop."
+else
+    log "WARNING: could not grant cap_perfmon to ~/.local/bin/btop — i915 engine/power counters won't be readable until it is."
+fi
 
 log "Done. Restart btop to see the Intel Iris Xe GPU box."
