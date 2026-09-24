@@ -1,9 +1,13 @@
 # Rehab handout as PDF — practitioner interview guide
 
-Status: **interview pending.** This is the research note for a PDF rehab
-handout (daily-practice instructions + a low-vision-friendly schematic per
-exercise), and the interview script that decides the one open question:
-**what generates the imagery, and how.**
+Status: **interview pending — but a ready sample now exists.** This is the
+research note for a PDF rehab handout (daily-practice instructions + a
+low-vision-friendly schematic per exercise), and the interview script that
+decides the one open question: **what generates the imagery, and how.**
+
+A working sample is now available to show the practitioner during the
+interview (see **Ready sample** below) — it pre-answers question 13:
+a CC-BY illustration **with an attribution line is fine in practice.
 
 Related: `discoveries/ai-image-gen.md` (ComfyUI/Flux — uninstalled, was
 unreliable, effectively out of scope).
@@ -68,6 +72,11 @@ Ask:
 10. Which one "looks right but is actually misleading"? (Exposes the
     plausible-but-wrong risk of generated/realistic images.)
 
+**Also show `discoveries/arm-bow-exercise/`** — a finished 2-page handout
+(picture on p1, six numbered steps on p2, CC-BY credit line). It is the real,
+low-vision-tuned version of S2 and lets the practitioner judge the actual
+product rather than an abstract pictogram.
+
 ## D. Specificity & scale
 
 11. Of the exercises you hand out, roughly how many map cleanly to an existing
@@ -81,6 +90,11 @@ Ask:
 13. Would a "Graphics: CC-BY © …" line in the handout be acceptable to you and
     your patients, or does it undermine the product? (Resolves whether CC-BY /
     CC-BY-SA is usable, or only CC0.)
+
+> Demonstrable answer: the arm-bow handout uses a CC-BY 3.0 Wikimedia
+> illustration (Osteomyoamare) with a visible attribution line on p2 — so a
+> `CC-BY © …` credit is a live option, not a hypothetical. If the practitioner
+> still objects, fall back to CC0 (Open Peeps/Open Doodles).
 14. Do you distribute these commercially, freely, or internally? (Resolves
     whether NC-licensed graphics are even allowed.)
 
@@ -104,9 +118,23 @@ Ask:
 - If images feel optional once they describe the patient's real behavior →
   **layout-only** (D) may be the honest answer.
 
+## Ready sample
+
+`discoveries/arm-bow-exercise/` — a complete 2-page PDF handout for one
+exercise (elbow flexion/extension):
+
+- p1: CC-BY 3.0 illustration + caption
+- p2: 6 numbered steps, a tip line, and a CC-BY attribution line
+- Noto Sans, 20 pt base, generous spacing (low-vision-friendly)
+- Builds in one `pdflatex` pass via the ai-docgen pipeline
+
+Show this in the interview; it resolves question 13 and gives a concrete
+S2-style sample to point at.
+
 ## Open decisions still pending
 
-- Image source (A/B/C/D) — decided by the interview above.
+- Image source (A/B/C/D) — decided by the interview above. The arm-bow sample
+  is option **(A) CC library (CC-BY)** working end-to-end.
 - Content source: practitioner reviews; exercises are well-known/documented.
 - Hardware: not a constraint for A/B/D (no GPU needed); only C (diffusion)
   would need cyberkleiber to have a usable GPU.
