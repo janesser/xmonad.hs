@@ -67,25 +67,34 @@ btop only shows the NVIDIA box for the Intel Iris Xe / DG1 (gpu1). This is a
   `i915*` dir exposing `events/` and reassigns `engines->device` to the resolved
   instance name (e.g. `i915_0000_2f_00.0`) so `pmu_init()` finds the perf
   event source type. `free()` added on both the `err` path and `free_engines()`.
+  On DG1 / IGPUs (no RAPL energy-gpu PMU) power + temperature are read from the
+  i915 hwmon sensor (cumulative `energy1` microjoule counter + `temp1`) and
+  instantaneous power is derived from the perf-sampled energy delta in
+  `btop_collect` (see `src/linux/btop_collect.cpp`).
 - **`CAP_PERFMON` also required:** `perf_event_open()` on the i915 PMU needs
   `CAP_PERFMON` (`kernel.perf_event_paranoid = 4`). Granted via
   `setcap cap_perfmon+ep /usr/bin/btop` (targeted, preserves system-wide hardening).
-- **Deployed:** `/usr/bin/btop` = `1.4.6+975e395` (patched), `cap_perfmon=ep`,
-  root:root. Built from source, installed over the system binary.
+- **Deployed:** `/usr/bin/btop` = `1.4.7+2ad5308`, `cap_perfmon=ep`,
+  root:root. Built from the committed fix in `~/projs/btop` (its current HEAD),
+  installed over the system binary.
 - **Source clone (MR dev):** `~/projs/btop` — a **full** clone on branch
-  `btop-intel-gpu-fix` with the fix committed. Patch also at
-  `/tmp/btop-intel-gpu-fix.patch`. Full clone preferred over the previous
-  shallow one so an MR can be built locally.
+  `btop-intel-gpu-fix` with the fix committed. This is the **single source of
+  truth** for the btop fix; the deploy script builds from it (no separate tag
+  or patch file). Full clone preferred over the previous shallow one so an MR
+  can be built locally.
 - **Deploy run script:**
   `.chezmoiscripts/run_once_5_aitools_3btop_intel_gpu_cap.sh` (run_once,
   intentionally untracked). **Policy: patched btop only where an Intel GPU
   exists; every other host keeps the vanilla system btop untouched.** Two
   layers enforce this — a top-level `has_intel_gpu` guard (log + exit 0), plus a
   defence-in-depth assertion inside `ensure_btop()` that refuses to overwrite
-  `/usr/bin/btop` if `has_intel_gpu` is false. Clones only if no `.git`, builds
-  as the user, then `sudo install` + scoped `sudo setcap`. `cz update` needs no
-  network once the clone exists. (Dry-run both branches by hiding/lspci to test
-  the non-Intel path.)
+  `/usr/bin/btop` if `has_intel_gpu` is false. Clones only if no `.git`, then
+  builds the clone's current HEAD as the user and installs with `sudo install`
+  + scoped `sudo setcap`. Rebuilds whenever the clone HEAD advances, tracked by
+  a stamp at `~/.local/share/btop_deployed_commit` so a moving branch always
+  deploys a fresh binary and a failed build never masks a stale one. `cz update`
+  needs no network once the clone exists. (Dry-run both branches by hiding/lspci
+  to test the non-Intel path.)
 - **Config:** `~/.config/btop/btop.conf` (`shown_gpus = "nvidia amd intel"`,
   `shown_boxes = "cpu mem net proc gpu0 gpu1"`) — tracked by chezmoi; both GPUs
   render as separate boxes once the patched binary + cap are in place.
