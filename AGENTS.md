@@ -3,6 +3,14 @@
 Personal chezmoi dotfiles repo (xmonad / X11 Linux desktop). Managed via
 `chezmoi` (alias `cz`). GitHub: `janesser/xmonad.hs.git`. Human guide: `README.md`.
 
+## Tool usage: every bash command needs a timeout
+Run **every** `bash` tool call with an explicit `timeout`, without exception —
+even quick, obviously-fast commands. There is no default timeout, so omitting
+it leaves a hung process (slow apt/snap/network step, a stalled `cz`, a
+waiting consent prompt) to block the session indefinitely. Pick a sane value for
+the command's nature (seconds for local greps/edits; minutes for apt/snap/`cz
+update`). This rule overrides any general "omit timeout unless needed" guidance.
+
 ## pi-agent's sudo boundary (important)
 pi-agent MAY run `cz update` (chezmoi pull + apply). Privileged steps run under a
 scoped NOPASSWD sudoers drop-in at `/etc/sudoers.d/chezmoi-pi`, which grants root

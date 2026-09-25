@@ -23,6 +23,8 @@ sudo snap install ghidra
 # manifest changes the rendered script hash, so chezmoi re-runs this script
 # on the next apply. The live ~/.pi/agent/settings.json is owned by pi.
 
-npx bmad-method install --directory $CHEZMOI_SOURCE_DIR --modules bmm --tools pi --yes
+# NB: bmad is NOT installed here anymore. The project-local install that used
+# to live on this line is obsolete — the global BMAD skills are published to
+# ~/.pi/agent/skills/ by run_5_aitools_5bmad.sh on every "chezmoi apply".
 
 pi list
