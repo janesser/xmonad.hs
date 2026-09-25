@@ -29,7 +29,6 @@ Cmnd_Alias CHEZMOI_PKGS = \
     /usr/bin/snap, \
     /usr/sbin/usermod, \
     /usr/sbin/groupadd, \
-    /usr/bin/systemctl, \
     /usr/bin/update-alternatives, \
     /usr/bin/mkdir, \
     /usr/bin/chmod, \
@@ -49,5 +48,28 @@ Cmnd_Alias CHEZMOI_PKGS = \
     /usr/bin/journalctl, \
     /home/jan/.local/share/chezmoi/uninstaller/ollama_uninstall.sh \
 
+# --- scoped systemctl: unit-management subcommands only -----------------------
+# Replaces the previous bare `/usr/bin/systemctl` (any args). Each line mirrors a
+# form actually used by the chezmoi run_* scripts (see run_once_5_aitools_*,
+# run_once_3_podman_nvidia_cdi, run_onchange_auto_poweroff_timer). `enable *`,
+# `disable *`, `restart *` also match their trailing flags (--now, --user, ...)
+# because a bare `*` swallows the rest of the args; `--system *` / `--user *`
+# cover the bus-qualified forms. This lets `systemctl restart llama-sycl` work
+# while forbidding broader `systemctl` abuse (set-environment, daemon-reexec,
+# import, load, etc.). No shell / file-write access is granted.
+Cmnd_Alias SYSTEMCTL_UNIT = \
+    /usr/bin/systemctl daemon-reload, \
+    /usr/bin/systemctl enable *, \
+    /usr/bin/systemctl disable *, \
+    /usr/bin/systemctl start *, \
+    /usr/bin/systemctl stop *, \
+    /usr/bin/systemctl restart *, \
+    /usr/bin/systemctl status *, \
+    /usr/bin/systemctl is-active *, \
+    /usr/bin/systemctl is-enabled *, \
+    /usr/bin/systemctl list-unit-files *, \
+    /usr/bin/systemctl --system *, \
+    /usr/bin/systemctl --user * \
+
 # --- grant to this user only ---
-jan ALL=(root) NOPASSWD: CHEZMOI_PKGS
+jan ALL=(root) NOPASSWD: CHEZMOI_PKGS, SYSTEMCTL_UNIT
