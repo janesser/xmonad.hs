@@ -1,14 +1,10 @@
 #!/bin/bash
 #
-# TeamViewer uninstaller — run during `cz apply` (referenced from
-# .chezmoiscripts/run_9_cleanup_apt.sh.tmpl). TeamViewer was removed from the repo
+# TeamViewer uninstaller — run during `cz apply` (called from
+# .chezmoiscripts/run_9_cleanup_apt.sh). TeamViewer was removed from the repo
 # (etc/apt/... source + keyring, and the install step in
 # run_onchange_sudo_apt_sources.sh.tmpl); this script cleans it up from any
 # machine that still has TeamViewer installed. Idempotent: safe to run every apply.
-#
-# Uses the same passwordless-sudo scope as the other cleanup scripts: the
-# CHEZMOI_PKGS sudoers alias covers `/usr/bin/apt` and `/usr/bin/rm` (any args),
-# so no new sudoers entry is required.
 
 set -u
 
@@ -17,6 +13,12 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
+
+# --- output helpers (define these before use; the colors above are their only deps) ---
+say() { printf "%b%s%b\n" "$BLUE" "$1" "$NC"; }
+ok()  { printf "%b%s%b\n" "$GREEN" "$1" "$NC"; }
+warn(){ printf "%b%s%b\n" "$YELLOW" "$1" "$NC"; }
+err() { printf "%b%s%b\n" "$RED" "$1" "$NC" >&2; }
 
 # --- remove the package ---
 if dpkg -s teamviewer >/dev/null 2>&1; then
