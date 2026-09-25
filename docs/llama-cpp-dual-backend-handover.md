@@ -48,10 +48,11 @@ is in `/etc/fstab`.
   the original V100 server on :8081. `ExecStartPre` refuses to start without a
   CUDA device. Olla's `ExecStartPre` also polls `http://127.0.0.1:8081/v1/models`.
 - **SYCL backend** (`llama-sycl.service` → `restart-llama-sycl.sh`):
-  the Intel-GPU server on :8082. Installed + enabled by
-  `.chezmoiscripts/run_once_5_aitools_4llama_sycl_startup.sh` (mirrors the CUDA
-  run script). Not started by default (heavy ~3.8 GiB load) — start it explicitly
-  or it comes up at boot.
+  the Intel-GPU server on :8082. Installed + enabled (but not started by
+  default — heavy ~3.8 GiB load) by the merged
+  `.chezmoiscripts/run_once_5_aitools_2llama_startup.sh`, which provisions BOTH
+  backends from one backend table; the old `run_once_5_aitools_4llama_sycl_startup.sh`
+  is now a no-op stub. Start it explicitly (`systemctl --system start llama-sycl`) or it comes up at boot.
 
 **Model fit:** LFM2.5-2.6B (dense 2.6B, Q4_K_M ~1.8 GB weights) fits the Iris Xe
 shared-memory budget with room to spare for the KV cache — unlike the 8B

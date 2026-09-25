@@ -295,17 +295,17 @@ sort: lexicographic_by_filename
 - file: run_once_5_aitools_2llama_startup.sh
   phase: run_once
   tier: 5
-  desc: "Install boot systemd unit + HF-hub fstab bind-mount for the llama.cpp backend"
-  provides: [llama-cuda, huggingface-hub-bind]
+  desc: "Install boot systemd units + HF-hub fstab bind-mount for BOTH llama.cpp backends (CUDA :8081 + SYCL :8082)"
+  provides: [llama-cuda, llama-sycl, huggingface-hub-bind]
   depends_on: []
-  notes: "System unit (no login required); guarded to machines that ship restart-llama-cuda.sh."
+  notes: "System unit (no login required); guarded to machines that ship restart-llama-cuda.sh / restart-llama-sycl.sh. Started only when a backend is not already serving (never reaps a live instance)."
 - file: run_once_5_aitools_4llama_sycl_startup.sh
   phase: run_once
   tier: 5
-  desc: "Install boot systemd unit (llama-sycl.service) for llama.cpp on the Intel GPU (SYCL) on :8082"
-  provides: [llama-sycl]
+  desc: "NO-OP stub — SYCL backend provision now lives in run_once_5_aitools_2llama_startup.sh; kept only so existing references don't break."
+  provides: []
   depends_on: []
-  notes: "System unit (no login required); guarded to machines that ship restart-llama-sycl.sh. NOT enabled by default: the ~3.8 GB gemma load adds to an already memory-constrained box. Enable when you want the Intel backend."
+  notes: "Stub exits 0. Remove the file + this entry once docs/dep references are cleaned up. The SYCL unit itself (llama-sycl.service, :8082) is enable-only (see its START=no flag in the merged script)."
 - file: run_once_5_aitools_3olla_startup.sh
   phase: run_once
   tier: 5
