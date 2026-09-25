@@ -7,10 +7,10 @@
 # llama-cuda.service (the CUDA backend on :8081) but for the Intel
 # accelerator.
 #
-# NOTE: this service is NOT enabled by default — loading the ~3.8 GB model adds
-# to an already memory-constrained box. Enable it when you want the Intel
-# backend:
-#   systemctl --system enable --now llama-sycl.service
+# NOTE: this service IS enabled at boot (run_once_5_aitools_4llama_sycl_startup.sh
+# runs a plain `enable`, not `enable --now`): loading the ~3.8 GB model is heavy,
+# so the first start is left to an explicit `systemctl start` (or next boot) and
+# to the launcher's memory guard.
 #
 # The huggingface-hub bind-mount onto ~/.cache/huggingface/hub is added to
 # /etc/fstab by run_once_5_aitools_2llama_startup.sh, so at boot the hub is
@@ -25,12 +25,25 @@ User=jan
 Environment=HOME=/home/jan
 Environment=USER=jan
 Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/jan/.local/share/mise/shims
-# The launcher execs llama-server, so systemd tracks it as the main process
-# (Type=simple): restart + clean kill are handled by systemd, with no
-# fork/disown/cgroup-cleanup dance.
-Type=simple
+# The launcher DETACHES llama-server (fork + disown) and exits, so systemd runs
+# it as Type=oneshot: the launcher is the only tracked process, and once it
+# exits the unit becomes active(exited) while the orphaned llama-server keeps
+# serving. KillMode=process + KillSignal=SIGTERM means `systemctl stop/restart`
+# kills only the already-exited launcher, leaving the orphan running; the
+# launcher reaps the previous orphan on the next run (see the script).
+#
+# Self-heal: if the launcher itself fails (build missing, unit restarted), retry
+# after a short delay instead of requiring a manual restart. NOTE: unlike
+# Type=simple, systemd does NOT restart a llama-server that dies while running —
+# the unit is already "done" at that point. This is the CUDA backend's trade-off
+# (mirrors restart-llama-server.service).
+Type=oneshot
+RemainAfterExit=yes
 ExecStartPre=/usr/bin/bash -c '. "$HOME/.local/share/llama-cpp/lib.sh"; if [ -x "$BUILD_SYCL/bin/llama-server" ]; then echo "llama-sycl: SYCL build present at $BUILD_SYCL"; else echo "llama-sycl: SYCL build missing — the launcher will bootstrap it on first use"; fi'
 ExecStart=/usr/bin/bash /home/jan/.local/bin/restart-llama-sycl.sh 8082
+KillMode=process
+KillSignal=SIGTERM
+TimeoutStartSec=120s
 Restart=on-failure
 RestartSec=30s
 
