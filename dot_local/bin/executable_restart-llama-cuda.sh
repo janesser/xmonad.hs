@@ -1,9 +1,36 @@
 #!/usr/bin/fish
 
-# Kill any existing instances of llama-server
-if killall llama-server || killall llama
-  sleep 10
-end
+# Reap ONLY our own llama-cuda backend: a process named llama / llama-server
+# whose cmdline is bound to OUR port (:8081). This must never match the SYCL
+# backend on :8082, whose llama.cpp binary is also literally named
+# `llama-server` -- a blunt `killall llama-server` would kill it too. Run in
+# bash for reliable /proc/<pid>/cmdline scanning plus a bounded
+# SIGTERM -> SIGKILL wait. The extra `cuda` arg is `bash -c`'s $0 (its script
+# name); $1 = port, $2 = mode. (The `set -u`-free fish launcher inherits this.)
+bash -c '
+  port="$1"; mode="$2"
+  got=0
+  for pid in $(pgrep -x llama 2>/dev/null; pgrep -x llama-server 2>/dev/null); do
+    [ -r "/proc/$pid/cmdline" ] || continue
+    cmd=$(tr "\0" " " < "/proc/$pid/cmdline" 2>/dev/null)
+    case "$cmd" in
+      *"$port"*)
+        comm=$(cat "/proc/$pid/comm" 2>/dev/null)
+        if [ "$mode" = dry ]; then
+          echo "restart-llama-cuda: DRY-RUN would reap pid $pid ($comm) on :$port"
+        else
+          echo "restart-llama-cuda: reaping llama-cuda backend pid $pid ($comm) on :$port"
+          kill "$pid" 2>/dev/null
+          for i in $(seq 1 10); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
+          kill -0 "$pid" 2>/dev/null && { echo "restart-llama-cuda: SIGKILL unresponsive $pid" >&2; kill -9 "$pid" 2>/dev/null; }
+        fi
+        got=1
+        ;;
+    esac
+  done
+  [ "$got" = 0 ] && echo "restart-llama-cuda: no llama-cuda backend on :$port to reap"
+  [ "$mode" != dry ] && sleep 2
+' cuda 8081 live
 
 if [ "$argv[1]" = "stop" ]
   sudo umount ~/.cache/huggingface/hub
