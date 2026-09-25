@@ -11,7 +11,11 @@ if [ ! -t 0 ]; then
     exit 1
 fi
 
-echo "This will install apt keyrings/sources under /etc and adjust snap packages."
+echo "This will install apt keyrings/sources under /etc."
+
+# Legacy apps (charm, glow, the apt builds of signal-desktop and element-desktop)
+# were removed from the repo; their removal + snap migration now lives in
+# run_once_9_cleanup_uninstall.sh, so this script only installs keyrings/sources.
 read -r -p "Continue? [y/N] " answer || true
 case "${answer}" in
     [Yy]|[Yy][Ee][Ss]) : ;;
@@ -33,26 +37,3 @@ else
 fi
 
 sudo apt install -y extrepo
-
-# TODO find signal for arm64, e.g. https://github.com/dennisameling/Signal-Desktop
-
-
-# CLEAN UPs
-
-sudo rm -f /etc/apt/sources.list.d/charm.sources
-sudo rm -f /etc/apt/keyrings/charm.gpg
-sudo apt remove --purge -y glow
-
-sudo rm -f /etc/apt/sources.list.d/signal-xenial.sources
-sudo rm -f /etc/apt/keyrings/signal-desktop-keyring.gpg
-sudo apt remove --purge -y signal-desktop
-
-sudo rm -f /etc/apt/sources.list.d/element-io.sources
-sudo rm -f /etc/apt/keyrings/element-io-archive-keyring.gpg
-sudo apt remove --purge -y element-desktop
-
-sudo apt install -y snap
-sudo snap install signal-desktop
-sudo snap install element-desktop
-
-sudo snap remove --purge glow # FIXME broken, gives permission denied error
