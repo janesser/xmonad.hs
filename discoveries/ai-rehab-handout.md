@@ -25,6 +25,17 @@ How the image component of the handout is produced:
 - **(C)** Diffusion-generated images — currently the **disfavored** option
   (soft raster, ambiguous anatomy, GPU cost; poor fit for low-vision
   schematics).
+  > A concrete option now exists: **Qwen-Image-2.1**
+  > (<https://huggingface.co/Qwen/Qwen-Image-2.1>, 2026-09-20) — a 7B
+  > text-to-image+edit model that generates **native RGBA (transparent)
+  >** images and has improved typography. But two things keep it disfavored
+  > here: it is still **raster** (fails the Q6 "must scale without losing
+  > clarity" test that favors vector), and its **Qwen Research License is
+  > non-commercial only** (commercial use needs a separate license — Q14).
+  > So it is a runnable demo, not a fit for a distributable handout.
+  > > 🔴 **Live test run in progress (2026-09-25):** weights downloading and
+  > > the int8/CPU pipeline being exercised to produce one sample. See the
+  > > “IN-PROGRESS TEST RUN — handover” box in `discoveries/ai-image-gen.md`.
 - **(D)** No image — layout/typography only, if practitioners don't find
   them useful.
 
@@ -137,4 +148,5 @@ S2-style sample to point at.
   is option **(A) CC library (CC-BY)** working end-to-end.
 - Content source: practitioner reviews; exercises are well-known/documented.
 - Hardware: not a constraint for A/B/D (no GPU needed); only C (diffusion)
-  would need cyberkleiber to have a usable GPU.
+  would need cyberkleiber to have a usable GPU. Qwen-Image-2.1 fits C,
+  but see the license + raster caveats above — it does not clear them.
