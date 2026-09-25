@@ -23,8 +23,7 @@ if [ "$CHEZMOI_ARCH" = "amd64" ]; then
     # `install` (coreutils) copies SOURCE->DEST and sets mode/owner explicitly,
     # unlike `cp`, which would inherit the run umask. apt wants these root:root
     # 0644 (keyring readable by apt); `install -d` makes the target dirs
-    # exist first, so this stays idempotent. `/usr/bin/install` is in the
-    # CHEZMOI_PKGS passwordless-sudo alias.
+    # exist first, so this stays idempotent.
     sudo install -d -m 0755 -o root -g root /etc/apt/keyrings
     sudo install -d -m 0755 -o root -g root /etc/apt/sources.list.d
     sudo install -m 0644 -o root -g root -t /etc/apt/keyrings ./etc/apt/keyrings/*

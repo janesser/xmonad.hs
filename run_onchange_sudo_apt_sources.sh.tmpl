@@ -4,10 +4,6 @@
 # This script runs during `cz apply` (referenced from .chezmoiscripts/run_9_cleanup_apt.sh.tmpl).
 # It removes the TeamViewer package, apt source/keyring, and leftover files from any
 # machine that still has TeamViewer installed. Idempotent: safe to run on every apply.
-#
-# Uses the same passwordless-sudo scope as the other cleanup scripts: the
-# CHEZMOI_PKGS sudoers alias covers `/usr/bin/apt` and `/usr/bin/rm` (any args),
-# so no new sudoers entry is required.
 
 set -u
 

@@ -10,9 +10,26 @@ scoped NOPASSWD sudoers drop-in at `/etc/sudoers.d/chezmoi-pi`, which grants roo
 
 `apt, add-apt-repository, nala, snap, usermod, groupadd, systemctl,
 update-alternatives, mkdir, chmod, chown, tee, cp, gpg, mv, sed, extrepo,
-dpkg, curl, journalctl, setcap cap_perfmon+ep /usr/bin/btop`, plus direct `chmod`/`chown` on the podman.sock path (the
+dpkg, curl, rm, install, cmp, journalctl, setcap cap_perfmon+ep /usr/bin/btop`, plus direct `chmod`/`chown` on the podman.sock path (the
 `CHEZMOI_PKGS` alias authorizes `/usr/bin/chmod`/`/usr/bin/chown` with any
 args; the shell glob is expanded before sudo, so no wildcard reaches it).
+
+Cleanup scripts only ever use `apt`/`rm`/`install`, so they run under this
+same alias **without a new sudoers entry** — don't add one just because a
+cleanup script calls `sudo apt`/`sudo rm`. The TeamViewer uninstaller at
+`uninstaller/teamviewer_uninstall.sh` is an example: it uses only those.
+
+**Don't be explicit about sudoers in repo files.** Point to this AGENTS.md
+section instead of documenting sudo **authorization** specifics inline. In
+particular, files must not spell out *which commands the alias authorizes*,
+alias names (`CHEZMOI_PKGS`), or "no new sudoers entry needed" — that is
+operational security detail that lives here, not in the repo. Inline **may**
+note the *functional* reason `sudo` is used (e.g. why `install` over `cp`)
+and may briefly say sudo is scoped to the drop-in documented here; it must
+not audit the sudoers authorization or enumerate authorized commands. This
+applies repo-wide. Exceptions: the sudoers source files under `etc/sudoers.d/`
+and the install script `run_onchange_sudo_sudoers_chezmoi_pi.sh.tmpl`, whose
+path comments describe the file they manage.
 
 Rules:
 - Do **not** use `sudo` for anything outside a chezmoi run script.
@@ -22,6 +39,12 @@ Rules:
   explicit user approval.
 - Prefer `cz apply` for config edits; reserve `cz update` for pulling fresh
   upstream changes.
+- When the request says **"prepare"** an action, it is *staged only*: set it
+  up (stage/commit, run the checks, print what would happen) and then STOP.
+  Never auto-execute a destructive, irreversible, or networked action
+  (force-push/`--force`/`--force-with-lease`, `rm -rf`, `reset`/`rebase`,
+  `shutdown`) just because it was "prepared" — the user wanted it ready to
+  fire, not fired. Confirm before applying.
 
 ## Sudoers file (repo-managed under `etc/`)
 Source: `etc/sudoers.d/chezmoi-pi` (a normal chezmoi file, but `etc/` is in
