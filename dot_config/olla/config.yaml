@@ -1,12 +1,15 @@
 # Olla config — public entry on :8080 -> llama.cpp backend.
 #
-# Two llama.cpp backends, localhost-only, so Olla can own the public port:
+# This box (lincopta) is CUDA-only, so there is a single llama.cpp backend:
 #
-#   * :8081  CUDA / NVIDIA V100  (restart-llama-cuda.sh)  -> ornith-35B
-#   * :8082  SYCL / Intel DG1-IrisXe (restart-llama-sycl.sh) -> LFM2.5-2.6B (Q4_K_M)
+#   * :8081  CUDA / NVIDIA  (restart-llama-cuda.sh)  -> ornith-1.5 9B
 #
 # Olla binds 0.0.0.0:8080 (actually :40114) here and routes each request to the
-# endpoint whose reported model matches. Both endpoints are static below.
+# endpoint whose reported model matches. The endpoint is static below.
+#
+# The SYCL / Intel backend (:8082) is intentionally absent: this machine has no
+# Intel GPU. If an Intel backend is ever deployed, add a :8082 endpoint back —
+# the backend's port/model are configurable (see restart-llama-cuda.sh).
 #
 # Why type: "openai-compatible" (NOT "llamacpp"):
 #   Olla v0.0.29's "llamacpp" profile parses llama.cpp's *native* /v1/models
@@ -18,8 +21,9 @@
 #
 # The model is referenced by the exact name llama.cpp reports (the --model path,
 # shortened via a symlink in the launcher: restart-llama-cuda.sh for the CUDA
-# backend (ornith.gguf), restart-llama-sycl.sh for the SYCL backend
-# (LFM2.5-2.6B.gguf). Olla matches requests to an endpoint by this exact id.
+# backend. LLAMA_MODEL_NAME sets it (default: ornith-1.5-9B.gguf); it may also be
+# an HF repo, downloaded on first use. Olla matches requests to an endpoint by
+# this exact id.
 server:
   # Dual-stack on Linux (bindv6only=0): accepts IPv4 AND IPv6 clients, so LAN
   # IPv6 clients (e.g. http://[fd4c:468d:6524::<this host>]:8080) work too.
@@ -33,11 +37,9 @@ discovery:
   type: "static"
   static:
     endpoints:
+      # Single llama.cpp backend on this box (CUDA-only). Add a :8082 SYCL
+      # endpoint back only if an Intel backend is ever deployed here.
       - url: "http://127.0.0.1:8081"   # llama.cpp server (restart-llama-cuda.sh)
         name: "local-llamacpp-cuda"
         type: "openai-compatible"
         priority: 100
-      - url: "http://127.0.0.1:8082"   # llama.cpp server on the Intel GPU (restart-llama-sycl.sh)
-        name: "local-llamacpp-sycl"
-        type: "openai-compatible"
-        priority: 90

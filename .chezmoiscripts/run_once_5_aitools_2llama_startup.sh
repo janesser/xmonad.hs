@@ -20,6 +20,9 @@ set -euo pipefail
 
 SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
 
+# GPU-presence helpers (has_nvidia / has_intel_gpu). Sourced, not executed.
+source "$HOME/.local/share/gpu.func"
+
 # --- 0. retire the renamed-old CUDA unit + launcher (idempotent) ------------
 # Before the CUDA backend was renamed from restart-llama-server.* to
 # llama-cuda.* / restart-llama-cuda.sh the old unit was still installed AND
@@ -39,6 +42,19 @@ if [ -f "$HOME/.local/bin/restart-llama-server.sh" ]; then
     echo "✅ Removed stale launcher ~/.local/bin/restart-llama-server.sh"
 fi
 
+# --- 1. backend selection (configurable) ------------------------------------
+# LLAMA_BACKENDS is a space-separated list of backends to deploy ("cuda",
+# "sycl"). It defaults to what the box actually has; override it in the
+# environment to force a subset — e.g. `export LLAMA_BACKENDS=cuda` makes this a
+# CUDA-only deploy. On a box with no Intel GPU this is naturally "cuda" (this
+# box: lincopta, NVIDIA + AMD — no Intel GPU).
+read -ra _want_backend_arr <<< "${LLAMA_BACKENDS:-$(has_nvidia && echo cuda; has_intel_gpu && echo sycl)}"
+want_backend() {
+    local b="$1" x
+    for x in ${_want_backend_arr[@]}; do [ "$x" = "$b" ] && return 0; done
+    return 1
+}
+
 # --- 1. backend table -------------------------------------------------------
 # Each entry is UNIT|SCRIPT|PORT|START:
 #   UNIT   systemd unit name (etc/systemd/system/<UNIT>)
@@ -50,11 +66,15 @@ fi
 #   PORT   backend http port, used for the "already serving?" liveness probe.
 #   START  "yes" => enable + start-if-not-serving ; "no" => enable-only.
 # CUDA is the primary backend: it is started on deploy. SYCL is heavy (~3.8 GB),
-# so it is enabled at boot but left to an explicit `systemctl start`.
+# so it is enabled at boot but left to an explicit `systemctl start`. SYCL is
+# only deployed where there is an Intel GPU AND it was requested.
 declare -a BACKENDS=(
   "llama-cuda.service|.local/bin/restart-llama-cuda.sh|8081|yes"
-  "llama-sycl.service|.local/bin/restart-llama-sycl.sh|8082|no"
 )
+# SYCL (Intel) only where there is an Intel GPU AND it was requested.
+if want_backend sycl && has_intel_gpu; then
+    BACKENDS+=( "llama-sycl.service|.local/bin/restart-llama-sycl.sh|8082|no" )
+fi
 
 # Bail early (no sudo, no fstab change) when neither launcher is present.
 have_backend=0

@@ -227,17 +227,41 @@ grant_render_video_groups
 LLAMA_REF="v0.5.0"
 log "Building $LLAMA_REF"
 
+# --- backend selection (configurable) --------------------------------------
+# LLAMA_BACKENDS is a space-separated list of backends to build ("cuda",
+# "sycl"). It defaults to what the box actually has; override it in the
+# environment to force a subset — e.g. `export LLAMA_BACKENDS=cuda` makes this a
+# CUDA-only build. On a box with no Intel GPU this is naturally "cuda" (this
+# box: lincopta).
+if [ -z "${LLAMA_BACKENDS:-}" ]; then
+    _auto=""; has_nvidia && _auto="cuda"; has_intel_gpu && _auto="${_auto:+$_auto }sycl"
+    LLAMA_BACKENDS="${_auto:-}"
+fi
+want_backend() {
+    local b="$1" x
+    for x in ${LLAMA_BACKENDS}; do [ "$x" = "$b" ] && return 0; done
+    return 1
+}
+
 # --- CUDA (built here, during apply) ----------------------------------------
-if has_nvidia; then
+if want_backend cuda; then
     build_cuda "$LLAMA_REF" || log "CUDA build failed — investigate above and re-run."
 fi
 
 # --- generate SYCL helper + launchers (lazy; SYCL itself builds on demand) ---
+# write_generated_files always writes the CUDA launcher; the SYCL launcher and
+# its oneAPI helper are written for the SYCL backend too. On a CUDA-only box we
+# generate them, then drop the artifacts so no oneAPI leftovers remain.
 write_generated_files
 
 log "Done. Backend-specific commands:"
 log "  llama-server-cuda   # NVIDIA / CUDA  (build_cuda)"
-log "  llama-server-sycl   # Intel  / SYCL  (build_sycl, built lazily on first run)"
+if want_backend sycl; then
+    log "  llama-server-sycl   # Intel  / SYCL  (build_sycl, built lazily on first run)"
+else
+    rm -f "$HOME/.local/bin/llama-server-sycl" "$LIB"
+    log "  llama-server-sycl   # disabled — no Intel GPU here (or LLAMA_BACKENDS excludes sycl)"
+fi
 # NOTE: the boot service (llama-cuda) is CUDA-only by design; the
 # SYCL server is started with the llama-server-sycl command above.
 #

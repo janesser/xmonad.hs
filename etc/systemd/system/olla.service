@@ -1,5 +1,5 @@
 [Unit]
-Description=Olla LLM proxy (public :40114 -> llama.cpp backend :8081 CUDA + :8082 SYCL)
+Description=Olla LLM proxy (public :40114 -> llama.cpp backend :8081 CUDA)
 Documentation=https://thushan.github.io/olla/
 After=network.target llama-cuda.service
 Wants=llama-cuda.service
