@@ -27,7 +27,7 @@
 #   filename. See scripts/check_manifest_order.py (optional helper).
 #
 # LEGEND — tiers
-#   0  foundations / essentials (apt, mise, python, terminal emulator, precommit)
+#   0  foundations / essentials (apt, mise, python, terminal emulator, precommit, ssh client config)
 #   1  fish shell ecosystem + system daemons (clamfs, pipewire, fish + plugins/theme)
 #   2  desktop apps & browsers (codium, ghcup, logseq, browsers, nextcloud, ...)
 #   3  developer tooling (git/gcm, java, k8s, podman, github-act, jupyter, node, rust, helix)
@@ -78,6 +78,13 @@ sort: lexicographic_by_filename
   desc: "Remove pyenv/pipx/uv shims; install uv via mise; default python 3 (pinned in config.toml)"
   provides: [uv]
   depends_on: [run_once_0_mise_install.sh]   # verified: `mise install uv` after `mise activate`
+- file: run_once_0_ssh_config.sh
+  phase: run_once
+  tier: 0
+  desc: "Deploy the SSH client agent-forwarding drop-in to /etc/ssh/ssh_config.d/99-allow-agent-forward.conf (ForwardAgent yes)"
+  provides: [ssh_config.d/99-allow-agent-forward.conf]
+  depends_on: []
+  notes: "run_once (idempotent cmp); deploys to ignored etc/ via sudo install. Client directive is ForwardAgent, not the sshd_config-only AgentForwarding/AllowAgentForwarding."
 - file: run_once_0_xterm_install.sh
   phase: run_once
   tier: 0
