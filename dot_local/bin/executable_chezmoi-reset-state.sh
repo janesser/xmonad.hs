@@ -36,7 +36,7 @@ Forget chezmoi's run-script state so all scripts replay on next apply.
    chezmoi-reset-state.sh --dry-run  print the plan, change nothing
    chezmoi-reset-state.sh --yes      skip the confirmation prompt
    chezmoi-reset-state.sh -h         this help
- EOF
+EOF
 }
 
 DRY_RUN=0
