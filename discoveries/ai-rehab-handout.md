@@ -9,8 +9,8 @@ A working sample is now available to show the practitioner during the
 interview (see **Ready sample** below) — it pre-answers question 13:
 a CC-BY illustration **with an attribution line is fine in practice.
 
-Related: `discoveries/ai-image-gen.md` (ComfyUI/Flux — uninstalled, was
-unreliable, effectively out of scope).
+Related: `discoveries/ai-image-gen/` (ComfyUI/Flux — uninstalled, was
+unreliable, effectively out of scope; Qwen-Image-2.1 is the current direction).
 
 ---
 
@@ -35,7 +35,7 @@ How the image component of the handout is produced:
   > So it is a runnable demo, not a fit for a distributable handout.
   > > 🔴 **Live test run in progress (2026-09-25):** weights downloading and
   > > the int8/CPU pipeline being exercised to produce one sample. See the
-  > > “IN-PROGRESS TEST RUN — handover” box in `discoveries/ai-image-gen.md`.
+  > > “IN-PROGRESS TEST RUN — handover” box in `discoveries/ai-image-gen/qwen-image-21.md`.
 - **(D)** No image — layout/typography only, if practitioners don't find
   them useful.
 
