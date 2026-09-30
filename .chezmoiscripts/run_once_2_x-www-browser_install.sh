@@ -1,6 +1,7 @@
 #!/bin/bash
 
 sudo apt install lynx
+sudo apt remove -y firefox
 
 if [ "$CHEZMOI_ARCH" = "amd64" ]; then
     sudo extrepo enable librewolf
