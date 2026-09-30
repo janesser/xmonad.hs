@@ -1,0 +1,42 @@
+[Unit]
+Description=LocalAI — OpenAI-compatible front + model orchestrator (V100/CUDA, :8080)
+Documentation=https://localai.io/
+# Start after the local-fs target so the huggingface-hub bind mount
+# (/etc/fstab, added by run_once_5_aitools_2llama_startup.sh) is available.
+After=local-fs.target network.target
+Wants=local-fs.target
+
+[Service]
+User=jan
+Group=jan
+Environment=HOME=/home/jan
+Environment=USER=jan
+Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/jan/.local/share/mise/shims
+WorkingDirectory=/home/jan/.local/share/localai
+#
+# Bind [::]:8080 on the trusted LAN (mirrors olla.service's [::] posture), so
+# no auth is required for local use. LocalAI v4 refuses a public bind without
+# one of: a private interface, --auth, an api-key, or --allow-insecure-public-
+# bind. --allow-insecure-public-bind matches the existing Olla posture.
+#
+# Models load on demand (per §11: LocalAI's ModelLoader, not boot preload).
+# --max-active-backends=1 is SINGLE_ACTIVE_BACKEND — the safe posture for one
+# accelerator (see ai-server.md §11c, LocalAI issue #1498).
+ExecStart=/home/jan/.local/bin/localai run \
+  --address="[::]:8080" \
+  --allow-insecure-public-bind \
+  --models-path=/home/jan/.local/share/localai/models \
+  --backends-path=/home/jan/.local/share/localai/backends \
+  --max-active-backends=1 \
+  --log-level=info
+
+# The llama-cpp backend is an OCI image fetched on first model load (slow,
+# one-time). Allow generous time for that first fetch.
+TimeoutStartSec=600s
+Type=simple
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
