@@ -1,5 +1,5 @@
 [Unit]
-Description=LocalAI — OpenAI-compatible front + model orchestrator (V100/CUDA, :8080)
+Description=LocalAI — OpenAI-compatible front + model orchestrator (SYCL/Intel :8080)
 Documentation=https://localai.io/
 # Start after the local-fs target so the huggingface-hub bind mount
 # (/etc/fstab, added by run_once_5_aitools_2llama_startup.sh) is available.
@@ -19,9 +19,20 @@ WorkingDirectory=/home/jan/.local/share/localai
 # one of: a private interface, --auth, an api-key, or --allow-insecure-public-
 # bind. --allow-insecure-public-bind matches the existing Olla posture.
 #
+# Compute target is pinned here, not per-model: during staging it forces the
+# Intel SYCL backend (Iris Xe) so a small model can be tested with NO V100 VRAM
+# contention (Olla + llama-cuda keep the V100). At the llama-cuda cutover this
+# env var is flipped to nvidia (see run_once_5 + the cutover plan).
+#   intel  -> SYCL/oneAPI (Intel GPU)   nvidia -> CUDA (V100)
+#   amd    -> ROCm (AMD GPU)   default  -> CPU
+# The SYCL backend ships its own Intel Level Zero driver (no host driver needed).
+# GGML_SYCL_DEVICE=0 pins the first Intel device (renderD128). mmap: false in
+# the model YAML is required — SYCL hangs with mmap: true.
+#
 # Models load on demand (per §11: LocalAI's ModelLoader, not boot preload).
 # --max-active-backends=1 is SINGLE_ACTIVE_BACKEND — the safe posture for one
 # accelerator (see ai-server.md §11c, LocalAI issue #1498).
+# /dev/dri is passed to the process so the SYCL backend reaches the Intel GPU.
 ExecStart=/home/jan/.local/bin/localai run \
   --address="[::]:8080" \
   --allow-insecure-public-bind \
@@ -33,10 +44,13 @@ ExecStart=/home/jan/.local/bin/localai run \
 # The llama-cpp backend is an OCI image fetched on first model load (slow,
 # one-time). Allow generous time for that first fetch.
 TimeoutStartSec=600s
+Environment=LOCALAI_FORCE_META_BACKEND_CAPABILITY=intel
+Environment=GGML_SYCL_DEVICE=0
 Type=simple
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true
+DeviceAllow=char-dri rw
 
 [Install]
 WantedBy=multi-user.target

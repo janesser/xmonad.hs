@@ -27,17 +27,17 @@ LOCALAI_VERSION="v4.10.0"
 BIN="$HOME/.local/bin/localai"
 MODELS_DIR="$HOME/.local/share/localai/models"
 BACKENDS_DIR="$HOME/.local/share/localai/backends"
-ORNITH="$HOME/.cache/huggingface/hub/ornith.gguf"
-LINK="$MODELS_DIR/ornith.gguf"
-YAML="$MODELS_DIR/ornith.gguf.yaml"
 UNIT_NAME="localai.service"
 UNIT_SRC="$SRC_DIR/etc/systemd/system/$UNIT_NAME"
 UNIT_DEST="/etc/systemd/system/$UNIT_NAME"
 
-# GPU-presence helper (has_nvidia). Sourced, not executed.
+# GPU-presence helper. Sourced, not executed. The V100 box has both NVIDIA and
+# an Intel Iris Xe, so the guard is any-GPU; nvidia-smi is a driver-backed
+# fallback for a transient lspci glitch (the install must not skip just because
+# lspci hiccupped — the box demonstrably has a V100).
 source "$HOME/.local/share/gpu.func"
-if ! has_nvidia; then
-    echo "$(basename "$0"): no NVIDIA GPU — skipping LocalAI install."
+if ! (has_nvidia || has_intel_gpu || command -v nvidia-smi >/dev/null 2>&1); then
+    echo "$(basename "$0"): no GPU found — skipping LocalAI install."
     exit 0
 fi
 
@@ -68,30 +68,14 @@ else
 fi
 
 # --- 1. persistent data dirs (models + backends) ----------------------------
+# These are the persistent LocalAI data dirs (survive reboot). Model configs
+# live here and are added at their respective steps (SYCL smoke test now;
+# ornith on the V100 at the later llama-cuda cutover). This staged deploy only
+# installs the front + boot-enable — no model loads yet.
 mkdir -p "$MODELS_DIR" "$BACKENDS_DIR"
+echo "✅ LocalAI data dirs ready: $MODELS_DIR, $BACKENDS_DIR"
 
-# --- 2. register the ornith.gguf model (DISABLED during staging) ------------
-# LocalAI v4 loads models from --models-path; parameters.model is RELATIVE to
-# it, so symlink the model in and reference it by filename. The model is
-# DISABLED so it does NOT load on boot and contend for V100 VRAM with the live
-# Olla/llama-cuda backend. At cutover: flip enabled: false -> true + flip pi.
-if [ ! -e "$LINK" ]; then
-    ln -sf "$ORNITH" "$LINK"
-    echo "✅ Linked $ORNITH -> $LINK"
-fi
-cat > "$YAML" <<EOF
-name: ornith
-backend: llama-cpp
-parameters:
-  model: ornith.gguf
-  context_size: 8192
-  threads: 4
-  gpu_layers: 0
-enabled: false
-EOF
-echo "✅ Registered ornith.gguf model in $MODELS_DIR (disabled — staged)"
-
-# --- 3. install + enable the localai service -------------------------------
+# --- 2. install + enable the localai service -------------------------------
 if [ ! -f "$UNIT_SRC" ]; then
     echo "⚠️  Unit source not found: $UNIT_SRC"
     exit 1
@@ -104,7 +88,5 @@ else
     echo "✅ Installed $UNIT_DEST"
 fi
 sudo systemctl enable "$UNIT_NAME" >/dev/null 2>&1
-echo "✅ $UNIT_NAME enabled at boot (ornith disabled — staged; Olla stays live)"
-
 sudo systemctl daemon-reload
-echo "✅ LocalAI deployed (staged: ornith disabled, Olla live)."
+echo "✅ LocalAI deployed (staged: front enabled at boot, Olla stays live as the active path)."
