@@ -1,23 +1,31 @@
 ---
-title: Local Multi-Accelerator AI Server (Olla front)
+title: Local Multi-Accelerator AI Server (text + image)
 status: draft
 created: 2026-09-25
-updated: 2026-09-25
+updated: 2026-09-26
 ---
 
-# Local Multi-Accelerator AI Server — Olla-fronted
+# Local Multi-Accelerator AI Server — text + image
 
 > **Replaces / obsoletes** `discoveries/ai-llama-autostart.md`. That doc's scope
 > was "make llama.cpp's single server boot reliably." This is the pivot: a
-> hardware-agnostic, multi-model, **Olla-fronted** local AI server.
+> hardware-agnostic, multi-model, OpenAI-compatible local AI server spanning
+> **text/completion and image generation**.
+>
+> > **Runtime model decided (2026-09-26).** This doc was authored around
+> > **Olla** as the load balancer. §11 resolves that: **LocalAI** is the
+> > OpenAI-compatible front *and* the model-lifecycle orchestrator (image via
+> > the llama.cpp basis, DG1 dormant). The Olla-vs-gateway question is closed;
+> > the remaining items in §11 are rollout verifications, not open design.
 
 ## 1. Purpose (one line)
 
 A single-box local AI server that front-end exports **every accelerator the box
-has** through **Olla acting as the load balancer**, runs **several models
-concurrently**, and serves an **OpenAI-API-compatible** front so any OpenAI
-client works — sized for a small concurrent model portfolio, with image
-generation parked for later.
+has** through an **OpenAI-API-compatible front**, runs **several models
+concurrently**, and serves **both text/completion and image generation** —
+sized for a small concurrent model portfolio. The nature of that front (a
+statically-configured load balancer vs a unified llama.cpp-derived server +
+dynamic gateway) is the open question driving this revision; see §11.
 
 ## 2. Why this exists
 
@@ -28,10 +36,20 @@ generation parked for later.
   models at once on **mixed hardware** (NVIDIA V100 + Intel DG1/IrisXe), so the
   stack must be built around **concurrency and per-accelerator placement**, not
   one well-tuned service.
-- **Olla** (the `thushan/olla` OpenAI-compatible load balancer) is chosen as
-  the front — **not** Ollama the chat app, and **not** llama.cpp directly.
+- **Front + engine = LocalAI** (`mudler/LocalAI`), the OpenAI-compatible front
+  *and* the model-lifecycle orchestrator — the question in the original draft
+  (Olla-vs-gateway) is resolved in §11. **Not** Ollama the chat app, **not**
+  Olla the load balancer, **not** llama.cpp directly.
+- **Image generation** rides the **llama.cpp basis** via LocalAI's
+  **`stablediffusion-ggml`** (C++/ggml, leejet `stable-diffusion.cpp`) backend,
+  so image + text share the V100's single LocalAI instance — see §11. The model
+  is consumed as **GGUF** (leejet `Qwen-Image-2.1-GGUF`), **not** the diffusers/
+  PyTorch path in `qwen-image-21.md`. INT8 on the V100 (no FP8); see §11a.
 
 ## 3. Architecture (the deployed topology)
+
+> **Historical (§3).** This is the prior **Olla** topology. The current runtime
+> model is **§11 (LocalAI)**; §3 is kept as historical until the LocalAI rollout.
 
 ```
                 OpenAI-API clients (pi-agent + others)
@@ -70,13 +88,13 @@ generation parked for later.
 ## 4. Requirements
 
 ### Functional
-- **Olla as load balancer / front.** Single OpenAI-compatible entry point that
-  routes across the box's accelerators.
-- **One `llama-server` per accelerator; hardware-agnostic.** Any NVIDIA, Intel,
-  or AMD accelerator can serve — scaling a new vendor = add a `llama-server`
-  backend + one static endpoint (no redesign). The provisioning script already
-  drives a **backend table** (`UNIT|SCRIPT|PORT|START`), so new backends are a
-  row, not a rewrite.
+- **LocalAI as OpenAI-compatible front + orchestrator.** Single OpenAI-compatible
+  entry point that is also the model-lifecycle engine (on-demand load, LRU
+  eviction, concurrency-group placement). See §11.
+- **One LocalAI instance per accelerator; hardware-agnostic.** Any NVIDIA, Intel,
+  or AMD accelerator can serve via LocalAI's per-vendor backend
+  (`LOCALAI_FORCE_META_BACKEND_CAPABILITY`); scaling a vendor = new backend, no
+  redesign. One instance per accelerator — see §11b (DG1 dormant for now).
 - **Concurrent models.** Multiple models of differing size run at once
   (present: a heavy `ornith-*` on CUDA + `LFM2.5-2.6B` on SYCL). Not one
   mega-model.
@@ -98,11 +116,12 @@ generation parked for later.
 
 | In scope | Out of scope (for now) |
 |---|---|
-| Text/completion inference via Olla | **Image generation** (deferred — see §8) |
-| Multiple concurrent models, one `llama-server` per accelerator | Multi-machine / fleet routing |
-| Cross-accelerator reroute-or-reject | CPU fallback / degraded serving |
+| Text/completion via LocalAI (V100, single instance) | **DG1 / second-accelerator hot path** — dormant until Option 2 (§11b) |
+| Image on the llama.cpp basis via LocalAI (Qwen Image, §11a) | **Cross-accelerator reroute / warm failover** — single instance = reject on outage |
+| Lifecycle: on-demand load, LRU eviction, no preemption | CPU fallback / degraded serving |
 | Default-model / smart routing | Default-model routing — explicit-only for now |
 | OpenAI-API-compatible clients | Vendor-specific clients / protocols |
+| Concurrent small/mid model portfolio | One mega-model; GPU sharding |
 
 ## 6. Clients
 
@@ -116,30 +135,32 @@ what we test, not the API surface.)
 - **Present:** 2–3 small-to-mid LLMs running concurrently, ~2.6B to ~35B
   parameters, quantized across a 32 GB V100 + integrated graphics.
 - **Similar (horizon):** a few more models of comparable size; a bigger single
-  model that may need sharding across GPUs. *Image gen is out of this envelope
-  (parked in §5).*
+  model that may need sharding across GPUs. *Image gen sits beside this envelope
+  (§11), not inside the LLM size range.*
 
 ## 8. Key open questions (load-bearing)
 
-- **[CONFIRMED] Front = Olla, not Ollama.** Olla fronts one `llama-server` per
-  GPU. Ollama the chat app is not part of this design.
-- **[QUESTION] AMD is "in scope" but not yet deployed.** "Any NVIDIA/Intel/AMD"
-  names ROCm as a first-class backend, but only CUDA + SYCL exist today. Is an
-  AMD box a near-term target or a horizon marker?
-- **[QUESTION] Reroute semantics.** With static config, "reroute" only fires if
-  a *duplicate* backend serves the *same* model. If a model lives on one
-  accelerator and that's down, Olla must **reject** (it can't serve `ornith-*`
-  on the SYCL backend). Confirm this model-dependent reroute/reject is the
-  intended behavior, and whether a duplicate/failover backend is ever wanted.
-- **[QUESTION] Static config editing.** Adding a backend currently means
-  hand-editing `config.yaml` + a unit. Any desire to make backend registration
-  data-driven (from the backend table) rather than manual?
-- **[VERIFY] Exact model ids.** Config comment says `ornith-35B`; elsewhere the
-  model is `ornith-1.5-27B`. Confirm the canonical reported names Olla matches
-  on.
-- **[QUESTION] Image later — how unified?** When image lands, is it behind the
-  same Olla front (Olla is weak at image) or a second lane behind a gateway?
-  Deciding now avoids a rework.
+- **[DECIDED] Front + engine = LocalAI** (§11). Resolves the original
+  Olla-vs-gateway question: LocalAI is the OpenAI-compatible front *and* the
+  lifecycle orchestrator. With one V100 instance the router largely dissolves;
+  a router returns only if DG1 becomes hot (Option 2).
+- **[DECIDED] DG1 dormant by default** (§11b). The DG1/small-model role is
+  secondary and unused; one LocalAI instance on the V100 hosts text + image.
+  DG1 goes hot only if a real DG1 workload appears (Option 2, data-driven
+  router).
+- **[QUESTION] Reject on outage is the failover policy.** With a single V100
+  instance and DG1 dormant, a down LocalAI = **reject** (no warm failover).
+  Confirm reject — rather than a standby backend — is acceptable.
+- **[QUESTION] AMD ROCm — horizon marker.** "Any NVIDIA/Intel/AMD" names ROCm,
+  but only CUDA is deployed. Near-term target or horizon?
+- **[VERIFY] Exact model ids.** Confirm the canonical reported model names
+  LocalAI exposes (config said `ornith-35B`; elsewhere `ornith-1.5-27B`).
+- **[OPEN] #1498 backend switch.** If image + text ever share one GPU instance,
+  validate the text<->image backend switch; keep one active backend at a time
+  (SINGLE_ACTIVE_BACKEND) until fixed.
+- **[OPEN] Intel SYCL on DG1.** Verify driver/SDK prerequisites before DG1 is
+  anything more than dormant; skip until Option 2.
+  that may dissolve this question.
 
 ## 9. Deployment
 
@@ -154,23 +175,111 @@ installer.
 
 - Multiple models of different sizes run concurrently, each on an accelerator
   that can serve it.
-- An OpenAI-API client can request any model by name and get a response via Olla.
-- When a backend that serves a model is down, the request **reroutes (to a
-  serving duplicate) or rejects** — never silently falls back to CPU.
+- An OpenAI-API client can request any model by name and get a response via
+  LocalAI.
+- A model loads on first request and evicts idle (LRU); no model is preempted
+  mid-run — a long-running gen blocks shorter requests until its load completes
+  (FIFO, no preemption).
+- When the V100 instance is down, the request **rejects** (no warm failover while
+  DG1 is dormant) — never silently falls back to CPU.
 - Adding a new-vendor backend (e.g. AMD ROCm) is a backend-table row + one
   static endpoint, not a redesign.
 - The same setup script runs on a box with different hardware and adapts.
 
-## 11. Risks
+## 11. Runtime model — LocalAI as orchestrator + OpenAI front
 
-- **Static Olla routing is brittle.** Model-name matching + hand-edited
-  `config.yaml` is fragile as the backend table grows; a config typo takes the
-  whole public front down.
-- **Failover is model-dependent, not backend-dependent.** With one backend per
-  model, "reroute" rarely fires — most single-backend outages just **reject**.
-  Decide whether a duplicate/failover backend is worth provisioning.
-- **Olla version pin.** Routing relies on Olla v0.0.29's `openai-compatible`
-  profile (the `llamacpp` native `/v1/models` parser is broken on this
-  llama.cpp build). A major Olla upgrade could change routing behavior.
-- **Concurrency capacity.** A 27–35B and a 2.6B on one 32 GB card constrain how
-  many concurrent models fit; placement/priority policy matters.
+**Decision (2026-09-26): LocalAI (`mudler/LocalAI`) is the front AND the
+lifecycle engine.** The "custom per-model orchestrator" §11b's earlier draft
+doesn't need building — LocalAI ships it, with image included. This collapses
+the old router-vs-Olla question: with one instance the router largely
+dissolves.
+
+### 11a. LocalAI is the lifecycle engine we designed
+
+Every piece we were going to hand-write is first-party LocalAI:
+
+| Lifecycle need | LocalAI mechanism |
+|---|---|
+| Load a model on first request | **ModelLoader** — on-demand load + automatic backend selection |
+| Evict idle models | **`--max-active-backends`** LRU eviction |
+| Unload a stuck / busy model | **watchdog busy-timeout** |
+| Drop idle models after a while | **watchdog idle-timeout** (default 15m) |
+| Placement / mutual exclusion | **concurrency groups** — per-model anti-affinity, "load one evicts the others" |
+| Text + image + audio | **llama-cpp** (incl. **Intel SYCL**), **stablediffusion-ggml** (C++/ggml), **whisper** under one OpenAI-compatible front |
+| Per-model backend + GPU | per-model YAML `backend:` + `LOCALAI_FORCE_META_BACKEND_CAPABILITY=nvidia|amd|intel` |
+
+This gives the exact behavior we specified: on-demand load, LRU eviction,
+FIFO/no-preemption (an actively-served model is never evicted — only the
+least-recently-used idle one), per-model placement. **Request-significance
+timeouts** ("a request might lose significance") are a **client-side HTTP
+timeout**, not a LocalAI concern; LocalAI's watchdog times *model* residency,
+not queue-wait. So no custom timeout logic.
+
+Image rides the llama.cpp basis (leejet `stable-diffusion.cpp`, via LocalAI's
+**`stablediffusion-ggml`** C++/ggml backend) and keeps the single-stack win:
+Qwen Image 2.1 is available as **GGUF** (`leejet/Qwen-Image-2.1-GGUF`), speaks
+OpenAI `/v1/images/generations`, and shares the V100's CUDA backend with text. V100
+INT8 reality unchanged — hardware INT8 + FP16, no FP8; INT8 is the right quant,
+and 32 GB clears the ≥16 GB gate.
+
+> **Backend choice matters.** LocalAI *also* ships a Python **`diffusers`** image
+> backend — a separate torch process with no single-stack win and its own
+> dependency surface. The single-stack claim here requires the
+> **`stablediffusion-ggml`** backend specifically. It is also the LocalAI backend
+> that carries **Intel SYCL**, so Option 2 (§11b) keeps a SYCL image path too.
+
+### 11b. Topology — one instance per accelerator; DG1 dormant by choice
+
+LocalAI runs as one process and binds to **one vendor/accelerator**, so it does
+not split the V100 and DG1 in a single instance (and a current bug, #1498, makes
+text<->image backend-switching in one GPU instance fragile). Two options:
+
+- **Option 1 — one LocalAI instance on the V100, DG1 dormant.** The V100 hosts
+  big-text + Qwen-Image + small-text. No cross-vendor router, no #1498 exposure.
+  **Chosen by default:** the DG1/small-model role is secondary and unused, so
+  keeping a second instance alive "just in case" is dead weight.
+- **Option 2 — two instances (V100/CUDA + DG1/SYCL) behind a data-driven router
+  (LiteLLM/Olla).** Only justified once an actual DG1 workload appears. Re-
+  introduces a router, but a data-driven one, not the hand-edited Olla config.
+
+With Option 1 the **router question dissolves** — clients hit LocalAI directly;
+the router is only brought in if Option 2 grows.
+
+### 11c. Open verification items (gate the rollout)
+
+- **#1498 — text<->image backend switch in one GPU instance.** If anything ever
+  runs image + text in one instance, test it now; `SINGLE_ACTIVE_BACKEND` (one
+  active backend at a time) matches the no-co-reside lifecycle and is the safe
+  posture regardless.
+- **Intel SYCL on the DG1.** Driver/runtime prerequisites before DG1 is anything
+  more than dormant; skip until Option 2 is warranted.
+- **`pinned`-model bug (#11101):** on some versions a `pinned: true` model still
+  tears down per-request, paying a cold reload — test residency policy on the
+  shipped version.
+- **Version pin:** like the prior Olla pin, LocalAI's behavior rides its version;
+  pin it once the topology is validated.
+
+> **Supersedes §3's Olla diagram.** The deployed topology in §3 is the prior
+> Olla design; §11 is the current runtime model. §3 stays as historical until
+> the LocalAI rollout is deployed.
+
+## 12. Risks
+
+- **Single V100 instance is a public chokepoint.** One LocalAI process serves
+  everything; if it dies or wedges the whole front is down and DG1 is dormant,
+  so there is no warm failover. Failover is model-dependent and this box has no
+  standby — reject-on-outage is the policy (§8). A second instance (Option 2)
+  would add a failover target but not a failover *path* without a router.
+- **#1498 backend-switch fragility.** Mixing image (diffusers) and text
+  (llama-cpp) backends in one GPU instance currently breaks on a backend switch;
+  keep one active backend at a time (`SINGLE_ACTIVE_BACKEND`) until fixed.
+- **Concurrency capacity.** Big-text + Qwen-Image INT8 are effectively
+  mutually exclusive on the 32 GB V100; concurrency groups + LRU eviction encode
+  the "load one evicts the others" policy but must be tuned to the actual model
+  sizes.
+- **Residency policy is version-sensitive.** `pinned`/idle-timeout eviction
+  behaves differently across LocalAI versions (#11101); validate the shipped
+  version's eviction before relying on a model staying resident.
+- **Client-side request timeouts.** "A request loses significance" is enforced by
+  the client, not LocalAI — make sure the OpenAI clients carry sane timeouts, or
+  a long cold-load queue can hang a client.
