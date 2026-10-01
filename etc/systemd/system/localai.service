@@ -25,7 +25,10 @@ WorkingDirectory=/home/jan/.local/share/localai
 # env var is flipped to nvidia (see run_once_5 + the cutover plan).
 #   intel  -> SYCL/oneAPI (Intel GPU)   nvidia -> CUDA (V100)
 #   amd    -> ROCm (AMD GPU)   default  -> CPU
-# The SYCL backend ships its own Intel Level Zero driver (no host driver needed).
+# The SYCL backend ships its own Intel Level Zero driver, but it predates the
+# kernel 7.0 i915 ABI and returns "no device", so we point LocalAI at the host
+# compute-runtime (libze-intel-gpu1, installed by run_once_5) via the alt-driver
+# hook: run.sh uses its bundled driver only when ZIC_ENABLE_ALT_DRIVERS is unset.
 # GGML_SYCL_DEVICE=0 pins the first Intel device (renderD128). mmap: false in
 # the model YAML is required — SYCL hangs with mmap: true.
 #
@@ -46,10 +49,18 @@ ExecStart=/home/jan/.local/bin/localai run \
 TimeoutStartSec=600s
 Environment=LOCALAI_FORCE_META_BACKEND_CAPABILITY=intel
 Environment=GGML_SYCL_DEVICE=0
+Environment=ZIC_ENABLE_ALT_DRIVERS=/usr/lib/x86_64-linux-gnu/libze_intel_gpu.so.1
 Type=simple
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true
+# The render node /dev/dri/renderD128 is root:render (0660). Group=jan resets
+# the supplementary groups (systemd behaviour), so the process would otherwise
+# have no 'render' group and the SYCL backend can't open the GPU device
+# ("No device of requested type available"). SupplementaryGroups re-adds the
+# groups the render/video nodes need. DeviceAllow=char-dri rw still grants the
+# sandbox permission to touch /dev/dri.
+SupplementaryGroups=video render
 DeviceAllow=char-dri rw
 
 [Install]

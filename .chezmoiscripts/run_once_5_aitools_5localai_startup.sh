@@ -2,20 +2,22 @@
 # run_once_5_aitools_5localai_startup.sh
 #
 # Install LocalAI (mudler/LocalAI) as the chezmoi-managed, boot-persistent
-# OpenAI-compatible front + model orchestrator for the V100 (CUDA). Per the
-# §11 design in discoveries/ai-server.md, LocalAI supersedes the Olla topology
+# OpenAI-compatible front + model orchestrator. Per the §11 design in
+# discoveries/ai-server.md, LocalAI supersedes the Olla topology
 # (run_once_5_aitools_3olla_startup.sh) during a STAGED cutover:
 #
 #   * Olla + llama-cuda stay the live path during staging.
-#   * LocalAI is installed + enabled at boot, but its ornith.gguf model is
-#     DISABLED, so it does NOT load on boot and does not contend for V100 VRAM
-#     with the live backend. At cutover: enable ornith + flip pi to LocalAI.
+#   * LocalAI is installed + enabled at boot, pinned to the Intel SYCL backend
+#     (Iris Xe) so a model can be served with NO V100 VRAM contention. The
+#     llama-cuda/cutover (V100, CUDA) is the later end-state.
 #
 #   * Downloads the precompiled LocalAI binary (no docker dependency — matches
 #     the box's unit+binary pattern) to ~/.local/bin/localai.
+#   * Installs the host Intel compute-runtime (libze-intel-gpu1) so the SYCL
+#     backend works under kernel 7.0 (LocalAI's bundled driver predates the
+#     i915 ABI and returns "no device").
 #   * Writes localai.service (systemd, User=jan) to /etc/systemd/system and
-#     enables it at boot.
-#   * Registers ornith.gguf (llama-cpp, NVIDIA backend) in the models dir.
+#     enables it at boot. The SYCL backend is fetched on first model load.
 #
 # Sudo is used only for commands in the scoped NOPASSWD sudoers drop-in.
 
@@ -74,6 +76,18 @@ fi
 # installs the front + boot-enable — no model loads yet.
 mkdir -p "$MODELS_DIR" "$BACKENDS_DIR"
 echo "✅ LocalAI data dirs ready: $MODELS_DIR, $BACKENDS_DIR"
+
+# --- 1.5. install the host Intel compute-runtime (Level Zero driver) --------
+# LocalAI's bundled SYCL driver predates the kernel 7.0 i915 ABI and returns
+# "no device"; the host libze-intel-gpu1 (v26.05, Ubuntu universe) enumerates
+# the DG1. Installed via apt (scoped NOPASSWD) before the unit is copied, since
+# the unit's ZIC_ENABLE_ALT_DRIVERS points at the path apt installs to.
+if dpkg -l libze-intel-gpu1 2>/dev/null | grep -q '^ii'; then
+    echo "✅ libze-intel-gpu1 already installed."
+else
+    sudo apt install -y libze-intel-gpu1
+    echo "✅ Installed libze-intel-gpu1 (host Intel Level Zero driver)."
+fi
 
 # --- 2. install + enable the localai service -------------------------------
 if [ ! -f "$UNIT_SRC" ]; then
