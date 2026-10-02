@@ -34,6 +34,26 @@ has_any_gpu() {
     has_nvidia || has_intel_gpu
 }
 
+# The cyberkleiber dual-driver topology needs two specific NVIDIA cards. These
+# are presence tests only (lspci needs no driver loaded); a negative result is
+# authoritative. Single grep -q per helper — fine because it is the only grep.
+
+# has_nvidia_gt730 -> true if a GeForce GT 730 (GK208B/Maxwell, PCI 10de:1287)
+# is present. This is the card the proprietary nvidia driver rejects and that
+# therefore needs the open-source nouveau driver.
+#   NOTE lspci prints the vendor:device hex IDs only with -nn, so the plain
+#   form would never match — that is the one thing that trips this up.
+has_nvidia_gt730() {
+    lspci -nn 2>/dev/null | grep -q '10de:1287'
+}
+
+# has_v100 -> true if a Tesla V100 (GV100 SXM2, PCI 10de:1db5) is present. This
+# is the compute card that must keep the proprietary nvidia driver, which is
+# what forces the GT 730 onto nouveau (470.xx cannot coexist with 580).
+has_v100() {
+    lspci -nn 2>/dev/null | grep -q '10de:1db5'
+}
+
 # grant_render_video_groups -> add $USER to the render + video groups so both
 # NVIDIA (CUDA) and Intel (Level-Zero / oneAPI) devices are usable. Safe to call
 # repeatedly (usermod -aG is idempotent). Requires sudo.

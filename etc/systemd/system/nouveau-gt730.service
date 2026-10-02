@@ -1,0 +1,15 @@
+[Unit]
+Description=Load nouveau KMS driver for GeForce GT 730 (GK208B)
+Documentation=file:///usr/local/bin/load-nouveau-gt730.sh
+# Start only after the proprietary nvidia driver has claimed the V100,
+# so nouveau can never steal it at boot.
+After=sys-module-nvidia.device
+Wants=sys-module-nvidia.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/load-nouveau-gt730.sh
+
+[Install]
+WantedBy=multi-user.target
