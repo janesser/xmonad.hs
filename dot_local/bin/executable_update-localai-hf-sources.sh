@@ -51,8 +51,13 @@ else
 fi
 
 PRUNE=0; RESTART=0
-[ "${1:-}" = "--prune" ] && PRUNE=1
-[ "${1:-}" = "--restart" ] && RESTART=1
+for _arg in "$@"; do
+  case "$_arg" in
+    --prune)   PRUNE=1 ;;
+    --restart) RESTART=1 ;;
+    *)         log "warning: unknown argument '$_arg' (ignored)" ;;
+  esac
+done
 
 log() { printf '%s\n' "$*"; }
 note() { printf '  %s\n' "$*"; }
