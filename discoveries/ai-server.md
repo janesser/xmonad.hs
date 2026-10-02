@@ -378,10 +378,28 @@ Live-checked 2026-10-02:
   ABI).
 
 Despite that, the **staged cutover is only half done**. Open items, in order of
-severity. **pi-agent routing verified 2026-10-02** (details under item 4): the
-`olla` autodetect provider points at `OLLA_BASE_URL=http://127.0.0.1:8080`, and a
+severity. **pi-agent routing verified 2026-10-02** (details under item 4). The
+pi-agent **extension crossbar** manages the connection to the LocalAI server —
+it is the transport pi-agent uses to reach the OpenAI-compatible front on
+`127.0.0.1:8080` — and that path **works fine**. Concretely, the `ola`
+audetect provider points at `OLLA_BASE_URL=http://127.0.0.1:8080`, and a
 `pi --print --provider olla --model qwen-sycl` completion returns cleanly through
 the Iris Xe SYCL backend.
+
+**HF-cache wiring codified (2026-10-02).** The LocalAI model wiring used to be
+hand-made symlinks + sidecars with no reproducible source. It is now
+chezmoi-managed: `dot_local/bin/executable_update-localai-hf-sources.sh`
+(installed to `~/.local/bin/update-localai-hf-sources.sh`). It (re)creates the
+`models/` symlinks + `<model>.gguf.yaml` sidecars from the GGUFs already in
+`~/.cache/huggingface/hub/` — idempotent, no model pulls, no sudo. It does not
+pull models (the cache is bind-mounted); run it after the cache is present.
+Manifest = the `MODELS=( … )` array in the script. qwen-sycl/qwen-05b share one
+physical link (`qwen25.gguf`); the qwen GGUF was relocated out of the old
+fragile `tmp-qwen25/` dir into a canonical `models--Qwen--qwen2.5-0.5b-instruct-GGUF/`
+repo so the manifest points at a stable ref. Verified: `localai /v1/models`
+lists qwen-sycl/qwen-05b/antares-1b, and a `qwen-sycl` completion served
+"Paris…" through the Iris Xe SYCL backend. Re-run is a no-op; restart the
+`localai` user unit after editing the manifest. Committed 2026-10-02.
 
 That said, the **staged cutover is only half done**. Open items, in order of
 severity:
@@ -427,7 +445,9 @@ severity:
    any request over the cap is rejected with *"request exceeds the available
    context size."*
 
-   **pi-agent test, 2026-10-02:** a full agent run (tools **on**) = **15229
+   **pi-agent test, 2026-10-02:** the whole round trip rides the pi-agent
+   **extension crossbar** (which handles the pi-agent↔LocalAI connection) —
+   that path is confirmed healthy. A full agent run (tools **on**) = **15229
    tokens** → `rpc error: Internal … exceeds the available context size
    (8192 tokens)`. The same prompt with `--no-tools` fits under 8192 and returns
    `PI_SYCL_OK` end-to-end. So the SYCL path *works* in pi-agent; the 8 KB window
@@ -470,3 +490,10 @@ severity:
    is validated. It is pinned at `v4.10.0` in the run script; confirm that
    pin is the validated one and stop chasing upgrades until the topology
    (item 2) is finally decided.
+9. **Remove Olla + olla-autodiscovery after the migration.** Once the
+   pi-agent extension crossbar is the confirmed transport to LocalAI (no
+   longer routing through Olla), tear down the Olla layer: drop the `ola`
+   autodetect provider / `OLLA_BASE_URL`, and remove `ola` and the
+   `ola-autodiscovery` integration so pi-agent connects to LocalAI directly.
+   This is the cleanup that closes out the router now that it has dissolved
+   (§11b).
