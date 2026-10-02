@@ -4,7 +4,9 @@
 
 ubuntu 26
 
-nvidia-drivers-580 for tesla v100
+nvidia-drivers-580 for tesla v100 (compute)
+
+nouveau for GeForce GT 730 (display; coexists with 580 on the V100 — needs mxm_wmi loaded first)
 
 llama-cpp self-compiled with CUDA
 
