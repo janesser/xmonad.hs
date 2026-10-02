@@ -378,17 +378,25 @@ Live-checked 2026-10-02:
   ABI).
 
 Despite that, the **staged cutover is only half done**. Open items, in order of
+severity. **pi-agent routing verified 2026-10-02** (details under item 4): the
+`olla` autodetect provider points at `OLLA_BASE_URL=http://127.0.0.1:8080`, and a
+`pi --print --provider olla --model qwen-sycl` completion returns cleanly through
+the Iris Xe SYCL backend.
+
+That said, the **staged cutover is only half done**. Open items, in order of
 severity:
 
-1. **⚠️ NOT actually boot-persistent (`Linger=no`).** The unit that is live is a
+1. **✅ Boot-persistent (verified 2026-10-03; `Linger=yes`).** The live unit is a
    **`--user` service** (enabled, `WantedBy=default.target`) — correct, because
    SYCL fails under a `--system` unit on this box (needs jan's full group set,
    incl. `render`/`video`, and there is no device cgroup under the user
-   manager). But `loginctl show-user jan | Linger` is **`no`**, so the unit does
-   **not** start at boot before login — it only comes up after jan logs in once.
-   **Next step:** `sudo loginctl enable-linger jan` to make it genuinely
-   boot-persistent, then confirm with `systemctl --user is-enabled` + a reboot
-   test. Until then the doc's "boot-persistent" claim is false.
+   manager). `loginctl show-user jan | Linger` is now **`yes`** (the
+   `sudo loginctl enable-linger jan` step from the prior session is done), so
+   `user@1000.service` starts at boot before login and this unit comes up with
+   it. `user@1000.service` shows `loaded active running`. **Remaining proof:**
+   a literal reboot test (only unconfirmed step) — do not reboot the live box
+   unilaterally; confirm after the next scheduled restart that `localai`
+   answers on :8080 before any pre-login session.
 2. **The staged cutover to the V100/CUDA end-state was never reached.** The run
    script's whole intent (and the `localai.service` comments) is a **two-phase**
    cutover: LocalAI pinned to **Intel SYCL now** (so a model serves with **no
@@ -400,19 +408,48 @@ severity:
    the V100/CUDA end-state (the documented end-state, §11 Option 1), or (b)
    formally abandon the V100 cutover and accept Intel SYCL as the running
    config — and update this doc accordingly. Don't leave it parked mid-cutover.
-3. **Stale redundant `--system` unit.** `~/.config/systemd/user/localai.service`
-   is the live one; `/etc/systemd/system/localai.service` (disabled) exists only
-   as the SYCL-fallback the user-unit comment says it is kept for *"until this
-   one serves a SYCL model on :8080."* That condition is **now met** (we just
-   proved it), so the system unit has served its purpose. **Next step:** retire
-   it (`sudo rm /etc/systemd/system/localai.service`, `daemon-reload`) — or,
-   only if the V100 flip is chosen, repurpose it. Right now it is dead weight
-   and a confusion hazard.
-4. **`context_size` is tiny → large requests rejected.** `qwen-sycl.gguf.yaml`
+3. **Stale redundant `--system` unit — RETIRED 2026-10-03.** `~/.config/systemd/user/localai.service`
+   is the live one; the `/etc/systemd/system/localai.service` fallback (was
+   disabled/inactive) existed only *"until the --user unit serves a SYCL model
+   on :8080"* — that condition is met, so the --user unit is now the sole path.
+   **Done:** `sudo rm /etc/systemd/system/localai.service` + `sudo systemctl
+   daemon-reload` (both NOPASSWD under the chezmoi-pi drop-in). Verified:
+   `is-enabled` = `not-found`, no `localai` unit files remain in any systemd
+   search path, and the live `--user` unit stays `active`.
+   **Repo cleaned to match:** the `run_once_5_aitools_5localai_startup.sh`
+   `--system` deploy block, its now-unused `UNIT_*` vars, and the
+   `etc/systemd/system/localai.service` source were removed (and the run
+   script's stale comments updated). The run script was already a one-shot, so
+   this has no live effect — it just stops the unit from ever being re-added
+   and removes the confusion hazard.
+4. **`context_size` is tiny → full pi-agent runs rejected (live-confirmed).** `qwen-sycl.gguf.yaml`
    sets `context_size: 2048` (effective runtime tuning observed at 8192);
    any request over the cap is rejected with *"request exceeds the available
-   context size."* Fine for short turns; decide whether to raise it in the YAML
-   (`context_size` + `n_ctx`) for the intended workload.
+   context size."*
+
+   **pi-agent test, 2026-10-02:** a full agent run (tools **on**) = **15229
+   tokens** → `rpc error: Internal … exceeds the available context size
+   (8192 tokens)`. The same prompt with `--no-tools` fits under 8192 and returns
+   `PI_SYCL_OK` end-to-end. So the SYCL path *works* in pi-agent; the 8 KB window
+   is simply too small for a tool-carrying agent prompt (system prompt + loaded
+   AGENTS.md files + tool schemas). This is a config knob, not an architecture
+   problem.
+   **RESOLVED 2026-10-03 — raise `context_size`, but it must be a TOP-LEVEL YAML
+   key, not under `parameters:`.** LocalAI's llama-cpp schema reads
+   `context_size` as a model-level field (like `name`/`backend`); under
+   `parameters:` it maps to llama.cpp `--params` and is ignored, so LocalAI
+   fell back to its hardcoded default of 8192 (`Estimate used default
+   context_size=8192`). Set `context_size: 32768` at the top level of
+   `qwen-sycl.gguf.yaml`; restart the user unit. Verified: effective tuning now
+   reports `context=32768 … n_gpu_layers=99999999 parallel=8 f16=true` — SYCL
+   GPU placement intact, parallelism restored. Full pi-agent run (tools **on**,
+   ~15229 tokens) now completes end-to-end → `FULL_AGENT_OK` (was rejected at
+   8192). No `LOCALAI_DISABLE_HARDWARE_DEFAULTS` needed.
+   **Speed caveat (important):** qwen-0.5b on the Iris Xe iGPU is slow — prompt
+   processing ≈ 60 tok/s, so a full agent round takes ~5-6 min (a 15k-token
+   first round alone is ~200s). It *works*, but don't expect snappy tool use;
+   it's a small-model iGPU, not a V100. 32768 = the model's trained max context;
+   KV cache sits ~750 MB RSS, fine on shared VRAM.
 5. **Image-gen path (Qwen Image / `stablediffusion-ggml`) never deployed.**
    §11a's image-on-the-llama.cpp-basis (GGUF Qwen Image, INT8 on the V100)
    is still only in the design. **Open:** implement once the text backend
