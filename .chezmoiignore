@@ -8,6 +8,7 @@ discoveries
 devices
 uninstaller
 systemd/system
+docs
 
 LICENSE
 COMPILE.md
