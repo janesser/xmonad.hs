@@ -39,7 +39,7 @@ fi
 
 # --- 2. install the launcher (idempotent) -----------------------------------
 # `usr/` is chezmoi-ignored, so this source is consumed only by run scripts,
-# never symlinked. It has no `{{ }}`, so chezmoi copies it verbatim.
+# never symlinked. It has no double-brace markers, so chezmoi copies it verbatim.
 if [ ! -f "${LAUNCHER_SRC}" ]; then
     echo "⚠️  launcher source not found: ${LAUNCHER_SRC}"
     exit 1
@@ -52,7 +52,7 @@ else
 fi
 
 # --- 3. install the unit, enable at boot ------------------------------------
-# `etc/` is chezmoi-ignored too; this is a plain unit (no `{{ }}`).
+# `etc/` is chezmoi-ignored too; this is a plain unit.
 if [ ! -f "${UNIT_SRC}" ]; then
     echo "⚠️  unit source not found: ${UNIT_SRC}"
     exit 1
