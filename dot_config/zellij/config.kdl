@@ -532,6 +532,12 @@ session_serialization true
 //
 // post_command_discovery_hook "echo $RESURRECT_COMMAND | sed <your_regex_here>"
 
+// Resume 'pi' on the same session it was in before a zellij resurrection
+// (ssh reconnect / reboot). A bare 'pi' pane is restarted as 'pi --continue',
+// which opens the most recent session for that pane's cwd. Exact match only,
+// so shells, editors and any 'pi ...' with args are left unchanged.
+post_command_discovery_hook "echo $RESURRECT_COMMAND | sed 's|^pi$|pi --continue|'"
+
 // Number of async worker tasks to spawn per active client.
 //
 // Allocating few tasks may result in resource contention and lags. Small values (around 4) should
