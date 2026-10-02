@@ -2,7 +2,7 @@
 title: Local Multi-Accelerator AI Server (text + image)
 status: draft
 created: 2026-09-25
-updated: 2026-09-26
+updated: 2026-10-02
 ---
 
 # Local Multi-Accelerator AI Server — text + image
@@ -283,3 +283,153 @@ the router is only brought in if Option 2 grows.
 - **Client-side request timeouts.** "A request loses significance" is enforced by
   the client, not LocalAI — make sure the OpenAI clients carry sane timeouts, or
   a long cold-load queue can hang a client.
+
+---
+
+## Handover — two in-progress threads (2026-10-02)
+
+Two separate jobs were worked on recently. Both are mid-flight; here's the state
+and the exact next steps for whichever assistant picks them up.
+
+### A. HuggingFace cache migration: `/media/passeport` sda1 → sdb1 (M.2)
+
+**Context.** The HF hub bind-mount (`/media/passeport` → `~/.cache/huggingface/hub`,
+the llama backend's model cache) lived on `sda1` (USB "My Passport", 466 G,
+88% full). Moving it to an internal M.2 (`sdb1`, WD Blue SA510 1000 G).
+
+**Status — as of this writing (live-checked today):**
+
+- ✅ `sdb1` wiped (it held a Kali Live ISO — safe junk) + reformatted btrfs with
+  **`LABEL="passeport"`** so fstab's `x-systemd.automount` keeps matching it.
+- ✅ Baseline + target benchmarks captured.
+- ⏳ **Mirror still running:** `sudo rsync -aHAXx --delete /media/passeport/ /mnt/new/`
+  (root, started ~15:59 today, still going — ~400 G tail on sdb1's ~260 MB/s
+  QLC-limited writes).
+- ⏳ **Switch + rebind NOT done.** Still serving from `sda1`.
+- ⏳ **Temp sudoers drop-in `zz_sdb_migrate` still installed** (only
+  `parted/mkfs.btrfs/wipefs/mount/umount/rsync`; remove when done).
+
+**Key facts for whoever finishes it:**
+
+- `sdb1` write is **~2× slower** than sda1's read side (260 MB/s sustained vs
+  ~932 MB/s) — QLC cache exhaustion, on a proper SATA III link (not a port
+  problem). Fine for a read/model-serving model cache; don't re-benchmark as if
+  it were a perf regression.
+- `sdb1` wedged once during format (no logged error, died on its own) — clear a
+  reboot if it ever hangs again; run `smartctl` self-check if it wedges a
+  second time before trusting it with 400 G. (`smartctl` needs root — it's not
+  in the temp drop-in.)
+
+**Remaining sequence (all the rest after the mirror finishes):**
+
+1. **Verify** `/mnt/new` == `/media/passeport` (`diff -r` or checksum/`du`).
+2. **Switch + rebind:** unmount HF bind → `umount /media/passeport` (sda1) →
+   `mount` sdb1 by LABEL `passeport` at `/media/passeport` → remount the HF
+   bind → restart the llama backend. (fstab needs no edit — it keys off the
+   label; the bind line is unchanged.)
+3. **Clean up:** remove the `zz_sdb_migrate` drop-in, unmount `/mnt/new`.
+
+### B. GPU dual-driver: nouveau + nvidia_drm (GT 730)
+
+**Context.** Wanted the GT 730 (GK208B, PCI `17:00.0`) off `simple-framebuffer`
+and onto real accel, coexisting with the V100 on `nvidia`.
+
+**Status — as of this writing (live-checked today):**
+
+- ✅ **V100** (`21:00.0`) still bound to **nvidia 580** (`nvidia_drm`+modeset) — fine.
+- ✅ **Iris Xe DG1** (`2f:00.0`) bound to **i915** — fine.
+- ✅ **GT 730** (`17:00.0`) is **now bound to `nouveau`** (live `lsmod` +
+  `/sys/.../17:00.0/driver → nouveau`). The `modprobe nouveau` test from the
+  earlier session **succeeded** — nouveau initializes the GK208B on this box.
+- ⏳ **Durability NOT done.** No udev driver-pinning rule yet — this resets on
+  reboot.
+
+**Remaining step (one, durable):**
+
+1. Write the per-device udev pin so it's order-independent and nouveau can
+   never grab the V100 at boot (there's still no nvidia initramfs hook to save
+   us today). Draft already prepared in-session as
+   `/etc/udev/rules.d/60-gpu-driver.rules`:
+   - `10de:1db5` (V100) → `driver_override nvidia`
+   - `10de:1287` (GT 730) → `driver_override nouveau`
+   then `udevadm control --reload; udevadm trigger` (or reboot) and confirm
+   `journalctl -k | grep -E 'nvidia|nouveau'` shows both bound correctly on
+   next boot.
+- `modprobe`/`udevadm trigger` need root and are **not** in any current
+  allowlist — either extend the temp drop-in (rename it) or run this step
+  interactively with your password.
+
+### C. LocalAI deployment — deployed & running, but the rollout is unfinished
+
+**Context.** This is the LocalAI thread (§11). It was **deployed and is live**
+since 2026-10-02 — unlike A and B, this one works, it is just not *finished*.
+Live-checked 2026-10-02:
+
+- ✅ **Running + functional.** `localai run --address=[::]:8080` (v4.10.0,
+  PID 87951). The Intel **SYCL** backend is real: a timed completion against
+  `qwen-sycl` returned the exact expected string — it is serving on the Iris Xe
+  GPU, not silently on CPU.
+- ✅ **Models present.** `qwen-sycl` (Intel SYCL, llama-cpp backend),
+  `antares-1b` + `qwen-05b` (CPU). Data dirs under `~/.local/share/localai/`.
+- ✅ **chezmoi-managed.** Deployed by the tracked
+  `run_once_5_aitools_5localai_startup.sh` (pinned `v4.10.0`, downloads the
+  precompiled binary — no docker). Installs the host Intel Level Zero driver
+  (`libze-intel-gpu1`, the bundled SYCL driver predates the kernel 7.0 i915
+  ABI).
+
+Despite that, the **staged cutover is only half done**. Open items, in order of
+severity:
+
+1. **⚠️ NOT actually boot-persistent (`Linger=no`).** The unit that is live is a
+   **`--user` service** (enabled, `WantedBy=default.target`) — correct, because
+   SYCL fails under a `--system` unit on this box (needs jan's full group set,
+   incl. `render`/`video`, and there is no device cgroup under the user
+   manager). But `loginctl show-user jan | Linger` is **`no`**, so the unit does
+   **not** start at boot before login — it only comes up after jan logs in once.
+   **Next step:** `sudo loginctl enable-linger jan` to make it genuinely
+   boot-persistent, then confirm with `systemctl --user is-enabled` + a reboot
+   test. Until then the doc's "boot-persistent" claim is false.
+2. **The staged cutover to the V100/CUDA end-state was never reached.** The run
+   script's whole intent (and the `localai.service` comments) is a **two-phase**
+   cutover: LocalAI pinned to **Intel SYCL now** (so a model serves with **no
+   V100 VRAM contention** while Olla + llama-cuda hold the V100), then at the
+   `llama-cuda` cutover the unit's `LOCALAI_FORCE_META_BACKEND_CAPABILITY` is
+   flipped to **`nvidia`** for the end-state. That flip **never happened** —
+   LocalAI is still pinned to `intel`, and there is **no** Olla/llama-cuda
+   process running now. **Decision needed:** either (a) proceed with the flip to
+   the V100/CUDA end-state (the documented end-state, §11 Option 1), or (b)
+   formally abandon the V100 cutover and accept Intel SYCL as the running
+   config — and update this doc accordingly. Don't leave it parked mid-cutover.
+3. **Stale redundant `--system` unit.** `~/.config/systemd/user/localai.service`
+   is the live one; `/etc/systemd/system/localai.service` (disabled) exists only
+   as the SYCL-fallback the user-unit comment says it is kept for *"until this
+   one serves a SYCL model on :8080."* That condition is **now met** (we just
+   proved it), so the system unit has served its purpose. **Next step:** retire
+   it (`sudo rm /etc/systemd/system/localai.service`, `daemon-reload`) — or,
+   only if the V100 flip is chosen, repurpose it. Right now it is dead weight
+   and a confusion hazard.
+4. **`context_size` is tiny → large requests rejected.** `qwen-sycl.gguf.yaml`
+   sets `context_size: 2048` (effective runtime tuning observed at 8192);
+   any request over the cap is rejected with *"request exceeds the available
+   context size."* Fine for short turns; decide whether to raise it in the YAML
+   (`context_size` + `n_ctx`) for the intended workload.
+5. **Image-gen path (Qwen Image / `stablediffusion-ggml`) never deployed.**
+   §11a's image-on-the-llama.cpp-basis (GGUF Qwen Image, INT8 on the V100)
+   is still only in the design. **Open:** implement once the text backend
+   placement (item 2) is settled and `SINGLE_ACTIVE_BACKEND` is confirmed.
+6. **model-discovery integration: null, fall back to `models.json`.** The last
+   session's finding stands: LocalAI's `/v1/models` returns only `{id, object}`
+   with **no** metadata, so `context_length`/`max_completion_tokens` are all
+   `None` and model-discovery has nothing to auto-detect — its value is
+   essentially null for LocalAI. **Decision recorded but not implemented:** use a
+   hand-edited `models.json` instead. Whoever takes it up confirms the file
+   location/schema pi expects.
+7. **Security posture — live, no auth.** Bound to `[::]:8080` with
+   `--allow-insecure-public-bind` (no API key / no `--auth`), mirroring the old
+   Olla posture. Works for a trusted LAN but means **any** host on the network
+   can hit the AI front unauthenticated. Keep or add auth — this is a deliberate
+   open call, not an oversight.
+8. **Version pin (minor).** §11c said pin LocalAI's version once the topology
+   is validated. It is pinned at `v4.10.0` in the run script; confirm that
+   pin is the validated one and stop chasing upgrades until the topology
+   (item 2) is finally decided.
