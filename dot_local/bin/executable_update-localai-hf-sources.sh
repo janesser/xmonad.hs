@@ -38,11 +38,12 @@ note() { printf '  %s\n' "$*"; }
 #   physical-path   : absolute path to the GGUF inside the HF cache (stable ref)
 #   backend         : llama-cpp (GPU) or cpu-llama-cpp (CPU)
 #
-# qwen-sycl and qwen-05b share ONE physical link (qwen25.gguf) but get two
-# sidecars with different YAML schemas (GPU: top-level context_size+f16; CPU:
-# context_size under parameters:). The physical link is created once.
+# The physical link is created once even if two sidecars point at it (dedup).
+# To add a GPU/SYCL model back, append a line with backend llama-cpp and the
+# GPU yaml fields (f16=true, gpu_layers, top-level context_size), e.g. the
+# smallest LFM in the cache:
+#   "lfm2.5-2.6b|lfm2.6b.gguf|$HF_CACHE/models--LiquidAI--LFM2.5-2.6B-GGUF/blobs/02a8b7e17487d326e46d68ce0ba24211e1b80a14c4cd0597fa73c1cd697f52ed|llama-cpp|true|999|32768|4|true"
 MODELS=(
-  "qwen-sycl|qwen25.gguf|$HF_CACHE/models--Qwen--qwen2.5-0.5b-instruct-GGUF/qwen2.5-0.5b-instruct-q4_k_m.gguf|llama-cpp|true|999|32768|4|true"
   "qwen-05b|qwen25.gguf|$HF_CACHE/models--Qwen--qwen2.5-0.5b-instruct-GGUF/qwen2.5-0.5b-instruct-q4_k_m.gguf|cpu-llama-cpp|false|0|2048|4|true"
   "antares-1b|antares-1b.gguf|$HF_CACHE/models--DevQuasar--fdtn-ai.antares-1b-GGUF/blobs/1f4d922bbf2d317944185ff1155feb8b9dcfa48d37617fdeaec56e9c2af54b1f|cpu-llama-cpp|false|0|2048|4|true"
 )
