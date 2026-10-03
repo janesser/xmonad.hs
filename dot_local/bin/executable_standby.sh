@@ -4,14 +4,14 @@ TARGETS="sleep.target suspend.target hibernate.target hybrid-sleep.target"
 MASK_PROBE="sleep.target"
 MASKED=""
 
-if systemctl list-unit-files --state=masked|grep $MASK_PROBE; then
+if [ "$(readlink /etc/systemd/system/sleep.target)" = "/dev/null" ]; then
     MASKED=true
 else
     MASKED=false
 fi
 
 do_toggle() {
-    if [ "$MASKED" ]; then
+    if [ "$MASKED" = true ]; then
         sudo systemctl unmask $TARGETS
     else
         sudo systemctl mask $TARGETS
@@ -19,13 +19,21 @@ do_toggle() {
 }
 
 case "${1:-status}" in
-    toggle)
+    on)
+        MASKED=true
         do_toggle
         ;;
-    -b)
-        if [ $MASKED ]; then echo P; fi
+    off)
+        MASKED=false
+        do_toggle
         ;;
-    status)
-        echo "standby: $(MASKED)"
+    -t|toggle)
+        do_toggle
+        ;;
+    -b|bar)
+        if [ $MASKED = true ]; then echo P; fi
+        ;;
+    *|-s|status)
+        echo "standby: $MASKED"
         ;;
 esac
