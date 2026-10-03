@@ -41,3 +41,12 @@ discovery:
         name: "local-llamacpp-sycl"
         type: "openai-compatible"
         priority: 90
+      - url: "http://127.0.0.1:8091"   # vLLM-Omni (restart-vllm-omni.sh) on the V100
+        name: "vllm-omni"
+        type: "openai-compatible"
+        priority: 50
+        # vLLM-Omni shares the V100 with the llama.cpp CUDA backend (:8081,
+        # ornith): only ONE can hold the V100 at a time. This endpoint is only
+        # live while vLLM-Omni is running (switch-ai-backend.sh omni); while it
+        # is down Olla keeps routing ornith (it won't route a model it cannot
+        # discover). See ai-server.md §13.
