@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Helix is installed via the official Snap package (classic).
-# The old ppa:maveonair/helix-editor is unmaintained and only ships noble (24.04)
-# packages, so it is broken on Ubuntu 24.10+ / 26.04 (missing release file).
-# Upstream snap docs: https://docs.helix-editor.com/package-managers.html#snap
-# Remove the unmaintained PPA source file(s) if a previous install added them
-# (suite-agnostic glob; idempotent, no apt update triggered).
 sudo rm -f /etc/apt/sources.list.d/maveonair-ubuntu-helix-editor*.sources \
            /etc/apt/sources.list.d/maveonair-ubuntu-helix-editor*.list 2>/dev/null || true
 if snap list helix >/dev/null 2>&1; then
@@ -25,3 +19,5 @@ cargo uninstall markdown-oxide 2>/dev/null || true # cleanup earlier install
 
 # setting git core.editor
 git config --global core.editor hx
+
+go install charm.land/glow/v3@latest
