@@ -27,6 +27,7 @@ set -euo pipefail
 WALL_STORE="${WALL_STORE:-${XDG_DATA_HOME:-$HOME/.local/share}/wall}"
 INBOX="$WALL_STORE/inbox"
 LATEST="$WALL_STORE/latest"
+SEEN="$WALL_STORE/seen"
 MAX_LEN="${WALL_MAX_LEN:-4000}"
 
 die() { printf 'wall: %s\n' "$*" >&2; exit 1; }
@@ -37,7 +38,7 @@ wall — pane-visible broadcast (see discoveries/wall-fix.md)
   wall "message"       post a message (shown in fish panes on next prompt)
   wall < file           post from stdin
   wall history [-l N]  list recent messages (newest first)
-  wall clean [-d DAYS] purge inbox messages older than DAYS days (default 3)
+  wall clean [-d DAYS] purge inbox + seen files older than DAYS days (default 3)
   wall reset           delete every message
 EOF
 }
@@ -106,7 +107,13 @@ cmd_clean() {
     [ -d "$INBOX" ] || { echo "nothing to clean"; return 0; }
     local removed
     removed=$(find "$INBOX" -mindepth 1 -maxdepth 1 -type d -mtime +"$days" -print -exec rm -rf {} + 2>/dev/null | wc -l)
-    echo "cleaned $removed inbox message(s) older than $days day(s)"
+    # seen/<pid> files accumulate one per pane lifetime; prune the stale ones
+    # too so the store doesn't grow unbounded.
+    local seen=0
+    if [ -d "$SEEN" ]; then
+        seen=$(find "$SEEN" -mindepth 1 -maxdepth 1 -type f -mtime +"$days" -print -exec rm -f {} + 2>/dev/null | wc -l)
+    fi
+    echo "cleaned $removed inbox message(s) + $seen seen file(s) older than $days day(s)"
 }
 
 cmd_reset() {
