@@ -389,3 +389,76 @@ when the vLLM-Omni path is standing up:** stop/disable the `localai` user unit,
 remove the Olla layer and the `ola` autodetect provider / `OLLA_BASE_URL`, and
 drop `update-localai-hf-sources.sh`. The gguf model wiring is now irrelevant —
 vLLM-Omni uses native HF weights (§8 item 3).
+
+### D. vLLM-Omni pivot — handover for a new session (2026-10-03)
+
+**State: Olla wiring DONE · model downloading · activation pending your go-ahead.**
+
+#### ✅ Done
+- **torchcodec blocker RESOLVED.** `import vllm_omni` failed on `libnvrtc.so.13`/
+  `libcudart.so.13`; torch 2.13.0 *bundles* the CUDA-13 runtime under
+  `nvidia/cu13/lib` — torchcodec just couldn't find it. Fixed with a portable
+  `LD_LIBRARY_PATH` export in the venv activate (`/media/sailor/ai-server/.venv/bin/activate`,
+  lines ~132-137). `import vllm_omni` now succeeds; sm_70 V100 load verified. The
+  only residual is a benign vLLM 0.30.0 vs vLLM-Omni dev-version warning.
+- **Olla wired for vLLM-Omni.** Added the `vllm-omni` endpoint
+  (`127.0.0.1:8091`, `openai-compatible`, priority 50) to
+  `dot_config/olla/config.yaml`; Olla stays healthy with it down and picks up the
+  omni models on its discovery refresh. Committed.
+- **Lifecycle scripts** (in `~/.local/bin/`, rendered from `dot_local/bin/`):
+  `restart-vllm-omni.sh` (launch/stop vLLM-Omni on the V100) and
+  `switch-ai-backend.sh {omni|instruct}` (swap which backend holds the single V100).
+  Documented in **§13**.
+- **Model fit decided:** Qwen2.5-Omni-7B is **24 GB** of fp16 weights → won't fit
+  a 32 GB V100 once KV cache is added. Target is **Qwen2.5-Omni-3B (~12 GB)** —
+  comfortable headroom for stages + KV. Both are vLLM-Omni-supported.
+
+#### 🔄 In progress
+- **Qwen2.5-Omni-3B download** running detached (`hf download … --local-dir`),
+  landing in `/media/sailor/ai-server/models/Qwen2.5-Omni-3B/` (NOT the HF cache).
+  Check completion by counting weight shards:
+  `…/models/Qwen2.5-Omni-3B/*.safetensors` → expect **3**. Current: ~8/12 GB.
+- V100 still holds **ornith** (pi's llama backend, :8081, ~31 GB). Olla active.
+
+#### ⏳ Pending (next session)
+1. **Confirm download done** — 3 `.safetensors` shards present.
+2. **Activation swap** — *your call* (see ⚠️ below):
+   ```bash
+   switch-ai-backend.sh omni /media/sailor/ai-server/models/Qwen2.5-Omni-3B
+   ```
+   This stops ornith (frees VRAM) and launches vLLM-Omni on :8091; Olla picks it up.
+3. **Live omni test** — hit `/v1/chat/completions` on :8091 with text + audio +
+   image inputs to prove sm_70 kernel launch end-to-end. Then update §11 #1 from
+   *feasible* to *validated* and record real tok/s + VRAM footprint.
+4. **Optional:** LocalAI teardown (§13 → thread C): stop/disable the `localai`
+   user unit, remove the Olla layer + `ola` autodetect provider +
+   `update-localai-hf-sources.sh` — **only after** vLLM-Omni is standing, since
+   Olla is now vLLM-Omni's front end, not LocalAI's.
+
+#### ⚠️ Gotchas (hard-won — re-read before touching anything)
+- **One V100, one backend at a time.** ornith and vLLM-Omni fight for the same
+  32 GB; `switch-ai-backend.sh` manages the swap. Never start both.
+- **pi's llama backend is ornith on the V100.** Activating vLLM-Omni stops it →
+  pi has no coding backend during `omni` mode. Do the swap deliberately.
+- **`hf download` is broken in cache mode** (prints the snapshot path, fetches
+  nothing). Use `hf download … --local-dir <path>`.
+- **Do NOT restart Olla during `omni` mode.** Its `ExecStartPre` requires :8081
+  reachable; with ornith down that restart fails. The swap relies on Olla's
+  periodic discovery refresh instead.
+- **The HF cache-prune script is safe now** — the download goes to a local dir,
+  not `~/.cache/huggingface/hub`, so `run_9_cleanup_hf.sh` (which runs
+  `hf cache prune -y` on every `cz apply`) won't touch it. (It was temporarily
+  moved aside earlier while the 7B was in the cache; restored from git.)
+- **Don't go unilaterally stopping pi's llama backend** — it's this session's
+  active backend; confirm before the swap.
+
+#### Where things live
+| Item | Path |
+|---|---|
+| venv (vLLM 0.30.0, torch cu126, vllm_omni) | `/media/sailor/ai-server/.venv` |
+| vLLM-Omni model download | `/media/sailor/ai-server/models/Qwen2.5-Omni-3B/` |
+| launch/stop script | `~/.local/bin/restart-vllm-omni.sh` |
+| swap script | `~/.local/bin/switch-ai-backend.sh` |
+| Olla config | `~/.config/olla/config.yaml` (source: `dot_config/olla/config.yaml`) |
+| Olla binary | `~/.local/share/mise/installs/github-thushan-olla/0.0.29/olla` |
+| HF cache (bind-mounted) | `~/.cache/huggingface/hub` ← `/media/sailor/huggingface-hub` |
