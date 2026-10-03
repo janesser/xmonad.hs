@@ -37,5 +37,5 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
                ]
   , sepChar = "%"
   , alignSep = "}{"
-  , template = " %standby% } %UnsafeXMonadLog% } %date% { CPU: %multicpu% | GPU: %gpustat% | TMP: %thermal0% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=white>%volume-automute%</fc><fc=red>%volume-mute%</fc> | BAT: %battery%"
+  , template = " %UnsafeXMonadLog% } %date% { CPU: %multicpu% | GPU: %gpustat% | TMP: %thermal0% | BRT: <fc=lightgrey>%brightness%</fc> | VOL: <fc=orange>%volume%</fc><fc=white>%volume-automute%</fc><fc=red>%volume-mute%</fc> | BAT: %battery% <fc=red>%standby%</fc>"
 }

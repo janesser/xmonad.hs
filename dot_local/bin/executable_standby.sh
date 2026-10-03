@@ -60,8 +60,9 @@ case "${1:-status}" in
         do_toggle
         ;;
     -b)
-        # barmode: compact indicator only, no sudo, fast for the update loop
-        [ "$(state)" = "$MASKED" ] && echo "standby: MASKED" || echo "standby: UNMASKED"
+        # barmode: red 'S' in the bar only when standby is masked (disabled);
+        # nothing when unmasked. The colour comes from <fc=red> in xmobarrc.
+        [ "$(state)" = "$MASKED" ] && echo S
         ;;
     status|is-masked)
         echo "standby: $(verify)"

@@ -57,10 +57,14 @@ Cmnd_Alias CHEZMOI_PKGS = \
 # cover the bus-qualified forms. This lets `systemctl restart llama-sycl` work
 # while forbidding broader `systemctl` abuse (set-environment, daemon-reexec,
 # import, load, etc.). No shell / file-write access is granted.
+# `mask *` / `unmask *` back the `standby.sh toggle` (see ~/.local/bin/standby.sh):
+# masking sleep/suspend/hibernate keeps the machine out of standby.
 Cmnd_Alias SYSTEMCTL_UNIT = \
     /usr/bin/systemctl daemon-reload, \
     /usr/bin/systemctl enable *, \
     /usr/bin/systemctl disable *, \
+    /usr/bin/systemctl mask *, \
+    /usr/bin/systemctl unmask *, \
     /usr/bin/systemctl start *, \
     /usr/bin/systemctl stop *, \
     /usr/bin/systemctl restart *, \
