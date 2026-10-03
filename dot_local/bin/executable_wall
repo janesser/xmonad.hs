@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+#
+# wall — pane-visible broadcast for cyberkleiber.
+#
+# The system `wall` (write to all login terminals) delivers nothing here:
+# /run/utmp is empty (no utmp writer, minimal systemd) and zellij owns the
+# terminal ptys, so the real wall can never reach zellij panes via the tty
+# (see discoveries/wall-fix.md).
+#
+# This is a drop-in replacement for `wall` that routes an announcement to a
+# small, user-writable store. Each interactive fish prints any not-yet-seen
+# messages as a banner above its prompt on the next prompt draw, so every
+# zellij pane / SSH fish shows it. No utmp, no root, no zellij involvement.
+#
+# Usage:
+#   wall "message..."        post a message (visible in fish panes next prompt)
+#   wall < file             post from stdin (like the real wall)
+#   wall history [--limit N]   list recent messages (newest first)
+#   wall clean [--older-than N]  purge inbox messages older than N days (default 3)
+#   wall reset                 delete every message in the inbox
+#
+# Store: $WALL_STORE (default $XDG_DATA_HOME/wall, else ~/.local/share/wall)
+# Env overrides: WALL_STORE, WALL_MAX_LEN (default 4000)
+
+set -euo pipefail
+
+WALL_STORE="${WALL_STORE:-${XDG_DATA_HOME:-$HOME/.local/share}/wall}"
+INBOX="$WALL_STORE/inbox"
+LATEST="$WALL_STORE/latest"
+MAX_LEN="${WALL_MAX_LEN:-4000}"
+
+die() { printf 'wall: %s\n' "$*" >&2; exit 1; }
+
+usage() {
+    cat <<'EOF'
+wall — pane-visible broadcast (see discoveries/wall-fix.md)
+  wall "message"       post a message (shown in fish panes on next prompt)
+  wall < file           post from stdin
+  wall history [-l N]  list recent messages (newest first)
+  wall clean [-d DAYS] purge inbox messages older than DAYS days (default 3)
+  wall reset           delete every message
+EOF
+}
+
+now_id() { date +%s%N; }
+
+display_time() {
+    local secs="${1:0:10}"   # first 10 chars of the nanosecond epoch = seconds
+    date -d "@$secs" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || printf '%s' "$1"
+}
+
+cmd_post() {
+    local msg="$*"
+    # Strip CR and NUL so a banner can never hijack the terminal state.
+    msg=$(printf '%s' "$msg" | tr -d '\r\000')
+    [ -n "$msg" ] || die "empty message"
+
+    local trunc=""
+    if (( ${#msg} > MAX_LEN )); then
+        trunc=" [wall: truncated to ${MAX_LEN} chars]"
+        msg="${msg:0:MAX_LEN}"
+    fi
+
+    local id; id=$(now_id)
+    mkdir -p "$INBOX/$id" || die "cannot create $INBOX/$id"
+    printf '%s' "$msg$trunc" > "$INBOX/$id/body" || die "cannot write body"
+    printf '%s\n' "$id" > "$LATEST"
+
+    printf 'wall: posted (id %s) — %s.\n' "$id" "$(display_time "$id")"
+}
+
+cmd_history() {
+    local limit=20 arg
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -l|--limit) limit="$2"; shift 2 ;;
+            *) shift ;;
+        esac
+    done
+    [ -d "$INBOX" ] || { echo "no messages yet"; return 0; }
+    local n=0 d id when body
+    # Newest first: names are nanosecond epochs, so reverse-sorted names = newest.
+    for d in $(printf '%s\n' "$INBOX"/* | sort -r); do
+        [ -d "$d" ] || continue
+        id=$(basename "$d")
+        [ -f "$d/body" ] || continue
+        when=$(display_time "$id")
+        body=$(head -n1 "$d/body" | cut -c1-100)
+        printf '%s  %s\n' "$when" "$body"
+        n=$((n+1))
+        [ "$n" -ge "$limit" ] && break
+    done
+    # Avoid the trailing `[ n -ge limit ] && break` leaving a false (exit 1)
+    # status when fewer messages than the limit.
+    return 0
+}
+
+cmd_clean() {
+    local days=3 arg
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -d|--older-than) days="$2"; shift 2 ;;
+            *) shift ;;
+        esac
+    done
+    [ -d "$INBOX" ] || { echo "nothing to clean"; return 0; }
+    local removed
+    removed=$(find "$INBOX" -mindepth 1 -maxdepth 1 -type d -mtime +"$days" -print -exec rm -rf {} + 2>/dev/null | wc -l)
+    echo "cleaned $removed inbox message(s) older than $days day(s)"
+}
+
+cmd_reset() {
+    rm -rf "$INBOX" "$LATEST" 2>/dev/null || true
+    echo "inbox reset"
+}
+
+main() {
+    # No arguments: post from stdin (matches the real wall's stdin mode).
+    if [ "$#" -eq 0 ]; then
+        cmd_post "$(cat)"
+        return
+    fi
+    case "$1" in
+        -h|--help|help) usage; exit 0 ;;
+        history)   shift; cmd_history "$@" ;;
+        clean)     shift; cmd_clean "$@" ;;
+        reset)     shift; cmd_reset "$@" ;;
+        *)         cmd_post "$@" ;;
+    esac
+}
+
+main "$@"
