@@ -90,6 +90,7 @@ myBasicKeyMap =
     ( "<XF86AudioRaiseVolume>"
     , spawn' "pactl set-sink-volume @DEFAULT_SINK@ +10%"
     )
+  , ("M-C-d", addName "standby toggle" $ spawn' "standby.sh toggle")
   , ("M-f", addName "sendMessage ToggleStruts" $ sendMessage ToggleStruts)
   , ("M-C-k", spawn' "xkill")
   , ("M-C-p", addName "xprops" $ spawn "x-terminal-emulator -e bash -c \"xprop && read -n 1 -p 'Press any key to continue..'\"")
