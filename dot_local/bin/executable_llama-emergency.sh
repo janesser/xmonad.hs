@@ -36,7 +36,10 @@ LOG="$HOME/.local/log/llama-emergency.log"
 # actually exist on this box are touched (portable across boxes).
 UNITS=(llama-cuda llama-sycl vllm-omni)
 
-usage() { sed -n 's/^#   //p' "$0"; exit 1; }
+usage() {
+  awk '/^# Usage:/{f=1;next} /^# Notes:/{f=0} f && /^#   /{sub(/^#   /," ");print}' "$0"
+  exit 1
+}
 
 MODE="serve"
 FG=0
