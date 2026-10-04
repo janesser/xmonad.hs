@@ -1,16 +1,7 @@
 #!/bin/bash
 
-# Podman + NVIDIA CDI setup.
-#
-# Only meaningful when an NVIDIA GPU is present: `nvidia-ctk` (part of
-# nvidia-container-toolkit) is only useful for exposing a GPU to containers.
-# If no NVIDIA hardware is present we install nothing and remove any
-# nvidia-container-toolkit that may have been installed by mistake.
+# PODMAN NVIDIA CDI setup.
 
-# lspci needs no sudo and detects the GPU even with no driver installed (the
-# exact decision point here); nvidia-smi would need the driver present already.
-# Detection is centralised in ~/.local/share/gpu.func (sourced below); has_nvidia
-# is the never-false-negative presence test shared with the llama.cpp build script.
 source "$HOME/.local/share/gpu.func"
 if ! has_nvidia; then
     echo "$(basename $0): No NVIDIA GPU detected, skipping podman-nvidia setup..."
@@ -48,3 +39,16 @@ else
     sudo mv nvidia.yaml /var/run/cdi/
     nvidia-ctk cdi list # 0 and all
 fi
+
+# PODMAN fix permission trouble
+## /var/run/docker.socket points where no one may reach
+
+sudo groupadd docker # might not exist
+
+sudo chown root:docker /run/podman
+sudo chmod 750 /run/podman # 700 before
+# glob expands in this shell before sudo sees it, so no wildcard reaches sudo.
+sudo chown root:docker /run/podman/*.sock
+sudo chmod 660 /run/podman/*.sock # 600 before
+
+sudo usermod -a -G docker $USER
