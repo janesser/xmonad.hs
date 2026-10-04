@@ -5,15 +5,18 @@
 # router/Olla path. It stops the managed llama unit(s) that can hold the V100,
 # reaps any existing server on the emergency port, then launches:
 #
-#     llama serve --host 127.0.0.1 --port 8080 -hf <MODEL> --parallel 1
+#     llama serve --host 127.0.0.1 --port 9931 -hf <MODEL> --parallel 1 --device CUDA0
 #
-# (the same "emergency" command, now explicit + --parallel 1).
+# (the same "emergency" command, now explicit + --parallel 1 + --device CUDA0).
+# --device CUDA0 is REQUIRED: with --parallel 1 the server otherwise ends up
+# CPU-bound instead of taking the V100. Port 9931 anticipates the upstream
+# llama.cpp default-port switch.
 #
 # Usage:
 #   llama-emergency.sh              # serve the default stopgap model (background)
 #   llama-emergency.sh -f           # foreground (exec) — logs to this terminal
 #   llama-emergency.sh -m REPO      # serve a different model, e.g. -m Qwen/Qwen3-4B-GGUF:Q4_K_M
-#   llama-emergency.sh -p PORT      # use a different emergency port (default 8080)
+#   llama-emergency.sh -p PORT      # use a different emergency port (default 9931)
 #   llama-emergency.sh stop         # stop the emergency server (managed units left alone)
 #   llama-emergency.sh status       # show what (if anything) is on the emergency port
 #
@@ -27,9 +30,10 @@
 #     nothing is hard-coded here.
 set -uo pipefail
 
-MODEL="unsloth/Qwen3.8-27B-GGUF:Q4_K_M"
+#MODEL="unsloth/Qwen3.8-27B-GGUF:Q4_K_M"
+MODEL="ornith-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M"
 HOST="127.0.0.1"
-PORT="8080"
+PORT="9931"
 SUDO="/usr/bin/systemctl --system"
 LOG="$HOME/.local/log/llama-emergency.log"
 # Best-effort list of managed units that can hold the V100. Only units that
@@ -120,11 +124,11 @@ mkdir -p "$(dirname "$LOG")"
 
 if [ "$FG" = 1 ]; then
   echo "llama-emergency: serving $MODEL on http://$HOST:$PORT (foreground; Ctrl-C to stop)"
-  exec llama serve --host "$HOST" --port "$PORT" -hf "$MODEL" --parallel 1
+  exec llama serve --host "$HOST" --port "$PORT" -hf "$MODEL" --parallel 1 --device CUDA0
 fi
 
 echo "llama-emergency: serving $MODEL on http://$HOST:$PORT (log: $LOG)"
-nohup llama serve --host "$HOST" --port "$PORT" -hf "$MODEL" --parallel 1 \
+nohup llama serve --host "$HOST" --port "$PORT" -hf "$MODEL" --parallel 1 --device CUDA0 \
   >>"$LOG" 2>&1 &
 PID=$!
 disown
