@@ -1,0 +1,27 @@
+[Data Source]
+DisplayName=jan@esserjan.de alt
+Enabled=true
+Parent=c6390dd3427ff824fb157e005e07aad894231ec1
+
+[Authentication]
+Host=esserjan-de.netcup-mail.de
+Method=PLAIN
+Port=465
+ProxyUid=system-proxy
+RememberPassword=true
+User=jan@esserjan.de
+CredentialName=
+IsExternal=false
+
+[Security]
+Method=ssl-on-alternate-port
+
+[Mail Transport]
+BackendName=smtp
+
+[Smtp Backend]
+ReencodeData=false
+DsnRetFull=false
+DsnNotifySuccess=true
+DsnNotifyFailure=true
+DsnNotifyDelay=true

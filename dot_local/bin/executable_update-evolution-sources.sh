@@ -91,6 +91,8 @@ while IFS= read -r -d '' f; do
             if chezmoi re-add "$f"; then
                 echo "  re-added (changed): $f"
                 readded=$((readded + 1))
+            elif chezmoi add "$f"; then
+                echo " added (new): $f"
             else
                 echo "  warn: chezmoi re-add failed for $f" >&2
             fi
