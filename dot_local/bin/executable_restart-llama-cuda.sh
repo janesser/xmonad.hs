@@ -65,24 +65,19 @@ set LOG_FILE $LOG_DIR/llama-server.log
 llama serve \
   --host 127.0.0.1 \
   --port 8081 \
-  --model ~/.cache/huggingface/hub/ornith.gguf \
+  --models-preset ~/.llama-cpp-models-preset.ini \
+  --models-max 4 \
+  --parallel 1 \
+  --no-warmup \
+  --no-ui \
   --log-file $LOG_FILE \
   >/dev/null 2>/dev/null \
   &;disown
 
-echo llama-server \
-  --host 127.0.0.1 \
-  --port 8081 \
-  --models-max 1 \
-  --parallel 1 \
-  --no-warmup \
-  --no-ui \
-  --offline \
-&; disown
-
-#  --models-preset ~/.llama-cpp-models-preset.ini \
-#  --verbosity 3 \
-#  --log-file $LOG_FILE \
-#  --sleep-idle-seconds 3600 \
+# One router-server instance serves every llama-cuda model in the preset; llama.cpp
+# loads only ONE into VRAM at a time and reloads on selection. Olla discovers all of
+# them from /v1/models (dynamic discovery), so it now exposes the full portfolio.
+# Ids are preset repo ids (e.g. deepreinforce-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M),
+# not the old ~/.cache/huggingface/hub/ornith.gguf path -> update any pinned client.
 
 echo "llama-server (re-)started."
