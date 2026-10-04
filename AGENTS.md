@@ -47,12 +47,17 @@ Rules:
   explicit user approval.
 - Prefer `cz apply` for config edits; reserve `cz update` for pulling fresh
   upstream changes.
+- **`git force push` (`--force`, `--force-with-lease`, `--force-with-lease=force`,
+  or any other force-push) is always prohibited.** It is unsafe on a shared
+  remote branch because it overwrites history other people have already pulled.
+  Never run it, and never treat a "prepare" request as permission to run it —
+  stage the change and refuse the force-push; ask the user to run it by hand
+  if they are the only writer and truly need it.
 - When the request says **"prepare"** an action, it is *staged only*: set it
   up (stage/commit, run the checks, print what would happen) and then STOP.
   Never auto-execute a destructive, irreversible, or networked action
-  (force-push/`--force`/`--force-with-lease`, `rm -rf`, `reset`/`rebase`,
-  `shutdown`) just because it was "prepared" — the user wanted it ready to
-  fire, not fired. Confirm before applying.
+  (`rm -rf`, `reset`/`rebase`, `shutdown`) just because it was "prepared" —
+  the user wanted it ready to fire, not fired. Confirm before applying.
 
 ## Sudoers file (repo-managed under `etc/`)
 Source: `etc/sudoers.d/chezmoi-pi` (a normal chezmoi file, but `etc/` is in

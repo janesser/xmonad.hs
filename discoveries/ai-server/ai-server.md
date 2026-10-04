@@ -27,18 +27,39 @@ engine — sized for a small concurrent portfolio.
 
 ## 2. Why this exists
 
-- The previous **LocalAI** thread was deployed and half-running, but the
-  experience was poor: the only GPU-backed model lived on the **Iris Xe DG1**
-  (SYCL, ~60 tok/s — a full agent round took 5–6 min), the V100 was never
-  actually used for serving, and the stack could only do small GGUF text models
-  (no real audio/video; "image" was a thin GGUF diffusion path).
-- The real need is **modern, fast, omni-modal serving**, not "small ggml model
-  on the iGPU." vLLM-Omni gives true GPU acceleration on the V100 **and** audio +
-  image + video — what LocalAI never provided.
+This box has **one** useful accelerator (the 32 GB V100) but needs to run more
+than one *kind* of workload on it — a fast coding backend (ornith/llama.cpp),
+and omni-modal text+audio+image+video (vLLM-Omni). The whole point of the
+design is **managing that one accelerator across competing workloads**. Three
+reasons, in order:
+
+1. **Run different workloads on limited local hardware (the reason it exists).**
+   One V100, several models, none of them free to run at once. The V100 is the
+   scarce resource and the box's real value is modern, fast, omni-modal serving —
+   not a small ggml model crawling on the Iris Xe iGPU. LocalAI half-exercised
+   this: its only GPU model ran on the DG1 at ~60 tok/s (5–6 min/agent round),
+   never touched the V100, and did no real audio/video. The need was always
+   **fast V100 serving**, and that's what this is built around.
+2. **Seamlessly switch models / backends.** Because only one backend can hold
+   the V100 at a time, switching between them has to be a deliberate, single
+   command (`switch-ai-backend.sh`), not a fumble. The swap is the operational
+   heart of the setup.
+3. **A stable integration frontend that knows what can be switched in.** A
+   single, well-known entry point (OpenAI-API-compatible) that clients can rely
+   on — and that is *aware of the portfolio*, knowing which workloads exist and
+   being able to route to whichever is live. Integration stays simple even though
+   the backend behind it changes. (Which concrete thing plays this role is still
+   an open candidate question — e.g. Olla is a candidate, unproven for the job;
+   not yet decided.)
+
+The rest of this section is the technical shape that serves those reasons.
+
 - **Front + engine = vLLM-Omni** (`vllm-project/vllm-omni`), the OpenAI-compatible
   server *and* the serving engine. vLLM ships its own OpenAI-compatible
-  `/v1/*` endpoint, so **no LocalAI and no router** are needed — the server *is*
-  the front. Not Ollama, not Olla, not llama.cpp directly.
+  `/v1/*` endpoint, so **no LocalAI** are needed — the server *is* the front. Not
+  Ollama, not llama.cpp directly. This directly backs reason 3: vLLM-Omni is one
+  more stable, OpenAI-compatible workload that the frontend can point at — no
+  bespoke front to stand up for it.
 
 ## 3. Architecture (the target topology)
 
