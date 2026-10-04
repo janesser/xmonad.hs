@@ -85,15 +85,27 @@ function _wall_render_banner
     printf '%s' "$shown" > "$WALL_SEEN/$pid"
 end
 
-# Compose with any pre-existing fish_prompt (e.g. kitty shell integration):
-# never replace it, only prepend the banner.
-if functions -q _wall_prompt_orig
-    functions --erase _wall_prompt_orig
-end
-if functions -q fish_prompt
-    functions --copy fish_prompt _wall_prompt_orig
-end
-function fish_prompt
-    _wall_render_banner
-    functions -q _wall_prompt_orig && _wall_prompt_orig
+# Compose with any pre-existing fish_prompt (e.g. a theme or kitty shell
+# integration): prepend the banner, never replace the original.
+#
+# Wrapped only once per fish session, via a sentinel, so re-sourcing the file
+# can't copy our own wrapper into _wall_prompt_orig (which would make it call
+# itself and recurse). We also define the wrapper when fish has no fish_prompt
+# of its own (the default), so the banner shows regardless.
+if not set -q __wall_prompt_active
+    # `functions --copy` refuses to overwrite an existing destination, so clear
+    # any leftover _wall_prompt_orig first. The sentinel keeps this block running
+    # only once per session, so fish_prompt here is always the original (never
+    # our own wrapper) -> no recursion on re-source.
+    if functions -q _wall_prompt_orig
+        functions --erase _wall_prompt_orig
+    end
+    if functions -q fish_prompt
+        functions --copy fish_prompt _wall_prompt_orig
+    end
+    function fish_prompt
+        _wall_render_banner
+        functions -q _wall_prompt_orig && _wall_prompt_orig
+    end
+    set -g __wall_prompt_active yes
 end

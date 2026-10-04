@@ -44,6 +44,12 @@ Secondary confirmation: `systemd-logind` (pid running) *does* exist, but every
 interactive `jan` session shows **TTY `-`** (no controlling terminal), so there
 is no login Session with a tty to map into utmp anyway.
 
+This is the documented behavior of this exact release, not a local
+misconfiguration — see §9 (Chris Siebenmann, "Ubuntu 26.04 has broken shutdown
+announcements and `wall` doesn't work"): Ubuntu 26.04/systemd 259.5 ships
+without `/run/utmp` (so `wall` does nothing) and logind doesn't learn SSH login
+ptys (so `loginctl` reports `TTY -`). cyberkleiber matches all of this.
+
 ## 3. The zellij connection (why utmp alone never fixed this)
 
 This is the decisive architectural point. `wall` writes to a tty **slave**;
@@ -172,3 +178,61 @@ now user-preference calls, not blockers:
   it to "implemented via fish banner, cz-apply blocked by archive sync".
 - git: `15bc4ba` `Add wall pane broadcast + fish banner for zellij`.
 - Sessions: 2026-10-01 ~21:47–22:05 (root-cause), 2026-10-03 (implementation).
+
+## 9. Related reading — Ubuntu 26.04 shutdown and `wall`
+
+- Reference: https://utcc.utoronto.ca/~cks/space/blog/linux/Ubuntu2604ShutdownAndWall
+  (Chris Siebenmann, 2026-07-20, "Ubuntu 26.04 has broken shutdown announcements
+  and `wall` doesn't work"). The site blocks AI agents, so the summary below is
+  from the downloaded HTML of the actual article, not a guess.
+- **The article's two separate issues.**
+  1. **`wall` is broken on 26.04.** Starting in Debian 13 ('Trixie') and
+     Ubuntu 25.10, Debian/Ubuntu systemd is built **without support for
+     `/run/utmp`**. `wall` (from `bsdutils`) only looks in the utmp file, so
+     with no utmp file, `wall` never does anything. The recommended fix is to
+     "write a script that gets the list of active user sessions with ptys and
+     writes a message to them itself." The utmp replacement is the `wtmpdb`
+     package (hooked via PAM), but Ubuntu 26.04's OpenSSH is built without
+     wtmpdb support.
+  2. **Shutdown broadcasts are broken on 26.04.** systemd **259.5**'s logind
+     does not learn which ttys SSH logins use, so `loginctl` shows **TTY `-`**
+     for every SSH session (console logins still get a TTY). logind only
+     announces impending shutdowns to TTYs it knows about, so SSH ptys get
+     nothing. This does *not* happen on Ubuntu 24.04 (systemd 255.4) or Fedora
+     43 (systemd 258.9); Fedora 44 (systemd 259.7, UTMP re-enabled) is fine.
+- **This is exactly our box.** cyberkleiber is **Ubuntu 26.04.1, systemd
+  259.5**, has **no `/run/utmp`**, and every `jan` session shows **`TTY -`** in
+  `loginctl` (verified 2026-10-05). So §2's root cause is not a local anomaly —
+  it is the documented behavior of this release. The `who`/`w` programs still
+  show pty info by falling back to scanning `/dev/pts` (not via systemd/utmp),
+  and AppArmor's `who` profile additionally blocks `/run/systemd/sessions`.
+- **Consequences for this project.**
+  1. **Root cause fully confirmed, direction unchanged.** Our finding that
+     `/run/utmp` is empty and logind reports `TTY -` is the published behavior
+     of Ubuntu 26.04, not a misconfiguration. A utmp/utmcd-based fix was never
+     viable here; the OS simply ships without utmp for `wall`.
+  2. **Approach C is precisely the article's recommended vector.** The article
+     says the fix is "get the active ptys and write to them yourself" — i.e.
+     bypass `wall`/utmp entirely. Our store + per-pane fish banner is the
+     fish-native realization of that. It is the correct approach and it is the
+     one the article points to.
+  3. **Caveat the article implies: a raw `wall`-replacement won't reach
+     zellij panes.** Writing to the ptys found via `/dev/pts` reaches raw SSH
+     and console sessions (nothing between the write and the screen), but zellij
+     holds the *master* side of a pane's pty, so bytes written to the slave are
+     consumed by zellij, not rendered. That is exactly why the banner has to be
+     fish rendering the store, not an external write to the tty — the one place
+     our approach is strictly better than the article's suggested `wall` clone.
+  4. **Immediacy is still a fish limit, independent of `wall`.** Even reaching
+     the store, the banner shows only on the next prompt draw (fish is
+     single-threaded with no file-watch/IPC hook; a `--on-signal` handler was
+     verified not to fire while idle). True instant delivery still means
+     rendering outside fish (zellij overlay/plugin) — see §6.
+  5. **Practical notes for any future tooling here.** Do not use `wall`, `who`,
+     or `loginctl` for session/pty discovery on this release: utmp is gone and
+     logind doesn't track SSH ptys. If you must discover ptys, scan `/dev/pts`
+     (or `who`/`w`, which fall back to `/dev/pts`, subject to AppArmor), and
+     know that `wtmpdb` won't help without a PAM hook and OpenSSH rebuild.
+  6. **Shutdown notices still work via the store.** A halt oneshot can post the
+     shutdown message into the inbox, so panes render it on their next prompt
+     after reboot — even though neither `wall` nor logind will announce it.
