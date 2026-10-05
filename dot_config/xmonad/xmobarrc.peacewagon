@@ -29,7 +29,7 @@ Config { font = "xft:inconsolatalgc:pixelsize=12:antialias=true"
                     "standby.sh -b || true"] 
                     "standby" 20
                , Run Com "/bin/bash" ["-c",
-                    "echo N/A"] 
+                    "intel_gpu_top -n 1 -l | tail -n -1 | awk '{print int($9)\"%\3";}'"] 
                     "gpustat" 20
                , Run Com "brightness.sh" [] 
                     "brightness" 20

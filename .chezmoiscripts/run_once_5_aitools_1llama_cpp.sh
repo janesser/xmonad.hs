@@ -24,6 +24,10 @@
 set -o pipefail
 export DEBIAN_FRONTEND=noninteractive
 
+uv tool install gpustat
+sudo apt install -y igt-gpu-tools
+sudo setcap cap_perfmon=ep $(which intel_gpu_top)
+
 # --- paths ------------------------------------------------------------------
 LLAMA_DIR="$HOME/projs/llama.cpp"
 BUILD_CUDA="$LLAMA_DIR/build_cuda"
