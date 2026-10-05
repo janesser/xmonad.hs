@@ -2,6 +2,36 @@
 
 <https://www.chuwi.com/de/product/items/Chuwi-UBooK-Xpro.html>
 
+## special pipe-key combo (tablet keyboard)
+
+    sudo cp usr/share/X11/xkb/symbols/de.chuwi_ubook_xpro /usr/share/X11/xkb/symbols/de.chuwi_ubook_xpro
+    sudo cp etc/default/keyboard /etc/default/keyboard
+
+  After reboot, verify
+
+    setxkbmap -print
+        # output
+        xkb_keymap {
+                xkb_keycodes  { include "evdev+aliases(qwerty)" };
+                xkb_types     { include "complete"      };
+                xkb_compat    { include "complete"      };
+                xkb_symbols   { include "pc+de.chuwi_ubook_xpro+inet(evdev)"    };
+                xkb_geometry  { include "pc(pc105)"     };
+        };
+
+  Good guide here:
+  https://medium.com/@damko/a-simple-humble-but-comprehensive-guide-to-xkb-for-linux-6f1ad5e13450
+
+  Chuwi specific parts
+
+    diff usr/share/X11/xkb/symbols/de.chuwi_ubook_xpro /usr/share/X11/xkb/symbols/de
+        29,30c29,30
+        <     key <AB01>        {[          y,          Y,              bar,          less ]}; // » › CHUWI MODIF
+        <     key <AB02>        {[          x,          X,    guillemotleft,          greater ]}; // « ‹ CHUWI MODIF
+        ---
+        >     key <AB01>        {[          y,          Y,   guillemotright,          U203A ]}; // » ›
+        >     key <AB02>        {[          x,          X,    guillemotleft,          U2039 ]}; // « ‹
+
 ## Chuwi Camera Fixing WIP
 
 Chuwi Ubook Xpro has an (back, over screen) ov2680 and (front) ov5648.
