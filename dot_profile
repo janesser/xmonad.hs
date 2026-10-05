@@ -11,7 +11,8 @@
 #umask 022
 
 killall -q clamfs || echo "No Running clamfs."
-clamfs ~/.config/clamfs.d/downloads.xml
+# don't disturb xserver start
+clamfs ~/.config/clamfs.d/downloads.xml 2>/dev/null >/dev/null
 
 
 # if running bash
