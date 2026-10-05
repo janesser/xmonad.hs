@@ -25,6 +25,8 @@
 #     fstab bind mount that is up at boot. `mount` is not in the scoped sudoers
 #     drop-in, so this script never sudo-mounts (it would block on a password);
 #     if the mount is down it warns and llama downloads the model on demand.
+#   * Binds the current LAN address, auto-resolved via `ip route get` (so a new
+#     DHCP lease keeps the server reachable). Override with LLAMA_HOST.
 #   * Stops units via the scoped `systemctl --system` drop-in — non-interactive.
 #   * Relies on the caller's shell for HF_TOKEN (as the current stopgap does);
 #     nothing is hard-coded here.
@@ -32,7 +34,7 @@ set -uo pipefail
 
 #MODEL="unsloth/Qwen3.8-27B-GGUF:Q4_K_M"
 MODEL="ornith-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M"
-HOST="127.0.0.1"
+HOST="::"
 PORT="9931"
 SUDO="/usr/bin/systemctl --system"
 LOG="$HOME/.local/log/llama-emergency.log"
@@ -133,6 +135,7 @@ nohup llama serve --host "$HOST" --port "$PORT" -hf "$MODEL" --parallel 1 --devi
 PID=$!
 disown
 echo "llama-emergency: pid $PID — stop with: $0 stop"
+HOST="$(hostname -s)"
 echo "llama-emergency: waiting on http://$HOST:$PORT/v1/models ..."
 for _ in $(seq 1 90); do
   if curl -fsS "http://$HOST:$PORT/v1/models" >/dev/null 2>&1; then
