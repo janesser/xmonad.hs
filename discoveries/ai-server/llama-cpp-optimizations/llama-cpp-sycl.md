@@ -1,7 +1,9 @@
 # llama.cpp: enable CUDA + SYCL (joined backends)
 
 **Date:** 2025-09-08
-**Status:** discovered + planned, not yet executed
+**Status:** **RESTORED (router mode) 2026-10-06** — launcher + systemd unit
+rewritten to match `llama-cuda` (commit `ee5bdd9`'s refactor); **build itself
+still pending** (one-time oneAPI + SYCL compile) — see below.
 **Target box:** xmonad desktop — NVIDIA Tesla V100 32GB + Intel DG1 Iris Xe
 
 ## Goal
@@ -85,6 +87,56 @@ separately, merge the `.so`.
 Install oneAPI compilers: **user-local** (`~/.local/oneapi`, no `sudo`) vs
 **system-wide** (`/opt/intel`, needs `sudo` — outside the normal sudoers boundary,
 needs explicit user OK). Default recommendation: user-local.
+
+## Execution (restored 2026-10-06, aligned to the `llama-cuda` router refactor)
+
+The build was never completed (see the pending note below), so this section
+records how the **launcher + unit** were brought in line with the CUDA backend's
+last state (`ee5bdd9`), not the old fixed-model `llama-server` style.
+
+- **Launcher** `~/.local/bin/restart-llama-sycl.sh` (chezmoi source
+  `dot_local/bin/executable_restart-llama-sycl.sh`) now runs **router mode** via
+  the unified `llama serve` CLI — the same pattern as
+  `restart-llama-cuda.sh`:
+  - `--host 127.0.0.1 --port 8082 --models-max 1 --parallel 1 --device SYCL0 --no-ui`
+    (fork + disown, exits so the systemd `Type=oneshot` tracks only the launcher;
+    the orphaned server keeps serving; the next run reaps the stale one).
+  - **Device pin = `SYCL0`.** CUDA uses `--device CUDA0`; the Intel backend's
+    own index is `SYCL0`. Confirm the exact index after the build with
+    `$BUILD_SYCL/bin/llama serve --list-devices` and fix the launcher if it
+    differs. Auto-select is left on (no `ONEAPI_DEVICE_SELECTOR`); this is only
+    the llama.cpp-side pin.
+  - Default model (LFM2.5-2.6B) is exposed to the router via a tidy symlink
+    (`~/.cache/huggingface/hub/LFM2.5-2.6B.gguf`), mirroring the CUDA ornith
+    symlink, so Olla discovers it from the HF cache — no `--hf`, no fixed path.
+  - Logs go to `journalctl` (no `--log-file`), like CUDA.
+  - `--device` is the only functional change vs. the old launcher besides the
+    router mode; everything else (oneAPI sourcing, render/video group adds,
+    port-bound reaper, `set -u` avoidance) is carried over.
+- **Unit** `llama-sycl.service` (chezmoi
+  `etc/systemd/system/llama-sycl.service`, installed by
+  `run_once_5_aitools_2llama_startup.sh`) now:
+  - calls the launcher `restart-llama-sycl.sh live 8082` (the new signature),
+  - has an `ExecStartPre` that **fails fast** if no SYCL device enumerates
+    (mirrors the CUDA probe) and **skips cleanly** if the build is absent, so a
+    fresh boot does not fail-loop, and
+  - does **not** bootstrap the build from systemd (the multi-minute
+    download+compile would blow the 120s oneshot window and loop on every boot);
+    the launcher bootstraps only when run interactively, so the build is a
+    one-time manual step.
+- **Deploy order:** `cz apply` (installs/units the unit, enabled at boot but
+  `START=no` → not started on deploy) → **manual one-time build** →
+  `systemctl restart llama-sycl`.
+
+### Still pending: the build itself
+
+`build_sycl/` does not exist, so no SYCL binary is present to run. First run of
+the launcher (or any `llama-sycl-test.sh`) triggers the one-time bootstrap in
+`~/.local/share/llama-cpp/lib.sh`: download the ~1.5 GB Intel Deep Learning
+Essentials installer → `~/.local/intel/oneapi` (no sudo) → cmake build of the
+`build_sycl` tree. Until that completes the unit's `ExecStartPre` skips and the
+backend is unreachable. The oneAPI install is user-local (per the 2025-09-08
+open decision), no `sudo`.
 
 ## Reference
 

@@ -1,23 +1,25 @@
 # Installed by
-# .chezmoiscripts/run_once_5_aitools_4llama_sycl_startup.sh
-# to /etc/systemd/system/llama-sycl.service
+# .chezmoiscripts/run_once_5_aitools_2llama_startup.sh (dual-backend deploy,
+# one backend table manages both llama-cuda and llama-sycl) to
+# /etc/systemd/system/llama-sycl.service
 #
-# Runs llama.cpp on the Intel GPU (SYCL / oneAPI), serving the SYCL backend
-# model on 127.0.0.1:8082 so Olla can proxy it publicly on :8082. It mirrors
-# llama-cuda.service (the CUDA backend on :8081) but for the Intel
-# accelerator.
+# Runs llama.cpp on the Intel GPU (SYCL / oneAPI) in ROUTER mode, serving every
+# SYCL model discovered from the bind-mounted HF cache on 127.0.0.1:8082 so
+# Olla can proxy it publicly on :8082. Mirrors llama-cuda.service (the CUDA
+# backend on :8081) but for the Intel accelerator: same Type=oneshot launcher
+# pattern, same --device pin, same journalctl logging.
 #
-# NOTE: this service IS enabled at boot (run_once_5_aitools_4llama_sycl_startup.sh
-# runs a plain `enable`, not `enable --now`): loading the ~3.8 GB model is heavy,
-# so the first start is left to an explicit `systemctl start` (or next boot) and
-# to the launcher's memory guard.
+# NOTE: enabled at boot, but left to an explicit `systemctl start` (this unit
+# is START=no in the backend table) because loading a model into the Iris Xe
+# shared-memory budget is heavy and the SYCL build itself is a one-time
+# bootstrap. See the launcher's memory guard and ExecStartPre below.
 #
 # The huggingface-hub bind-mount onto ~/.cache/huggingface/hub is added to
 # /etc/fstab by run_once_5_aitools_2llama_startup.sh, so at boot the hub is
 # already a mountpoint.
 
 [Unit]
-Description=llama.cpp on Intel GPU (SYCL) — LiquidAI/LFM2.5-2.6B (Q4_K_M) on 127.0.0.1:8082
+Description=llama.cpp on Intel GPU (SYCL) — router mode, 127.0.0.1:8082
 After=local-fs.target media-passeport.mount
 
 [Service]
@@ -32,15 +34,19 @@ Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/
 # kills only the already-exited launcher, leaving the orphan running; the
 # launcher reaps the previous orphan on the next run (see the script).
 #
-# Self-heal: if the launcher itself fails (build missing, unit restarted), retry
-# after a short delay instead of requiring a manual restart. NOTE: unlike
-# Type=simple, systemd does NOT restart a llama-server that dies while running —
-# the unit is already "done" at that point. This is the CUDA backend's trade-off
-# (mirrors restart-llama-server.service).
+# Self-heal: if the launcher itself fails, retry after a short delay instead of
+# requiring a manual restart. NOTE: unlike Type=simple, systemd does NOT restart
+# a llama-server that dies while running — the unit is already "done" at that
+# point. This is the CUDA backend's trade-off (mirrors restart-llama-cuda).
 Type=oneshot
 RemainAfterExit=yes
-ExecStartPre=/usr/bin/bash -c '. "$HOME/.local/share/llama-cpp/lib.sh"; if [ -x "$BUILD_SYCL/bin/llama-server" ]; then echo "llama-sycl: SYCL build present at $BUILD_SYCL"; else echo "llama-sycl: SYCL build missing — the launcher will bootstrap it on first use"; fi'
-ExecStart=/usr/bin/bash /home/jan/.local/bin/restart-llama-sycl.sh 8082
+# Fail fast rather than silently falling back to CPU. Probe for a live SYCL
+# device (needs the oneAPI runtime on LD_LIBRARY_PATH to enumerate); retry a
+# few times for the runtime init race. If the SYCL build was never bootstrapped,
+# skip cleanly (exit 0) so a fresh boot does not fail-loop — the launcher will
+# build it on first explicit start.
+ExecStartPre=/usr/bin/bash -c 'if [ ! -x "$HOME/projs/llama.cpp/build_sycl/bin/llama" ]; then echo "llama-sycl: SYCL build not present — bootstrap first (run ~/.local/bin/restart-llama-sycl.sh)" >&2; exit 0; fi; . "$HOME/.local/share/llama-cpp/lib.sh"; . "$ONEAPI_SETVARS" >/dev/null 2>&1 || true; for i in $(seq 1 8); do if "$BUILD_SYCL/bin/llama" serve --list-devices 2>/dev/null | grep -q SYCL; then exit 0; fi; echo "llama-sycl: SYCL not ready, attempt $${i}/8, retrying..." >&2; sleep 2; done; echo "llama-sycl: no SYCL device after 8 attempts, refusing to fall back to CPU" >&2; exit 1'
+ExecStart=/usr/bin/bash /home/jan/.local/bin/restart-llama-sycl.sh live 8082
 KillMode=process
 KillSignal=SIGTERM
 TimeoutStartSec=120s
