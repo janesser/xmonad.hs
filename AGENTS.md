@@ -178,3 +178,19 @@ the machine off at configured local times, installed to `/etc/systemd/system`
 - Lifecycle: `systemctl --system enable --now auto-poweroff.timer`,
   `systemctl list-timers auto-poweroff.timer --all`,
   `journalctl -t auto-poweroff`.
+
+## `dot_local/bin` scripts: keep the `.sh` suffix
+
+Scripts under `dot_local/bin/` keep their `.sh` extension through chezmoi's
+render, so they land in `~/.local/bin/` as `zattach.sh`, `brightness.sh`,
+`checkip.sh`, etc. (not bare `zattach`). This is **intentional** — jan wants
+the `.sh` suffix so scripts are visually distinguishable from everything else
+in `~/.local/bin/` (e.g. in `dmenu`).
+
+Consequences:
+- The command is `zattach.sh`, not `zattach`. The script's own usage text
+  says `zattach`, but the rendered command is `zattach.sh`. Do **not** rename
+  the source to `executable_zattach` to get a bare `zattach` unless jan
+  explicitly asks — the suffix is the point.
+- When adding a new standalone script here, keep the `.sh` extension
+  (`executable_<name>.sh`), matching this convention.
