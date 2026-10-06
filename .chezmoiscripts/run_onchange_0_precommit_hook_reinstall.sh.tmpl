@@ -1,0 +1,37 @@
+#!/bin/bash
+# run_onchange_0_precommit_hook_reinstall.sh.tmpl
+#
+# Re-install pre-commit's git hook whenever .pre-commit-config.yaml changes.
+#
+# run_once_0_precommit_hook_install.sh holds the (idempotent) install logic
+# (`pre-commit install` just (re)installs the git hook), so re-running it here
+# on a config change is safe and is the single source of install logic.
+#
+# Non-fatal: always exits 0 so a failure in the hook install never breaks
+# `chezmoi apply`.
+
+# --- chezmoi change filter (re-run only when the config changes) -------------
+# The SHA256 of .pre-commit-config.yaml is embedded below as a comment, so the
+# *rendered* script changes whenever that file changes. Chezmoi hashes the
+# rendered script and only runs THIS script when that hash changes. On
+# unchanged applies the script is skipped entirely — no hook reinstall — so this
+# never re-runs needlessly.
+#
+#   pre-commit config hash: {{ include ".pre-commit-config.yaml" | sha256sum }}
+# ------------------------------------------------------------------------------
+
+set -uo pipefail
+
+PRECOMMIT_SCRIPT="${CHEZMOI_SOURCE_DIR:-.}/.chezmoiscripts/run_once_0_precommit_hook_install.sh"
+
+if [ ! -f "${PRECOMMIT_SCRIPT}" ]; then
+    echo "⚠️  ${PRECOMMIT_SCRIPT} not found — skipping pre-commit hook install."
+    exit 0
+fi
+
+echo "==> pre-commit: config changed; re-running ${PRECOMMIT_SCRIPT}..."
+# Run in an isolated subshell so its exit status / `set -e` never breaks
+# chezmoi apply.
+"${PRECOMMIT_SCRIPT}" || true
+echo "==> pre-commit: hook install step finished (non-fatal)."
+exit 0
