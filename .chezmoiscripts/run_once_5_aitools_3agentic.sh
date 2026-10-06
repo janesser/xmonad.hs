@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # delete everything under ~/.pi except agent/sessions (keep conversation history)
-find "$HOME/.pi" \
+find -mindepth 1 "$HOME/.pi" \
   -path "$HOME/.pi/agent/sessions" -prune -o \
   -path "$HOME/.pi/agent" -o \
-  -mindepth 1 -exec rm -rf {} +
+  -exec rm -rf {} +
 
 sudo apt install -y fd-find
 sudo apt remove --purge -y fdclone
