@@ -5,15 +5,16 @@
 #   * :8081  CUDA / NVIDIA V100  (restart-llama-cuda.sh)  -> ALL llama-cuda models
 #   * :8082  SYCL / Intel DG1-IrisXe (restart-llama-sycl.sh) -> LFM2.5-2.6B (Q4_K_M)
 #
-# :8081 runs ONE llama.cpp router server serving every model in
-# ~/.llama-cpp-models-preset.ini (see restart-llama-cuda.sh). llama.cpp loads only
-# one into VRAM at a time; selecting a model loads it on demand.
+# :8081 runs ONE llama.cpp router server. llama.cpp loads only
+# one model into VRAM at a time; selecting a model loads it on demand. The served
+# portfolio is discovered from the bind-mounted HF cache
+# (~/.cache/huggingface/hub) -- no preset file.
 #
-# Olla discovers each preset model from /v1/models (dynamic discovery is ON), so it
+# Olla discovers each served model from /v1/models (dynamic discovery is ON), so it
 # exposes the full llama-cuda portfolio automatically — no per-model entry needed.
-# Reported ids are the preset repo ids (e.g.
-# deepreinforce-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M), not the old
-# ~/.cache/huggingface/hub/ornith.gguf path — update any client that pinned it.
+# Reported ids are the HF-cache repo ids (e.g.
+# deepreinforce-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M) -- update any client that pinned
+# the old ~/.cache/huggingface/hub/ornith.gguf path.
 # Olla binds 0.0.0.0:8080 (actually :40114) here and routes each request to the
 # endpoint whose reported model matches. Both endpoints are static below.
 #
