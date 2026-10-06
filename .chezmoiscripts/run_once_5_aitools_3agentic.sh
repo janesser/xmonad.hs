@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# delete whatever was installed before
-## settings.json is chezmoi managed
-rm -fR ~/.pi 
+# delete everything under ~/.pi except agent/sessions (keep conversation history)
+find "$HOME/.pi" \
+  -path "$HOME/.pi/agent/sessions" -prune -o \
+  -path "$HOME/.pi/agent" -o \
+  -mindepth 1 -exec rm -rf {} +
 
 sudo apt install -y fd-find
 sudo apt remove --purge -y fdclone
@@ -25,6 +27,8 @@ sudo snap install ghidra
 
 # NB: bmad is NOT installed here anymore. The project-local install that used
 # to live on this line is obsolete — the global BMAD skills are published to
-# ~/.pi/agent/skills/ by run_5_aitools_5bmad.sh on every "chezmoi apply".
+# ~/.pi/agent/skills/ by run_onchange_pi_bmad.sh.tmpl. That script is gated so
+# it re-runs AFTER any pi-agent upgrade/reinstall (which wipes ~/.pi), never
+# before — see run_onchange_pi_bmad.sh.tmpl for the ordering rationale.
 
 pi list

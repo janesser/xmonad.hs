@@ -1,14 +1,30 @@
 #!/bin/bash
-# run_5_aitools_5bmad.sh
+# run_onchange_pi_bmad.sh.tmpl
 #
 # Publish the BMAD-METHOD skills as a PI USER-LEVEL (global) skill set under
 # ~/.pi/agent/skills/ so that EVERY project — every cwd — gets the bmad skills.
 #
 # This REPLACES the old project-local install that wrote _bmad/ and .agents/
-# inside the chezmai repo. The repo-local _bmad/ / .agents/ install is now
+# inside thechezmoi repo. The repo-local _bmad/ / .agents/ install is now
 # OBSOLETE: the skills live at ~/.pi/agent/skills/ and are shared by all
 # projects. See the BMAD section of ~/.pi/agent/AGENTS.md and the repo
 # AGENTS.md, which mark the old approach as obsolete.
+#
+# ---- ORDERING: this must run AFTER any pi-agent upgrade/reinstall -----------
+# Upgrading or (re)installing pi-agent wipes / replaces ~/.pi, so the global
+# bmad skills must be re-published AFTER that, never before. Two cz-apply paths
+# upgrade/reinstall pi:
+#   1. mise upgrade (run_onchange_mise_config) — `mise upgrade` upgrades every
+#      current tool, incl. pi (pi = "latest" in dot_config/mise/config.toml).
+#   2. agentic reinstall (run_onchange_pi_agent_settings) — re-runs
+#      run_once_5_aitools_3agentic.sh, which does `rm -fR ~/.pi` + `mise install
+#      pi`, wiping the skills this script publishes.
+# Because chezmoi runs ALL run_ scripts BEFORE any run_once_/run_onchange_
+# script, this is intentionally a run_onchange SCRIPT (not a run_ script) and
+# is named to sort AFTER run_onchange_pi_agent_settings. It is gated on BOTH
+# triggers below, so it re-runs whenever pi-agent could have changed, and
+# always runs after both of them. (A run_ script could never satisfy this: it
+# would run before the run_onchange pi upgrades every time.)
 #
 # How it works:
 #   bmad's official non-interactive installer writes its pi skills to
@@ -22,13 +38,11 @@
 #   --all-stable    resolve external modules to the highest stable tag.
 #
 #   NOTE on --action: bmad's interactive installer still lists `install` for a
-#   first-time setup, but under `-y` (non-interactive) it rejects `install`
+#   first-time setup, but under -y (non-interactive) it rejects `install`
 #   and only accepts `update` / `quick-update` (actions for an existing
 #   install). So a fresh machine needs ONE interactive `npx bmad-method install`
 #   to seed staging ~/.local/share/bmad; this script then keeps the skills fresh
-#   with `quick-update` (re-renders files, applies minor stable upgrades,
-#   preserves personas) on every cz apply.
-#   --action quick-update is used unconditionally below.
+#   with `quick-update` on every run. --action quick-update is used unconditionally.
 #
 # The bmad RUNTIME (_bmad/) is intentionally NOT installed here anymore. The
 # skills reference {project-root}/_bmad/..., so to actually run a bmad session
@@ -76,3 +90,12 @@ if cp -a "${STAGE}/.agents/skills/"* "${SKILLS_DIR}/" 2>/dev/null; then
 else
   echo "[bmad] WARNING: failed to copy skills from staging to ${SKILLS_DIR}."
 fi
+exit 0
+# --- chezmoi change filter (re-run only when pi-agent can have changed) -------
+# The script re-runs when the rendered script changes. The hashes below make the
+# rendered output change whenever either pi-upgrade trigger changes, so this
+# script (re)publishes the bmad skills right after pi is upgraded/reinstalled.
+#
+#   mise config hash:    {{ include "dot_config/mise/config.toml"      | sha256sum }}
+#   pi settings hash:    {{ include "dot_pi/agent/encrypted_settings.json.age" | sha256sum }}
+# -----------------------------------------------------------------------------
