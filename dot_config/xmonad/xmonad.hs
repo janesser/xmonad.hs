@@ -69,7 +69,7 @@ myBasicKeyMap =
   [ ("M-x", noName $ xmonadPrompt def)
   , ("M-e", spawn' "pcmanfm")
   , ("C-ö", spawn' "copyq toggle")
-  , ("<Print>", spawn' "shutter -s")
+  , ("<Print>", spawn' "shutter -s 2>/dev/null >/dev/null") -- ""
   , ("M-C-l", spawn' "xautolock -locknow")
   , ("M-C-m", spawn' "on-screenlock-toggle.fish -t")
   , ("<XF86MonBrightnessUp>", spawn' "brightness.sh +")
