@@ -51,27 +51,22 @@ chown -R $USER $LOG_DIR
 set LOG_FILE $LOG_DIR/llama-server.log
 # echo logging to $LOG_FILE
 
-# Run llama-server with default parameters
+# Run llama-server in router mode.
 ##  --mlock --no-mmap
 
-# FIXME log file is re-used/overwritten by slave process actually loading the model, on the other hand other params aren't passed
-# FIXME router process starts router process (no typo)
-
-# workaround
-# Bind localhost-only on a private port so the Olla proxy (systemd unit
-# olla.service) can own :8080 publicly. The model is referenced by the short
-# symlink ~/.cache/huggingface/hub/ornith.gguf -> this blob, so callers use a
-# tidy model name instead of the 150-char HF path.
+# Bind on all interfaces (IPv6 wildcard) on a private port. Models are served
+# in router mode: discovered automatically from the bind-mounted HF cache
+# (~/.cache/huggingface/hub) by llama.cpp's cache loader -- no --models-preset,
+# no --models-dir, no -hf needed. The exposed portfolio is therefore the cache
+# contents, and --models-max 1 keeps a single model in VRAM at a time.
+# Output flows to journalctl (no --log-file, no >/dev/null suppression).
 llama serve \
-  --host 127.0.0.1 \
+  --host :: \
   --port 8081 \
-  --models-preset ~/.llama-cpp-models-preset.ini \
-  --models-max 4 \
+  --models-max 1 \
   --parallel 1 \
-  --no-warmup \
+  --device CUDA0 \
   --no-ui \
-  --log-file $LOG_FILE \
-  >/dev/null 2>/dev/null \
   &;disown
 
 # One router-server instance serves every llama-cuda model in the preset; llama.cpp
