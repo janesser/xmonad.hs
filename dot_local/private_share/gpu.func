@@ -26,7 +26,7 @@ has_nvidia() {
 #   final vendor grep uses -q. Otherwise the prefilter's -q would stop after the
 #   first vga/3d/display line and could miss an Intel device.
 has_intel_gpu() {
-    lspci 2>/dev/null | grep -iE 'vga|3d|display' | grep -qi 'intel corporation'
+    lspci 2>/dev/null | grep -iE 'vga|3d|display' | grep -qi 'Iris'
 }
 
 # has_any_gpu -> true if either vendor is present.
