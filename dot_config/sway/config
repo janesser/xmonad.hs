@@ -1,0 +1,68 @@
+# ~/.config/sway/config  —  jan's Sway starter (ported from xmonad.hs, Aug 2026)
+# Minimal working config to sanity-test the platform. Extend below.
+
+# --- Modifiers -------------------------------------------------------------
+$mod4        Mod4
+$leader      Mod4            # leader key for the M-o group (xmonad "Mod-o")
+
+# --- Outputs ---------------------------------------------------------------
+# Auto-create workspaces on all detected outputs; waybar will dock to each.
+output * background /usr/share/pixboards/wallpaper.png center
+
+# --- Keymaps ---------------------------------------------------------------
+# Descriptive keymap block: "bindsym + description" (mirrors xmonad mkNamedKeymap).
+# NOTE: ö/ä/ü non-ASCII keys must be verified against this layout's XKB names
+# before relying on them (see the port doc "gotchas").
+bindsym $mod4+Return exec foot                 # spawn terminal (xmonad mod4+Enter)
+bindsym $mod4+Shift+Return float; move position 0 0  # floating term
+
+# Window navigation (i3/Sway style — replaces xmonad layout keybindings).
+bindsym $mod4+h split horizontal
+bindsym $mod4+v split vertical
+bindsym $mod4+j focus left
+bindsym $mod4+k focus down
+bindsym $mod4+l focus up
+bindsym $mod4+semicolon focus right
+bindsym $mod4+Shift+j move left
+bindsym $mod4+Shift+k move down
+bindsym $mod4+Shift+l move up
+bindsym $mod4+Shift+semicolon move right
+bindsym $mod4+space layout toggle split
+
+# --- Leader chord: M-o  (leader = $leader, then Shift+<letter>) -------------
+# Sway `mode {}` gives the xmonad "Mod-o then Shift+letter" behaviour.
+bindsym $leader bind mode-momo               # enter the M-o keymap group
+mode "momo" {
+    # Press ESC to leave the leader (like releasing Mod-o in xmonad).
+    bindsym Escape mode default
+    bindsym Shift+j floating enable; move position 0 0        # demo: copyToAll-ish
+    bindsym Shift+t floating enable                           # demo: killAllOtherCopies-ish
+    bindsym Shift-k kill                                       # demo: kill window
+    # add your M-o actions here (workspaces, prompts, etc.)
+    bindsym Return mode default
+}
+
+# --- Floating / scratchpad -------------------------------------------------
+# Placeholder for manageHook className rules. Fill in after measuring XWayland
+# class values for each app (class differs from X11; see gotchas).
+for_window [class="Vlc"] floating enable
+for_window [class="KeePassXC"] move to workspace admin
+
+# --- System ----------------------------------------------------------------
+bindsym $mod4+Shift+e kill                 # exit Sway (mod4+Shift+c in xmonad)
+bindsym $mod4+Shift+q kill
+
+# --- Status bar ------------------------------------------------------------
+bar {
+    position bottom
+    mode dock
+    workspace_buttons yes
+    tray_padding 6
+    # Replace xmobar. See ~/.config/waybar/{config.jsonc,style.css}.
+    status_command waybar
+}
+
+# --- Misc ------------------------------------------------------------------
+startup nocursor
+for_window [instance=.scratchpad] floating enable
+bindsym $mod4+p scratchpad show

@@ -3,6 +3,36 @@
 Date: 2026-08
 Context: migrating jan's personal xmonad setup to a Wayland compositor.
 
+## ⏭️ Installation status — Sway (handover)
+
+**Decision: Sway + Waybar.** Installed and a starter config is in place. This
+section is the handover for the next session — Sway is currently **not running**
+(a live X session is up at `:0`); the plan is to boot into the `sway` LightDM
+session and sanity-test the platform, then finish the config.
+
+**Done:**
+- Packages: `sway` 1.11-3, `waybar` 0.15.0, `foot` 1.25, `swaybg`, `wmenu`.
+- `~/.config/sway/config` — starter config (port of xmonad.hs from Aug 2026):
+  `$mod4` i3-style nav, `foot` on `$mod4+Return`, an `M-o` leader `mode {}`
+  (`bindsym $leader bind mode-momo`), demo window rules for Vlc/KeePassXC,
+  `waybar` on the bottom dock bar. Extends, doesn't rewrite.
+- `sway.desktop` session registered in LightDM — selectable at the login screen.
+
+**Pending (next session):**
+- **Waybar config missing** — `~/.config/waybar/` has no `config.jsonc`/`style.css`
+  (Sway would launch waybar but with no config). Create both (see Sway section).
+- **Helper tools not installed** — screenshot/grab (`grim` + `slurp`),
+  `swappy` (annotation), `wl-clipboard`, `wlsunset` (blue-light), `swaylock`
+  + `swayidle` (lock/idle). X11 stand-ins: `scrot`/`xautolock`/`xmobar`/`xkill`.
+- **Sanity-test XWayland classes** — measure real window `class` values for the
+  `manageHook` rules (vlc, KeePassXC, vscodium, browsers, Signal/Element) and
+  fill the `for_window`/`windowrule` entries; the XWayland class can differ from
+  the X11 value. Re-verify ö/ä/ü XKB key names before relying on them.
+
+**Open question for jan:** which helper set to standardize on (the screenshot/
+lock/idle tools above vs. a lighter minimal set). Once answered, install, then
+boot into Sway and test.
+
 ## Quick answer
 
 No Wayland WM lets you keep `xmonad.hs` verbatim — the keybinding *system* is
