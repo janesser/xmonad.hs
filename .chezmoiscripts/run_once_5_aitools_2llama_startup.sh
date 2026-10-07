@@ -23,25 +23,6 @@ SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
 # GPU-presence helpers (has_nvidia / has_intel_gpu). Sourced, not executed.
 source "$HOME/.local/share/gpu.func"
 
-# --- 0. retire the renamed-old CUDA unit + launcher (idempotent) ------------
-# Before the CUDA backend was renamed from restart-llama-server.* to
-# llama-cuda.* / restart-llama-cuda.sh the old unit was still installed AND
-# enabled; leaving it would let systemd start both units on :8081. Disable it
-# and drop the unit file + its wants link. Sudo is scoped to the drop-in.
-OLD_UNIT_NAME=restart-llama-server.service
-OLD_UNIT_DEST="/etc/systemd/system/${OLD_UNIT_NAME}"
-OLD_WANTS_LINK="/etc/systemd/system/multi-user.target.wants/${OLD_UNIT_NAME}"
-if sudo systemctl list-unit-files "${OLD_UNIT_NAME}" 2>/dev/null | grep -q "${OLD_UNIT_NAME}"; then
-    sudo systemctl disable "${OLD_UNIT_NAME}" >/dev/null 2>&1 || true
-    sudo rm -f "${OLD_UNIT_DEST}" "${OLD_WANTS_LINK}"
-    echo "✅ Retired old unit ${OLD_UNIT_NAME} (disabled + unit file + wants link removed)."
-fi
-# Drop the stale old launcher from the user tree (no sudo needed).
-if [ -f "$HOME/.local/bin/restart-llama-server.sh" ]; then
-    rm -f "$HOME/.local/bin/restart-llama-server.sh"
-    echo "✅ Removed stale launcher ~/.local/bin/restart-llama-server.sh"
-fi
-
 # --- 1. backend selection (configurable) ------------------------------------
 # LLAMA_BACKENDS is a space-separated list of backends to deploy ("cuda",
 # "sycl"). It defaults to what the box actually has; override it in the
@@ -73,7 +54,7 @@ declare -a BACKENDS=(
 )
 # SYCL (Intel) only where there is an Intel GPU AND it was requested.
 if want_backend sycl && has_intel_gpu; then
-    BACKENDS+=( "llama-sycl.service|.local/bin/restart-llama-sycl.sh|8082|no" )
+    BACKENDS+=( "llama-sycl.service|.local/bin/restart-llama-sycl.sh|8082|yes" )
 fi
 
 # Bail early (no sudo, no fstab change) when neither launcher is present.
@@ -86,20 +67,6 @@ done
     echo "$(basename "$0"): no llama backend launcher found — nothing to install."
     exit 0
 }
-
-# --- 2. huggingface-hub bind mount in /etc/fstab (idempotent) ---------------
-# Both backends serve their model from a blob in ~/.cache/huggingface/hub, so
-# the hub must be mounted at boot and the script never needs `sudo mount`.
-FSTAB=/etc/fstab
-MOUNT_LINE="/media/passeport/huggingface-hub/ /home/jan/.cache/huggingface/hub none bind,nofail 0 0"
-if grep -Fq "/home/jan/.cache/huggingface/hub" "${FSTAB}"; then
-    echo "✅ ${FSTAB} already contains the huggingface-hub bind mount."
-else
-    FSTAB_BAK="$(mktemp)"
-    sudo cp "${FSTAB}" "${FSTAB_BAK}"
-    echo "${MOUNT_LINE}" | sudo tee -a "${FSTAB}" >/dev/null
-    echo "✅ Added huggingface-hub bind mount to ${FSTAB} (backup: ${FSTAB_BAK})"
-fi
 
 # --- 3. install each unit, enable, and (maybe) start ------------------------
 for entry in "${BACKENDS[@]}"; do
