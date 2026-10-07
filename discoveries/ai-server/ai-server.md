@@ -483,3 +483,31 @@ vLLM-Omni uses native HF weights (§8 item 3).
 | Olla config | `~/.config/olla/config.yaml` (source: `dot_config/olla/config.yaml`) |
 | Olla binary | `~/.local/share/mise/installs/github-thushan-olla/0.0.29/olla` |
 | HF cache (bind-mounted) | `~/.cache/huggingface/hub` ← `/media/sailor/huggingface-hub` |
+
+### E. Omni front-end / successor-consumer *(new, 2026-10-07)*
+
+**Gap (big picture):** the omni engine (§11) is multimodal — text/audio/image/video —
+but the only wired front ends (Olla on :40114, pi-agent's OpenAI text client) are
+**text-biased.** The design assumed "engine = front," which holds for text but not for
+omni: a plain OpenAI text client can never *render* an image, *play* audio, or *show*
+video. So no client currently consumes the omni engine's non-text outputs. The
+front-end/consumer decision (§6, §13 open item) is still unresolved.
+
+**Increment — "successor-consumer": work on the front end that comes after pi-agent as
+the consumer of the omni engine. Shape is deliberately **open** — no default lean
+(agent-as-tools, chat UI, adapter, or CLI). The only hard requirement is that it
+actually *consumes* the multimodal outputs, not just re-echoes text.
+
+- **Why:** without a multimodal-aware consumer, the engine's differentiating value
+  (audio/image/video) is never exercised end-to-end, however well vLLM-Omni serves on
+  the V100.
+- **What to build:** the minimal consumer that proves one **non-text in → non-text out**
+  omni round trip is truly consumed (not just collapsed to a text caption).
+- **Acceptance:** a client submits an audio or image input and receives an audio or
+  video output that is *rendered/used* (played back, displayed, or fed to another tool)
+  — not text-only.
+- **Open decision this depends on (PM):** (1) primary use case — voice assistant vs
+  image understanding/generation vs video vs general multimodal playground; (2) who's
+  at the keyboard — pi-agent doing work vs a human at a UI; (3) front-end shape:
+  multimodal chat UI / pi-agent-as-tools / thin adapter / CLI. Until (1)–(3) are
+  decided, keep the increment shape-open and at "prove one multimodal round trip."
