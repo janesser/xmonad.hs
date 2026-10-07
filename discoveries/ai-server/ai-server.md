@@ -511,3 +511,51 @@ actually *consumes* the multimodal outputs, not just re-echoes text.
   at the keyboard — pi-agent doing work vs a human at a UI; (3) front-end shape:
   multimodal chat UI / pi-agent-as-tools / thin adapter / CLI. Until (1)–(3) are
   decided, keep the increment shape-open and at "prove one multimodal round trip."
+
+#### Direction decided (party, 2026-10-07 — Jan chose option 1)
+
+The party (John PM orchestrating; Vex/Grumbal/Boundary/Yui/Dana/Wildcard/Level/
+Killjoy/Splinter) resolved the shape. Outcome:
+
+- **Path: image-generation first** (Jan's ladder: image-gen → listen & talk →
+  listen/see & talk). Image-gen, not understanding, is the increment.
+- **Candidate model: `Qwen/Qwen-Image-2.1`** — 20B MMDiT, **INT8 (~16 GB)**.
+  First-party vLLM-Omni support exists via the **offline** `text_to_image.py`
+  recipe (docs.vllm.ai recipes → Qwen-Image). Qwen2.5-Omni-3B (already on the box)
+  *understands* images; it does not *generate*, so image-gen needs this separate
+  diffusion model, not the 3B.
+- **Architecture — option 1: time-slice, not space-slice.** Qwen-Image is a
+  **third V100 occupant** behind the existing `switch-ai-backend.sh` (ornith ↔
+  omni ↔ Qwen-Image). Ornith runs normally until you need images; then the V100 is
+  *borrowed* for the generation and ornith swapped back. Jan explicitly rejected
+  option 2 (permanently demoting pi's coding to the Iris Xe SYCL 0.8B on :8082).
+- **Hard constraints (from a live `nvidia-smi`/`free` check 2026-10-07):**
+  - V100 must be **freed entirely** — ornith holds ~27 GB (86 %); 27 + 16 > 32, so
+    no coexistence. Qwen-Image runs on a *dedicated* V100.
+  - **CPU offload is NOT viable** — only 14 GB system RAM, ~5.6 GB free (swap 2/4 GB
+    used). INT8 Qwen-Image must fit in the V100 alone; offload can't be the escape
+    hatch it is on bigger-RAM boxes.
+  - pi's fallback coding backend during the borrow is the **0.8B on Iris Xe SYCL
+    (:8082)** — a working-but-flimsy backend (known runaway-loop quirk).
+- **Prefer the offline per-gen path** (`text_to_image.py`), not a long-running
+  Qwen-Image server. Per-gen load→generate→unload makes the V100 borrow transient,
+  which is what keeps option 1 pleasant (ornith available between jobs).
+
+**Decomposed increment (ordered by risk; do the probes before building anything):**
+
+1. **Gate probe — fit + recognition (first).** On a dedicated V100, does our
+   **0.30.0 sm_70** vLLM-Omni build render a Qwen-Image-2.1 PNG via
+   `text_to_image.py` with `--quantization int8`, and does it fit? Cheap, no swap,
+   no server. If 2.1 isn't recognized by the pipeline registry, fall back to
+   `Qwen/Qwen-Image` or `Qwen-Image-2512` (same DiT core).
+2. **pi failover probe.** When ornith (`:8081`) drops on the swap, does the crossbar
+   **auto-route pi to the SYCL 0.8B**, or does pi's coding break? If no, option 1
+   degrades to "no coding backend during a generation" — same as omni mode. This is
+   a UX gap, not a VRAM gap, and it's the one unverified thing in the plan.
+3. **Swap wiring.** A launcher mirroring `switch-ai-backend.sh`: free the V100 from
+   ornith, run the offline generation, swap ornith back. 90 % a copy of the existing
+   script once probes 1–2 pass.
+
+**Still open:** crossbar auto-failover to SYCL on swap (§13 / crossbar config);
+confirm `:8091`-style online serving for Qwen-Image is *not* needed unless Jan later
+wants a person-facing ComfyUI front (he hasn't).
