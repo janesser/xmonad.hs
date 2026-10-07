@@ -1,11 +1,10 @@
 #!/bin/bash
 # restart-llama-sycl.sh — launch llama.cpp on the Intel GPU (SYCL / oneAPI).
 #
-# Mirrors restart-llama-cuda.sh for the Intel backend: router mode via the
-# unified `llama serve` CLI (one instance serves every SYCL model discovered
-# from the bind-mounted HF cache), bound to 127.0.0.1:8082 so Olla can own
-# :8082 publicly and proxy the SYCL backend. Logs go to journalctl (no
-# --log-file), exactly like the CUDA side.
+# Mirrors restart-llama-cuda.sh for the Intel backend: a SINGLE-model
+# `llama-server` (NOT router mode) pinned to one GGUF via --hf-repo, bound to
+# [::]:8082 so Olla can own :8082 publicly and proxy the SYCL backend. Logs go
+# to journalctl (no --log-file), exactly like the CUDA side.
 #
 # Reap ONLY our own SYCL backend: a process named llama whose cmdline is bound
 # to :8082. This never matches the CUDA backend on :8081 (whose binary is also
@@ -29,16 +28,20 @@ MODE="${1:-live}"
 PORT="${2:-8082}"
 
 if [ "$MODE" = dry ]; then
+    # PORT is read from the environment (exported below), NOT from a positional
+    # arg: this environment drops the FIRST positional arg of a nested
+    # `bash -c 'script' ARG1 ARG2` call (ARG1 is lost), which used to make the
+    # reaper match on an empty port string. Exported vars survive that intact.
+    export PORT
     bash -c '
-        port="$1"
         for pid in $(pgrep -x llama 2>/dev/null; pgrep -x llama-server 2>/dev/null); do
             [ -r "/proc/$pid/cmdline" ] || continue
             cmd=$(tr "\0" " " < "/proc/$pid/cmdline" 2>/dev/null)
-            case "$cmd" in *"$port"*)
-                echo "restart-llama-sycl: DRY-RUN would reap pid $pid ($(cat /proc/$pid/comm 2>/dev/null)) on :$port" ;;
+            case "$cmd" in *"$PORT"*)
+                echo "restart-llama-sycl: DRY-RUN would reap pid $pid ($(cat /proc/$pid/comm 2>/dev/null)) on :$PORT" ;;
             esac
         done
-    ' "$PORT"
+    '
     exit 0
 fi
 
@@ -49,25 +52,28 @@ if [ "$MODE" = stop ]; then
 fi
 
 # --- reap any stale :8082 SYCL backend (port-bound; never a sibling backend) ---
+# PORT/MODE are exported and read from the environment inside the subshell
+# instead of passed as positional args — see the dry-run block for why
+# (this environment drops the first positional arg of a nested `bash -c`).
+export PORT MODE
 bash -c '
-    port="$1"; mode="$2"
     got=0
     for pid in $(pgrep -x llama 2>/dev/null; pgrep -x llama-server 2>/dev/null); do
         [ -r "/proc/$pid/cmdline" ] || continue
         cmd=$(tr "\0" " " < "/proc/$pid/cmdline" 2>/dev/null)
         case "$cmd" in
-            *"$port"*)
+            *"$PORT"*)
                 comm=$(cat "/proc/$pid/comm" 2>/dev/null)
-                echo "restart-llama-sycl: reaping SYCL backend pid $pid ($comm) on :$port"
+                echo "restart-llama-sycl: reaping SYCL backend pid $pid ($comm) on :$PORT"
                 kill "$pid" 2>/dev/null
                 for i in $(seq 1 10); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
                 kill -0 "$pid" 2>/dev/null && { echo "restart-llama-sycl: SIGKILL unresponsive $pid" >&2; kill -9 "$pid" 2>/dev/null; }
                 got=1 ;;
         esac
     done
-    [ "$got" = 0 ] && echo "restart-llama-sycl: no SYCL backend on :$port to reap"
+    [ "$got" = 0 ] && echo "restart-llama-sycl: no SYCL backend on :$PORT to reap"
     sleep 2
-' "$PORT" "$MODE"
+'
 
 # --- ensure the SYCL build exists (one-time bootstrap: ~1.5 GB oneAPI + compile) ---
 # lib.sh sets BUILD_SYCL, ONEAPI_SETVARS, and llama_sycl_ready().
@@ -100,37 +106,29 @@ fi
 # clears any stale override.)
 if [ -n "${ONEAPI_DEVICE_SELECTOR:-}" ]; then export ONEAPI_DEVICE_SELECTOR; else unset ONEAPI_DEVICE_SELECTOR; fi
 
-# --- ensure the default model (LFM2.5-2.6B) is visible in the HF cache so the
-# router exposes it. Mirrors the CUDA side's ornith.gguf symlink: a tidy,
-# stable name so Olla/pi-agent route "LFM2.5" instead of the ~90-char HF blob
-# path. Idempotent — refreshed if the blob hash ever changes. ---
-model_link="$HOME/.cache/huggingface/hub/LFM2.5-2.6B.gguf"
-repo_dir="$HOME/.cache/huggingface/hub/models--liquidai--LFM2.5-2.6B-GGUF"
-if [ ! -e "$model_link" ] && [ -d "$repo_dir" ]; then
-    blob=$(find "$repo_dir" -name blobs -maxdepth 2 -type d -exec find {} -maxdepth 1 -type f \
-            ! -name '*.downloadInProgress' ! -name '*.uploadInProgress' -printf '%s\t%p\n' \; \
-            2>/dev/null | sort -rn | head -1 | cut -f2)
-    if [ -n "$blob" ]; then
-        ln -sf "$blob" "$model_link"
-        echo "restart-llama-sycl: exposed cached $model_link -> $blob"
-    fi
-fi
+# --- pinned model (single-server, non-router mode) ---
+# The SYCL backend serves exactly ONE model, selected with --hf-repo below;
+# there is nothing to symlink into the HF cache (no discover-all router), so
+# this script is self-contained. The blob already lives in the bind-mounted HF
+# cache (models--unsloth--Qwen3.5-0.8B-GGUF/.../Qwen3.5-0.8B-Q4_K_M.gguf) and --offline
+# forces cache-only resolution, so boot never stalls on / is redirected to the
+# network. ---
 
 LOG_DIR="$HOME/.local/log"
 mkdir -p "$LOG_DIR"; chmod 700 "$LOG_DIR"; chown -R "$USER" "$LOG_DIR"
 
-# --- run llama.cpp in router mode ---
-# One router-server instance serves every SYCL model discovered from the
-# bind-mounted HF cache; llama.cpp loads only ONE into VRAM at a time and
-# reloads on selection (Olla discovers the full portfolio from /v1/models).
-# --device SYCL0 pins the Intel GPU: fail fast (unit ExecStartPre) rather than
-# silently falling back to CPU when no Intel device is present. Verify the
-# exact index after the build with:  $BUILD_SYCL/bin/llama serve --list-devices
-echo "restart-llama-sycl: (re-)starting router on 127.0.0.1:$PORT (Intel GPU, --device SYCL0)"
-"$BUILD_SYCL/bin/llama" serve \
-  --host 127.0.0.1 --port "$PORT" \
-  --models-max 1 --parallel 1 \
-  --device SYCL0 --no-ui \
+# --- run a single pinned model (NOT router mode) ---
+# One llama-server instance serves exactly one GGUF, selected with --hf-repo.
+# Olla discovers that single model from /v1/models. --device SYCL0 pins the
+# Intel GPU: fail fast (unit ExecStartPre) rather than silently falling back to
+# CPU when no Intel device is present. Verify the exact index after the build
+# with:  $BUILD_SYCL/bin/llama serve --list-devices
+echo "restart-llama-sycl: (re-)starting single-model server on [::]:$PORT (Intel GPU, --device SYCL0) serving unsloth/Qwen3.5-0.8B-GGUF:Q4_K_M"
+"$BUILD_SYCL/bin/llama-server" \
+  --host :: --port "$PORT" \
+  --hf-repo unsloth/Qwen3.5-0.8B-GGUF:Q4_K_M \
+  --offline \
+  --device SYCL0 --parallel 1 --no-ui \
   &
 disown
 
