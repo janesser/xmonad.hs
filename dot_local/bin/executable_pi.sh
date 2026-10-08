@@ -19,6 +19,17 @@ set -euo pipefail
 
 SESSIONS="${PI_SESSIONS_DIR:-${HOME:-$HOME}/.pi/agent/sessions}"
 
+# A zattach resurrection reuses the serialized pane's old environment, which can
+# carry a stale forwarded SSH agent socket (pointing at a session that no longer
+# exists). If the agent isn't reachable, re-point SSH_AUTH_SOCK at the live agent
+# that ~/.ssh/rc keeps symlinked at ~/.ssh/ssh_auth_sock. No-op without forwarding.
+fix_ssh_agent() {
+    [[ -n "${SSH_AUTH_SOCK:-}" ]] || return 0
+    if ssh-add -l >/dev/null 2>&1; then return 0; fi
+    local live="$HOME/.ssh/ssh_auth_sock"
+    [[ -S "$live" ]] && export SSH_AUTH_SOCK="$live"
+}
+
 # Encode a cwd the way pi names its session dir: strip the leading '/', then
 # replace '/' and ':' with '-'.
 _encode_cwd() {
@@ -137,6 +148,7 @@ ask_launch() {
 
 main() {
     DRY_RUN=0
+    fix_ssh_agent
     local filtered=() a
     for a in "$@"; do
         if [[ "$a" == "--dry-run" ]]; then DRY_RUN=1
