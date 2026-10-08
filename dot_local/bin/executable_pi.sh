@@ -1,30 +1,26 @@
 #!/bin/bash
-# pi.sh — launch pi with the session that matches the current project.
+# pi.sh — launch pi for the current project, deciding the session deterministically.
 #
-# Inspects the sessions stored for the current working directory:
-#   * 0 or 1 session  ->  `pi --continue`   (unambiguous; creates one if absent)
-#   * more than 1     ->  list them and let you pick one, then
-#                         `pi --session-id <chosen>`
+# Reads the project's saved sessions from ~/.pi/agent/sessions/--<cwd>--/ (the
+# source of truth; it survives reboot, unlike /tmp or ~/.cache). Only ever reads
+# file paths to learn ids: no pi API call, no mutation.
 #
-# The session id is read from the session file path (authoritative, free, no
-# API call, no mutation). It is scoped to the project cwd, so it only ever
-# lists sessions for *this* project.
-#
-# Env hatches (for scripts/testing):
-#   PI_SH_DRY_RUN=1   print the command instead of exec'ing pi
-#   PI_CHOOSE=<n>     auto-select the 1-based nth session without prompting
-#
-# Usage:
-#   pi.sh [cwd]                  resolve and launch pi (default cwd: $PWD)
-#   pi.sh --list [cwd]           only list the candidate sessions, don't launch
-#   pi.sh --dry-run [cwd]        print the pi command(s) that would run
+# Modes:
+#   pi.sh [cwd]          launch (cwd defaults to $PWD):
+#                          >=1 known session -> ask which to resume, or start new
+#                          (never auto-resumes; prompts only when interactive)
+#                          0 known sessions       -> start a new session
+#   pi.sh --list  [cwd]  list the known sessions (observation only)
+#   pi.sh --current [cwd] print the newest-known session id (observation only)
+#   pi.sh --new   [cwd]  launch a brand-new session (never resume)
+#   --dry-run            print the pi command instead of launching it
 #
 set -euo pipefail
 
 SESSIONS="${PI_SESSIONS_DIR:-${HOME:-$HOME}/.pi/agent/sessions}"
 
-# Encode a cwd the same way pi encodes it in the session dir name:
-# strip the leading '/', then replace '/' and ':' with '-'.
+# Encode a cwd the way pi names its session dir: strip the leading '/', then
+# replace '/' and ':' with '-'.
 _encode_cwd() {
     local c="$1"
     c="${c#/}"
@@ -33,7 +29,7 @@ _encode_cwd() {
     printf -- --%s-- "$c"
 }
 
-# Collect 'date|id' rows for every session file of a project, newest first.
+# Newest-first rows of 'date|id' for a project.
 _rows() {
     local encoded epoch fname id date
     encoded="$(_encode_cwd "$1")"
@@ -47,107 +43,123 @@ _rows() {
         done
 }
 
-# Print the pi command for a chosen 1-based index.
-_command_for() {
-    local idx=$(( $1 - 1 )) row
-    row="${rows[$idx]}"
-    echo "pi --session-id ${row#*|}"
+# The newest-known session id for a project (exit 1 if there is none).
+current_id() {
+    local -a rows=()
+    mapfile -t rows < <(_rows "$1")
+    [[ ${#rows[@]} -eq 0 ]] && return 1
+    printf '%s\n' "${rows[0]#*|}"
 }
 
-main() {
-    local action="launch" cwd="$PWD"
-    case "${1:-}" in
-        --list)    action="list";    [[ -n "${2:-}" ]] && cwd="$2" ;;
-        --dry-run) action="dryrun";  [[ -n "${2:-}" ]] && cwd="$2" ;;
-        *)         [[ -n "${1:-}" ]] && cwd="$1" ;;
-    esac
-
-    # Env hatch: force dry-run over the interactive launch path.
-    if [[ $action == launch && -n "${PI_SH_DRY_RUN:-}" ]]; then
-        action="dryrun"
+# A brand-new session id, so `pi --session-id` creates a fresh session.
+new_id() {
+    if command -v uuidgen >/dev/null 2>&1; then
+        uuidgen
+    elif cat /proc/sys/kernel/random/uuid >/dev/null 2>&1; then
+        cat /proc/sys/kernel/random/uuid
+    else
+        printf 'pi-new-%s' "$(date +%Y%m%d%H%M%S)"
     fi
+}
 
+# Print the numbered known sessions. Exit 1 if there are none.
+list_sessions() {
+    local cwd="$1"
     local -a rows=()
     mapfile -t rows < <(_rows "$cwd")
-    local n=${#rows[@]}
-
-    case "$action" in
-        list)
-            if [[ $n -eq 0 ]]; then
-                echo "pi.sh: no pi session for project: $cwd" >&2
-                exit 1
-            fi
-            printf '%s session(s) for %s:\n' "$n" "$cwd"
-            local i=1 d id
-            for row in "${rows[@]}"; do
-                d="${row%%|*}"; id="${row#*|}"
-                printf '  %d  %s  %s\n' "$i" "$d" "$id"
-                ((i++))
-            done
-            return 0
-            ;;
-    esac
-
-    # 0 or 1 session -> `pi --continue` (creates one if absent).
-    if [[ $n -le 1 ]]; then
-        if [[ "$action" == dryrun ]]; then
-            echo "pi --continue"
-            return 0
-        fi
-        exec pi --continue
+    local n=${#rows[@]} i
+    if [[ $n -eq 0 ]]; then
+        echo "pi.sh: no pi session for project: $cwd" >&2
+        return 1
     fi
-
-    # More than one: dry-run previews every candidate; launch prompts to choose.
     printf '%s session(s) for %s:\n' "$n" "$cwd"
-    local i=1 d id
+    i=1
+    local row d id
     for row in "${rows[@]}"; do
         d="${row%%|*}"; id="${row#*|}"
         printf '  %d  %s  %s\n' "$i" "$d" "$id"
-        ((i++))
+        i=$((i + 1))
     done
+}
 
-    if [[ "$action" == dryrun ]]; then
-        # A chosen index wins over the full preview.
-        if [[ -n "${PI_CHOOSE:-}" ]]; then
-            if [[ "$PI_CHOOSE" != *[0-9]* || PI_CHOOSE -lt 1 || PI_CHOOSE -gt $n ]]; then
-                echo "pi.sh: PI_CHOOSE ${PI_CHOOSE} out of range (1-$n)" >&2
-                exit 2
-            fi
-            _command_for "$PI_CHOOSE"
-        else
-            for row in "${rows[@]}"; do
-                echo "pi --session-id ${row#*|}"
-            done
-        fi
+# Launch a brand-new session for the current project.
+launch_new() {
+    local cwd="$1" cmd
+    cmd="pi --session-id $(new_id)"
+    if [[ $DRY_RUN -eq 1 ]]; then echo "$cmd"
+    else exec $cmd; fi
+}
+
+# Interactive ask: choose a known session, or start new. Never auto-resumes.
+ask_launch() {
+    local cwd="$1"
+    local -a rows=()
+    mapfile -t rows < <(_rows "$cwd")
+    local n=${#rows[@]}
+    list_sessions "$cwd"
+
+    # Nothing known -> only a new session is possible.
+    if [[ $n -eq 0 ]]; then
+        launch_new "$cwd"
         return 0
     fi
 
-    # Interactive choose.
-    local choice chosen=""
-    if [[ -n "${PI_CHOOSE:-}" ]]; then
-        choice="$PI_CHOOSE"
-    else
-        choice=""
-        while true; do
-            printf 'Choose session [1-%s] (q to cancel): ' "$n"
-            if ! read -r choice; then choice="q"; fi
-            case "$choice" in
-                q|Q|cancel|'')
-                    echo "cancelled" >&2; exit 1 ;;
-                *[!0-9]*)
-                    echo "please enter a number between 1 and $n (or q to cancel)" >&2
-                    continue ;;
-            esac
-            if [[ "$choice" -ge 1 && "$choice" -le "$n" ]]; then
-                break
-            fi
-            echo "out of range (1-$n)" >&2
-        done
+    # Ask only when a human can answer; at a post-reboot hook stdin is not a TTY.
+    if [[ ! -t 0 ]]; then
+        echo "pi.sh: $n session(s) for $cwd (none selected) - re-run 'pi.sh' interactively" >&2
+        return 1
     fi
 
-    local idx=$(( choice - 1 ))
-    chosen="${rows[$idx]#*|}"
-    exec pi --session-id "$chosen"
+    local choice row idx chosen cmd=""
+    while true; do
+        printf 'resume [1-%s], or "new"? ' "$n"
+        if ! read -r choice; then choice=""; fi
+        case "$choice" in
+            ""|q|Q|cancel)
+                echo "cancelled" >&2; return 1 ;;
+            new|n|N)
+                cmd="pi --session-id $(new_id)"; break ;;
+            *[!0-9]*)
+                echo "enter 1-$n, or 'new'" >&2; continue ;;
+        esac
+        idx=$((choice - 1))
+        if [[ $idx -ge 0 && $idx -lt $n ]]; then
+            row="${rows[$idx]}"
+            cmd="pi --session-id ${row#*|}"
+            break
+        fi
+        echo "out of range (1-$n)" >&2
+    done
+
+    if [[ $DRY_RUN -eq 1 ]]; then echo "$cmd"
+    else exec $cmd; fi
+}
+
+main() {
+    DRY_RUN=0
+    local filtered=() a
+    for a in "$@"; do
+        if [[ "$a" == "--dry-run" ]]; then DRY_RUN=1
+        else filtered+=("$a"); fi
+    done
+
+    local action="ask" cwd="$PWD"
+    if [[ ${#filtered[@]} -gt 0 ]]; then
+        case "${filtered[0]}" in
+            --list)    action="list" ;;
+            --current) action="current" ;;
+            --new)     action="new" ;;
+            *)         action="ask" ;;
+        esac
+        [[ ${#filtered[@]} -ge 2 ]] && cwd="${filtered[1]}"
+    fi
+
+    case "$action" in
+        list)     list_sessions "$cwd" ;;
+        current)  current_id "$cwd" ;;
+        new)      launch_new "$cwd" ;;
+        *)        ask_launch "$cwd" ;;
+    esac
 }
 
 main "$@"
