@@ -117,6 +117,15 @@ if [ -n "${ONEAPI_DEVICE_SELECTOR:-}" ]; then export ONEAPI_DEVICE_SELECTOR; els
 LOG_DIR="$HOME/.local/log"
 mkdir -p "$LOG_DIR"; chmod 700 "$LOG_DIR"; chown -R "$USER" "$LOG_DIR"
 
+# Repetition penalty settings
+# 1.0 is the default - keep it low to prevent loops
+export LLAMA_ARG_REPEAT_PENALTY=1.0
+
+# Enable frequency-based penalty if you want it
+export LLAMA_ARG_FREQUENCY_PENALTY=1.5
+
+MODEL="LiquidAI/LFM2.5-2.6B-GGUF:Q4_K_M"
+
 # --- run a single pinned model (NOT router mode) ---
 # One llama-server instance serves exactly one GGUF, selected with --hf-repo.
 # Olla discovers that single model from /v1/models. --device SYCL0 pins the
@@ -126,7 +135,7 @@ mkdir -p "$LOG_DIR"; chmod 700 "$LOG_DIR"; chown -R "$USER" "$LOG_DIR"
 echo "restart-llama-sycl: (re-)starting single-model server on [::]:$PORT (Intel GPU, --device SYCL0) serving unsloth/Qwen3.5-0.8B-GGUF:Q4_K_M"
 "$BUILD_SYCL/bin/llama-server" \
   --host :: --port "$PORT" \
-  --hf-repo unsloth/Qwen3.5-0.8B-GGUF:Q4_K_M \
+  --hf-repo $MODEL \
   --offline \
   --device SYCL0 --parallel 1 --no-ui \
   &
