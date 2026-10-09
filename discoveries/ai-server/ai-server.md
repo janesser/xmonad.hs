@@ -486,6 +486,8 @@ vLLM-Omni uses native HF weights (§8 item 3).
 
 ### E. Omni front-end / successor-consumer *(new, 2026-10-07)*
 
+> **Status update (2026-10-08).** The image-gen probe ran and **failed on fit**: Qwen-Image-2512 is ~57.5 GB bf16 (40.9 GB DiT + 16.6 GB encoder) and vLLM-Omni's `int8` materializes bf16 before quantizing → OOM at load on the 32 GB V100. The **vLLM-Omni image-gen path is abandoned in favour of stable-diffusion.cpp + GGUF** (pre-quantized, fits with headroom; also sidesteps the ~33 GB HF download). Full write-up + clean-up checklist: [`vllm-omni-2512-probe.md`](../ai-image-gen/vllm-omni-2512-probe.md); sd.cpp direction and ranked model range: [`stable-diffusion-cpp.md`](../ai-image-gen/stable-diffusion-cpp.md). The probe order below is updated to the sd.cpp progression. (For the borrow: ornith's reaper tree was killed to free the V100 — restore with `sudo systemctl --system start llama-cuda` when Jan says so.)
+
 **Gap (big picture):** the omni engine (§11) is multimodal — text/audio/image/video —
 but the only wired front ends (Olla on :40114, pi-agent's OpenAI text client) are
 **text-biased.** The design assumed "engine = front," which holds for text but not for
@@ -519,11 +521,23 @@ Killjoy/Splinter) resolved the shape. Outcome:
 
 - **Path: image-generation first** (Jan's ladder: image-gen → listen & talk →
   listen/see & talk). Image-gen, not understanding, is the increment.
-- **Candidate model: `Qwen/Qwen-Image-2.1`** — 20B MMDiT, **INT8 (~16 GB)**.
-  First-party vLLM-Omni support exists via the **offline** `text_to_image.py`
-  recipe (docs.vllm.ai recipes → Qwen-Image). Qwen2.5-Omni-3B (already on the box)
-  *understands* images; it does not *generate*, so image-gen needs this separate
-  diffusion model, not the 3B.
+- **Candidate model — CHANGED: use `Qwen/Qwen-Image-2512`, NOT 2.1.** Probe
+  2026-10-07 (recognition, weight-free) was **conclusive and caught a blocker
+  before any download:**
+  - `Omni(model=…)` resolves the pipeline via `model_index.json` → `_class_name`,
+    looked up in `DiffusionModelRegistry`; an unregistered class raises
+    `ValueError("Model class … not found in diffusion model registry")` (registry
+    registry.py:504) *before* generation.
+  - `Qwen/Qwen-Image-2.1` → `_class_name = QwenImage21Pipeline` → **zero references
+    in our vLLM-Omni source → unsupported.**
+  - `Qwen/Qwen-Image-2512` (and base 1.0) → `_class_name = QwenImagePipeline` →
+    **registered** → supported. 2512 is the newer supported model in the same
+    family; 2.1 needs a vLLM-Omni upgrade to register its class (heavy/risky,
+    given the existing vLLM 0.30 vs vLLM-Omni 0.1.dev1 mismatch) or a speculative
+    `--model-class-name QwenImagePipeline` override (2.1's architecture differs).
+  - So: **target = Qwen-Image-2512, 20B MMDiT, INT8 (~16 GB).**
+  - Qwen2.5-Omni-3B (already on the box) *understands* images; it does not
+    *generate*, so image-gen needs this separate diffusion model, not the 3B.
 - **Architecture — option 1: time-slice, not space-slice.** Qwen-Image is a
   **third V100 occupant** behind the existing `switch-ai-backend.sh` (ornith ↔
   omni ↔ Qwen-Image). Ornith runs normally until you need images; then the V100 is
@@ -543,11 +557,16 @@ Killjoy/Splinter) resolved the shape. Outcome:
 
 **Decomposed increment (ordered by risk; do the probes before building anything):**
 
-1. **Gate probe — fit + recognition (first).** On a dedicated V100, does our
-   **0.30.0 sm_70** vLLM-Omni build render a Qwen-Image-2.1 PNG via
-   `text_to_image.py` with `--quantization int8`, and does it fit? Cheap, no swap,
-   no server. If 2.1 isn't recognized by the pipeline registry, fall back to
-   `Qwen/Qwen-Image` or `Qwen-Image-2512` (same DiT core).
+1. **Gate probe — fit (first).** On a dedicated V100, does the pipeline render a
+   1024² PNG and fit? Run via **stable-diffusion.cpp + GGUF, not vLLM-Omni** — the
+   vLLM-Omni fit probe (2512, `--quantization int8`) failed on load (~57.5 GB bf16
+   transient vs 32 GB), so sd.cpp is now the gate; it also fails *immediately* (no
+   30-min stall), which is the point. Progression: **SDXL Q8** smoke (1024², no
+   quant gotchas → proves the toolchain) → **FLUX.1-dev Q8_0** (heavy, best
+   quality) → **Qwen-Image-2512 Q8_0** (original target; Q8_0 only — the
+   k-quants black out). See `stable-diffusion-cpp.md`. (The older vLLM-Omni order
+   — recognition then fit via `text_to_image.py` — is recorded as abandoned in
+   `vllm-omni-2512-probe.md`; do not re-run it as written.)
 2. **pi failover probe.** When ornith (`:8081`) drops on the swap, does the crossbar
    **auto-route pi to the SYCL 0.8B**, or does pi's coding break? If no, option 1
    degrades to "no coding backend during a generation" — same as omni mode. This is
