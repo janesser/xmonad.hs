@@ -1,25 +1,28 @@
 #!/usr/bin/env bash
 #
 # ssh-heal-forward.sh — repair a stale SSH_AUTH_SOCK by pointing it at a live
-# sshd forwarding agent.
+# sshd forwarding agent, then run a command against it.
 #
 # The sshd forwarding agent is ephemeral: each agent-forwarded connection gets
 # its own socket under ~/.ssh/agent (s.<id>.sshd.<id>), and the previous one is
 # removed when the connection dies. A long-lived shell, or a frozen inherited
 # env var, can keep pointing at a socket that no longer exists, so every ssh /
 # git / scp fails with "Error connecting to agent". This script probes the
-# sockets, finds one that answers, and repoints.
+# sockets, finds one that answers, and runs your command against it.
+#
+# Because this runs in its own shell it cannot rewrite the parent's environment
+# — there is deliberately no eval step. Instead it heals and then execs a
+# command, so the healed SSH_AUTH_SOCK is simply in effect for that command:
 #
 # Usage:
-#   eval "$(ssh-heal-forward.sh)"          # fix SSH_AUTH_SOCK in the current shell
-#   ssh-heal-forward.sh ssh host           # run a command with a healed env
-#   ssh-heal-forward.sh git fetch origin   # ...or any other command
+#   ssh-heal-forward.sh            # heal, then run ssh-add -l to show the agent
+#   ssh-heal-forward.sh ssh host   # heal, then run this command
+#   ssh-heal-forward.sh git fetch  # ...with SSH_AUTH_SOCK pointed at a live agent
 #
 # Behaviour:
 #   - If the current SSH_AUTH_SOCK already answers, it is left as-is.
 #   - Otherwise ~/.ssh/agent is scanned for a live s.*.sshd.* agent.
-#   - With no command, shell-appropriate export lines are printed (for eval).
-#   - With a command, it is exec'd with the healed SSH_AUTH_SOCK exported.
+#   - With no command, `ssh-add -l` is run to report the live agent.
 #
 # This only reads socket files and runs ssh-add to probe them; it never
 # modifies the running system or any other process.
@@ -54,28 +57,17 @@ find_live_agent() {
     return 1
 }
 
-# Emit the correct export syntax for the calling shell.
-emit_export() {
-    if [ -n "${FISH_VERSION:-}" ]; then
-        printf "set -gx SSH_AUTH_SOCK '%s'\n" "$1"
-    else
-        printf "export SSH_AUTH_SOCK='%s'\n" "$1"
-    fi
-}
-
 main() {
     local live
     if ! live="$(find_live_agent)"; then
         printf "ssh-heal-forward: no live forwarding agent in %s\n" "$agent_dir" >&2
         return 1
     fi
+    export SSH_AUTH_SOCK="$live"
 
     if [ "$#" -eq 0 ]; then
-        emit_export "$live"
-        return 0
+        exec ssh-add -l
     fi
-
-    export SSH_AUTH_SOCK="$live"
     exec "$@"
 }
 
