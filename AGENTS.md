@@ -194,3 +194,43 @@ Consequences:
   explicitly asks — the suffix is the point.
 - When adding a new standalone script here, keep the `.sh` extension
   (`executable_<name>.sh`), matching this convention.
+
+## Discoveries (`discoveries/`)
+
+`discoveries/` holds research, proposals, and handover notes for things jan is
+exploring or has explored. It is **not** managed into the system — these are
+working notes.
+
+### `discoveries/discoveries-status.yaml` — keep it up to date
+
+`discoveries/discoveries-status.yaml` is the canonical quick-view / status
+rollup of everything under `discoveries/`. It mirrors the per-file `Status`
+banner of each discovery, grouped into buckets.
+
+**When a discovery changes state, update this YAML in the same change.**
+Trigger events:
+
+- creating, resolving, or abandoning a discovery (file or dir)
+- a discovery moving between buckets (e.g. `active` → `done`, or `held` →
+  `abandoned`)
+- editing an existing discovery's status banner
+
+Steps:
+1. Add/remove the entry (or move it to another bucket list).
+2. `last_edited` = the newest file mtime inside the entry
+   (`find <entry> -type f -printf '%T@\n' | sort -rn | head -1`).
+3. Bump `summary.{done,active,held,dormant,abandoned,total}` (total = sum of the
+   bucket counts).
+4. (Optional) keep `discoveries/MAP.md` in sync — it is the same rollup as a
+   human-readable markdown table; the YAML is the source of truth.
+
+### Status buckets
+
+- **done** — implemented/verified, no pending work (may still be referenced as
+  handover).
+- **active** — actively worked on; has a concrete next step.
+- **held** — proposal or in-flight with no imminent next action; parked, not
+  abandoned.
+- **dormant** — research/reference note, superseded, or no planned follow-up.
+- **abandoned** — explicitly killed in favour of something else.
+

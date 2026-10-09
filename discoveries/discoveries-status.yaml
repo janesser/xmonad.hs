@@ -1,0 +1,129 @@
+# discoveries-status.yaml
+#
+# Machine + human readable status rollup of everything under `discoveries/`.
+# KEEP UP TO DATE: this file is the canonical quick-view of discovery health.
+# Refresh it whenever a discovery is created, resolved, abandoned, or last
+# actively worked on. See the "Discoveries" section of the repo AGENTS.md for
+# the rules and status buckets. `last_edited` = newest file mtime in the entry.
+#
+# Generated / last rolled up: 2026-10-09
+---
+discoveries:
+  summary:
+    # total = number of entries in the buckets below (13 top-level *.md files
+    # + 4 dirs, with ai-image-gen/ and its abandoned vllm probe listed as
+    # separate entries). Adjust when adding/removing discoveries.
+    total: 18
+    done: 4
+    active: 4
+    held: 5
+    dormant: 4
+    abandoned: 1
+
+  done:
+    - path: wall-fix.md
+      last_edited: 2026-10-05
+      note: >
+        IMPLEMENTED. fish-banner `wall` deployed to ~/.local/bin/wall +
+        ~/.config/fish/conf.d/wall.fish, committed 15bc4ba. One stale note in
+        its own text flags a memory entry that still says "never fixed".
+    - path: chezmoi-evolution-sources.md
+      last_edited: 2026-09-21
+      note: >
+        Resolved. update-evolution-sources.sh implemented (re-add / strip+restore
+        LastNotified). The inherent LastNotified drift is only worked around.
+    - path: mise-migration-plan.md
+      last_edited: 2026-09-27
+      note: >
+        IMPLEMENTED (2026-02-25). asdf -> mise, fully applied & verified, asdf
+        removed.
+    - path: ai-docgen.md
+      last_edited: 2026-09-25
+      note: >
+        Explored & verified end-to-end: LaTeX/Graphviz/Pandoc "source -> compile"
+        loop proven (beamer + generated DOT + pinned CC figure).
+
+  active:
+    - path: wm-xmonad-wayland-alternatives.md
+      last_edited: 2026-10-07
+      note: >
+        Sway + Waybar installed, starter config ported from xmonad.hs. Next:
+        waybar config.jsonc + style.css (missing) and helper tools (grim,
+        slurp, swappy, wl-clipboard, wlsunset, swaylock).
+    - path: ai-server/ai-image-gen/
+      last_edited: 2026-10-09
+      note: >
+        Actively pivoting. stable-diffusion.cpp adopted 2026-10-08 as preferred
+        image backend; Qwen-Image-2.1 smoke-test still pending; finish on a
+        >=16 GB VRAM box (handover). vLLM-Omni image-gen path abandoned (see
+        vllm-omni-2512-probe.md).
+    - path: ai-server/ai-server.md
+      last_edited: 2026-10-09
+      note: >
+        Design in progress: omni-modality (text+audio+image+video) target
+        topology via vLLM-Omni; LocalAI runtime retired. Replaces ai-llama-autostart.md.
+    - path: ai-server/ai-emergency-fallback.md
+      last_edited: 2026-10-05
+      note: >
+        Draft. llama.cpp manual stopgap serving path + pinned production build
+        safespot (rollable back). Sibling of ai-server.md / llama-cpp-optimizations/.
+
+  held:
+    - path: ai-rehab-handout.md
+      last_edited: 2026-09-27
+      note: >
+        Interview pending; a ready Qwen-Image-2.1 demo sample now exists to show
+        the practitioner. Illustration direction (A/B/C/D) still open.
+    - path: ha-bath-humidity.md
+      last_edited: 2026-09-21
+      note: >
+        Proposal (Tado humidity -> Smart Life dryer via Home Assistant). No HA
+        installed on this host -> blocked on a host decision. Not built.
+    - path: ha-google-home-backup.md
+      last_edited: 2026-09-22
+      note: >
+        Proposal (scriptable export/import of Google Home settings). Not
+        implemented — blocked on feasibility probe + which-settings decision.
+    - path: pi-windbg/
+      last_edited: 2026-09-18
+      note: >
+        Design finalized / frozen and internally consistent; execution (P1
+        spike on the Windows target) never started. Best candidate to either
+        un-park or formally close.
+    - path: windows-bootstrap/
+      last_edited: 2026-09-18
+      note: >
+        Windows setup notes for HP Z6 G4 (chezmoi-on-Windows, openssh,
+        windows-via-ssh, BIOS reset). No clear next action.
+
+  dormant:
+    - path: ai-graph-knowledge.md
+      last_edited: 2026-09-21
+      note: >
+        Research summary (local/offline/graph DBs for agents; grit winner). No
+        planned follow-up.
+    - path: ai-voice-assistant.md
+      last_edited: 2026-09-21
+      note: >
+        ovos + rhasspy setup notes (pipewire, podman). Voice stack not pursued on
+        this host; superseded by the image-gen pivot.
+    - path: rhasspy.md
+      last_edited: 2026-08-23
+      note: >
+        Old rhasspy troubleshooting notes (predecessor to ai-voice-assistant.md).
+    - path: bmad/
+      last_edited: 2026-09-03
+      note: >
+        Reference note on BMAD spec-driven AI tools.
+
+  abandoned:
+    - path: ai-server/ai-image-gen/vllm-omni-2512-probe.md
+      last_edited: 2026-10-08
+      note: >
+        Abandoned 2026-10-08. Probe ran and failed on fit; vLLM-Omni image-gen
+        path killed in favour of stable-diffusion.cpp.
+
+themes:
+  - "AI server stack is the live cluster: ai-server.md (topology) + ai-image-gen/ (image backend) + ai-emergency-fallback.md (serving robustness) + llama-cpp-optimizations/ (tuning)."
+  - "Home Assistant automations (bath humidity, Google Home) are proposals parked pending a host."
+  - "Window-manager work (xmonad -> Sway) is the other active thread."
