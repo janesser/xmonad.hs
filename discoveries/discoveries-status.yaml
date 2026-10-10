@@ -54,9 +54,11 @@ discoveries:
       last_edited: 2026-10-09
       note: >
         Actively pivoting. stable-diffusion.cpp adopted 2026-10-08 as preferred
-        image backend; Qwen-Image-2.1 smoke-test still pending; finish on a
-        >=16 GB VRAM box (handover). vLLM-Omni image-gen path abandoned (see
-        vllm-omni-2512-probe.md).
+        image backend. First successful render: FLUX.2-klein-4b Q4_0 (smoke
+        test passing, PR #2122 upstream) — fix for the checkpoint's unprefixed
+        GGUF naming + a Qwen3-4b weight_scale. Qwen-Image-2.1 smoke-test still
+        pending; finish on a >=16 GB VRAM box (handover). vLLM-Omni image-gen
+        path abandoned (see vllm-omni-2512-probe.md).
     - path: ai-server/ai-server.md
       last_edited: 2026-10-09
       note: >

@@ -123,9 +123,41 @@ The whole reason for sd.cpp is that failures surface **immediately**, not after 
 3. Confirm a real (non-black) PNG is written before trusting a quant — the
    black-image bug is silent until you inspect output.
 
+## Flux.2-klein-4b Q4_0 — smoke test fixed (2026-10-09)
+
+The `flux-2-klein-4b-Q4_0.gguf` checkpoint now loads and renders end to end.
+Smoke test (`sd-cli`, steps=20, guidance=4, seed=42, 512×512) produced a valid
+non-black PNG. This was the first model successfully rendered through sd.cpp on
+this box.
+
+**Root cause — an atypical GGUF naming convention.** This quantizer's GGUF
+stores its tensor names *without* the leading `model.diffusion_model.` prefix
+that sd.cpp's version detection and model builders expect, and it carries no
+`general.architecture` metadata. Loading it therefore failed first with
+`get sd version from file failed` (`VERSION_COUNT`) and then, once detection was
+bypassed, `tensor ... not in model metadata` — the tensors were all present,
+just unprefixed.
+
+**Fix — upstream PR #2122** (`leejet/stable-diffusion.cpp`):
+- `model_loader.cpp` — detect Flux/Flux2 by model signature with or without the
+  prefix, so `get_sd_version()` no longer returns `VERSION_COUNT` (logs
+  `Version: Flux.2 klein`).
+- `diffusion_engine.cpp` — detect an unprefixed Flux GGUF at load and apply the
+  `model.diffusion_model.` prefix so the builders' tensor lookups match. The
+  probe fires only on the Flux marker `double_stream_modulation_img` and only
+  when the prefix is absent, so standard leejet GGUFs are untouched.
+- `ggml_block.hpp` — dropped a `GGML_ASSERT` that required `weight_scale`
+  element count of 1 or `out_features`; this Qwen3-4b-based encoder stores a
+  weight_scale with an element count outside that range (the dequant path
+  already handles any count).
+
+The smoke-test command and log are kept local (per CONTRIBUTING.md, test
+scripts stay out of the PR).
+
 ## Open items
 
-- [ ] Build sd.cpp (CUDA) on the target box and smoke SDXL Q8 at 1024².
+- [x] Build sd.cpp (CUDA) on the target box and smoke SDXL Q8 at 1024² — done;
+  also confirmed with FLUX.2-klein-4b Q4_0 (smoke test passing, PR #2122).
 - [ ] Pick a box: V100 (32 GB, FLUX/2512 Q8_0) or RTX 2060 Mobile (6 GB, SDXL/SD1.5).
 - [ ] For Qwen-Image-2512: confirm a non-blanking Q8_0 GGUF before committing.
 - [ ] Pin GGUF providers (Civitai/gpustack / `unsloth/*-GGUF`) and verify blob integrity.
