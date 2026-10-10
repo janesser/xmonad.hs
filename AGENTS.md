@@ -73,6 +73,40 @@ of the top-level README.md.
 The old `pi/` scaffold has been removed — the sudoers file now lives in the
 natural `etc/` tree, so `pi/` is obsolete.
 
+## Encryption (age-encrypted / concealed files)
+
+Some files are **age-encrypted** and stored in the source tree as `.age` with the
+`encrypted_` filename prefix. They never appear in the repo in cleartext.
+**Current count: 44 `.age` files** (`find . -name '*.age' | grep -v .chezmoistate`),
+growing as more secrets are added — refresh this figure when it changes.
+
+- **Method:** `encryption = "age"` in `~/.config/chezmoi/chezmai.toml`. Recipients
+  are listed there (labels: `peacewagon`, `lincopta`, `no5`, `cyberkleiber`).
+- **Identity = the only decryption key:** `~/.config/chezmoi/age-id.txt`. It is
+  **local-only** (not chezmai-managed, not in the repo). **Back it up separately**
+  — without it all 44 `.age` files are unrecoverable even if you have the
+  recipients.
+- **Notable encrypted destinations (source blobs under `dot_pi/` etc.):**
+  - pi-agent: `~/.pi/agent/settings.json`, `~/.pi/agent/crossbar.json`
+    (`dot_pi/agent/encrypted_{settings.json,crossbar.json}.age`)
+  - SSH: `~/.ssh/config` (`private_dot_ssh/encrypted_config.age`)
+  - git: `~/.gitconfig` (`encrypted_dot_gitconfig.age`)
+  - Evolution mail/addressbooks/calendar/RSS: `~/.config/evolution/*` (~36 files,
+    the bulk of the count)
+  - App configs: KeeXc (`~/.config/keepassxc/keepassxc.ini`), meteo-qt, Nextcloud
+  - Host-specific: `~/.local/bin/wakeup` on cyberkleiber
+    (`dot_local/bin/encrypted_executable_wakeup.cyberkleiber.age`)
+- **Add a new encrypted file:** `cz add --encrypt <destination>` (one-shot), or
+  `cz encrypt <dest>` then `cz re-add --encrypt <dest>`; an already-managed file
+  is refreshed with `cz re-add --encrypt <dest>`. When you add a recipient for a
+  new host, add it to `chezmai.toml` **first**, then re-encrypt affected files
+  (`cz re-add --encrypt`), or they won't decrypt on that host.
+- **Don't** `cz diff`/edit/`cz apply` a `.age` expecting cleartext — read it with
+  `cz decrypt <source>`. A `.age` blob is opaque in a diff.
+- **Distinguish:** `etc/apt/keyrings/teamviewer-keyring.gpg` is a plain **public**
+  keyring committed in the clear — **not** concealed. It is not one of the `.age`
+  files.
+
 ## Backend: llama.cpp server at boot
 
 The llama.cpp server is a **backend** service, not a user dotfile. It is started
