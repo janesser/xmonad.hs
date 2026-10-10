@@ -6,16 +6,16 @@
 # actively worked on. See the "Discoveries" section of the repo AGENTS.md for
 # the rules and status buckets. `last_edited` = newest file mtime in the entry.
 #
-# Generated / last rolled up: 2026-10-09
+# Generated / last rolled up: 2026-10-10
 ---
 discoveries:
   summary:
     # total = number of entries in the buckets below (13 top-level *.md files
     # + 4 dirs, with ai-image-gen/ and its abandoned vllm probe listed as
     # separate entries). Adjust when adding/removing discoveries.
-    total: 18
+    total: 19
     done: 4
-    active: 4
+    active: 5
     held: 5
     dormant: 4
     abandoned: 1
@@ -44,6 +44,15 @@ discoveries:
         loop proven (beamer + generated DOT + pinned CC figure).
 
   active:
+    - path: ssh-agent-heal-forward.md
+      last_edited: 2026-10-10
+      note: >
+        IMPLEMENTED (2026-10-10) but LEFT UP TO YOUR TESTING. `ssh-heal-forward.sh`
+        + `ssh-heal-forward.fish` heal a stale SSH_AUTH_SOCK by finding the live
+        forwarded agent (3s probe bound so a dead peer that accepts-but-never-
+        replies is skipped, not hung on). Committed 9997752 + e048af3. Next: your
+        test pass against real forwarded connections (stale-socket skip, fresh
+        ssh -A, fish prompt, bash -c --emit eval).
     - path: wm-xmonad-wayland-alternatives.md
       last_edited: 2026-10-07
       note: >
