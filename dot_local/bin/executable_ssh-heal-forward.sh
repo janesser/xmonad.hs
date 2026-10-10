@@ -10,37 +10,31 @@
 # git / scp fails with "Error connecting to agent". This script probes the
 # sockets, finds one that answers, and runs your command against it.
 #
-# Because this runs in its own shell it cannot rewrite the parent's environment
-# — there is deliberately no eval step. Instead it heals and then execs a
-# command, so the healed SSH_AUTH_SOCK is simply in effect for that command:
-#
 # Usage:
-#   ssh-heal-forward.sh            # heal, then run ssh-add -l to show the agent
-#   ssh-heal-forward.sh ssh host   # heal, then run this command
-#   ssh-heal-forward.sh git fetch  # ...with SSH_AUTH_SOCK pointed at a live agent
+#   ssh-heal-forward.sh            # heal, then run ssh-add -l to show the live agent
+#   ssh-heal-forward.sh <cmd>      # heal + exec a command with healed SSH_AUTH_SOCK
+#   ssh-heal-forward.sh --which    # print the live agent path (for eval-based one-liner)
+#   ssh-heal-forward.sh --emit     # detect parent shell and emit export/set-gx
 #
-# Behaviour:
-#   - If the current SSH_AUTH_SOCK already answers, it is left as-is.
-#   - Otherwise ~/.ssh/agent is scanned for a live s.*.sshd.* agent.
-#   - With no command, `ssh-add -l` is run to report the live agent.
-#
-# This only reads socket files and runs ssh-add to probe them; it never
-# modifies the running system or any other process.
+# Modes --which/--emit are for the eval-based one-liner:
+#     eval "$(ssh-heal-forward.sh --emit)"
+# In an interactive FISH shell you do not need eval at all — use the
+# ~/.config/fish/functions/ssh-heal-forward.fish function instead, which heals
+# the calling shell directly (it runs inside the parent process).
 
 set -u
 
-# ${HOME:-$HOME} defeats chezmoi's $HOME substitution (same idiom as
-# executable_pi.sh) so the script stays portable across hosts.
+# ${HOME:-$HOME} defeats chezmoi's $HOME substitution (same idiom as pi.sh)
 agent_dir="${SSH_AGENT_DIR:-${HOME:-$HOME}/.ssh/agent}"
 
-# A candidate counts as alive only if the agent actually answers ssh-add
-# (a dead socket lingers as a file and must be rejected).
+# A candidate counts as alive only if the agent actually answers ssh-add.
 agent_alive() {
     [ -S "$1" ] || return 1
     SSH_AUTH_SOCK="$1" ssh-add -l >/dev/null 2>&1
 }
 
-# Print the path of a live agent, or return 1 if none is found.
+# Print the path of a live agent, or return 1 if none is found (and print
+# nothing on stdout).
 find_live_agent() {
     if [ -n "${SSH_AUTH_SOCK:-}" ] && agent_alive "$SSH_AUTH_SOCK"; then
         printf '%s\n' "$SSH_AUTH_SOCK"
@@ -57,18 +51,49 @@ find_live_agent() {
     return 1
 }
 
-main() {
-    local live
-    if ! live="$(find_live_agent)"; then
-        printf "ssh-heal-forward: no live forwarding agent in %s\n" "$agent_dir" >&2
-        return 1
+# Emit the correct export/set-directive for the calling shell.
+export_directive() {
+    local path="$1"
+    if [ -n "${FISH_VERSION:-}" ]; then
+        printf 'set -gx SSH_AUTH_SOCK "%s"\n' "$path"
+    else
+        printf 'export SSH_AUTH_SOCK="%s"\n' "$path"
     fi
-    export SSH_AUTH_SOCK="$live"
+}
+#
+main() {
+    local args=()
+    local mode=run
 
-    if [ "$#" -eq 0 ]; then
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --which) mode=which ;;
+            --emit)  mode=emit  ;;
+            *)       args+=("$1") ;;
+        esac
+        shift
+    done
+
+    if [ "$mode" = which ]; then
+        find_live_agent || { echo "ssh-heal-forward: no live forwarding agent in $agent_dir" >&2; exit 1; }
+        return 0
+    fi
+
+    if [ "$mode" = emit ]; then
+        local agent
+        agent="$(find_live_agent)" || { echo "ssh-heal-forward: no live forwarding agent in $agent_dir" >&2; exit 1; }
+        export_directive "$agent"
+        return 0
+    fi
+
+    # mode = run
+    local agent
+    agent="$(find_live_agent)" || { echo "ssh-heal-forward: no live forwarding agent in $agent_dir" >&2; return 1; }
+    export SSH_AUTH_SOCK="$agent"
+
+    if [ ${#args[@]} -eq 0 ]; then
         exec ssh-add -l
     fi
-    exec "$@"
+    exec "${args[@]}"
 }
-
 main "$@"
