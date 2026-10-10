@@ -28,9 +28,11 @@ set -u
 agent_dir="${SSH_AGENT_DIR:-${HOME:-$HOME}/.ssh/agent}"
 
 # A candidate counts as alive only if the agent actually answers ssh-add.
+# A stale socket whose sshd peer died accepts the connection but never replies,
+# so ssh-add -l blocks; bound the probe with a timeout so it counts as dead.
 agent_alive() {
     [ -S "$1" ] || return 1
-    SSH_AUTH_SOCK="$1" ssh-add -l >/dev/null 2>&1
+    SSH_AUTH_SOCK="$1" timeout 3 ssh-add -l >/dev/null 2>&1
 }
 
 # Print the path of a live agent, or return 1 if none is found (and print
