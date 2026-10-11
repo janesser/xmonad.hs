@@ -1,0 +1,1 @@
+Delegate environment‑specific behavior from AGENTS.md to the respective env guides (e.g., AGENTS-cyberkleiber.md).

@@ -13,10 +13,10 @@ discoveries:
     # total = number of entries in the buckets below (13 top-level *.md files
     # + 4 dirs, with ai-image-gen/ and its abandoned vllm probe listed as
     # separate entries). Adjust when adding/removing discoveries.
-    total: 20
+    total: 21
     done: 4
     active: 6
-    held: 5
+    held: 6
     dormant: 4
     abandoned: 1
 
@@ -122,6 +122,14 @@ discoveries:
       note: >
         Windows setup notes for HP Z6 G4 (chezmoi-on-Windows, openssh,
         windows-via-ssh, BIOS reset). No clear next action.
+    - path: ai-vram-swap.md
+      last_edited: 2026-10-11
+      note: >
+        Strata — runs a ~125B MoE (Qwen3.8-Flash-Next) on a 12 GB consumer PC
+        by spreading the 24,576 experts across GPU/RAM/CPU/SSD (hot on GPU,
+        cold on RAM/SSD). Open source, MIT, OpenAI-compatible endpoint at
+        :8080. Relevant to the V100<->Iris Xe VRAM-swap work. Next: whether the
+        offload strategy suits the V100/Intel box, or a smaller model is simpler.
 
   dormant:
     - path: ai-graph-knowledge.md

@@ -1,0 +1,1 @@
+**Discovery:** Reducing the diskspace footprint of OneAPI after installation. Question: What remains to stay for future compilations, and what components belong to the installation?
