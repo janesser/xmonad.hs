@@ -20,6 +20,57 @@ discovery state.
 - prompt to the little brother: `tests/switchmode/handover-out.md`
 - results template: `tests/switchmode/handover-in.md`
 
+## Mutual-support handover (llama-cuda → llama-sycl)
+
+Stopping `llama-cuda` (:8081, V100) triggers the mutual-support handover: the big
+session's `pi` backend is moved to `llama-sycl` (:8082, Iris Xe) so a text
+backend keeps answering. This is exactly what the switchmode does when it drops
+the V100's text backend to hand the card to sd.cpp — and it is the handover used
+whenever `llama-cuda` is stopped for any reason on cyberkleiber. (The two backends
+are boot units, `WantedBy=multi-user.target`, so they auto-start on wake; this
+handover is the only manual case.)
+
+**Only step 1 is a `pi-command`, and only step 1 names an explicit `--provider`
+(:8082). `defaultProvider` is never used or changed at any point.** Flow:
+
+1. **Record the stop (mandatory trigger).** Before stopping `llama-cuda`, run
+   `~/.local/bin/llama-handover-request.sh`. It auto-picks the handover model
+   (first id from `curl :8082/v1/models`), embeds the ready `pi --provider …
+   --model …` as `pi_command` in the marker, and **triggers the executor (step 2)**:
+
+   ```bash
+   ~/.local/bin/llama-handover-request.sh "stop" "systemctl stop llama-cuda"
+   ```
+
+2. **Execute (executor — a result of step 1's call).** Stops `llama-cuda` (:8081),
+   confirms :8082 answers, and **leaves the marker** in place (it holds the ready
+   `pi_command`). Runs no `pi --provider`.
+3. **Caller resumes (human-triggered).** Reads `pi_command` from the marker at the
+   predefined location `~/.local/share/llama-cpp/handover/requested` and runs it —
+   the sole `pi --provider` in the flow:
+
+   ```bash
+   eval "$(python3 -c 'import json;print(json.load(open("$HOME/.local/share/llama-cpp/handover/requested"))["pi_command"])')"
+   ```
+
+4. **Return.** Restart `llama-cuda`, clear the marker. No `--provider`, never
+   `defaultProvider`:
+
+   ```bash
+   sudo systemctl restart llama-cuda          # :8081 back up
+   MODEL=$(curl -fsS http://127.0.0.1:8081/v1/models \
+     | python3 -c 'import json,sys;print(json.load(sys.stdin)["data"][0]["id"])')
+   pi --model "$MODEL"
+   rm -f "$HOME/.local/share/llama-cpp/handover/requested"
+   ```
+
+Marker + append-only event log live under
+`~/.local/share/llama-cpp/handover/` (stamped with `PI_SESSION_ID`). Full spec:
+`AGENTS.md` "Mutual support protocol" section. Helper sources:
+`dot_local/bin/executable_llama-handover-request.sh` and
+`dot_local/bin/executable_llama-handover.sh`
+(both reinstalled to `~/.local/bin/`).
+
 ## How to run (for the little brother)
 
 Follow `tests/switchmode/handover-out.md` — it steps through: pre-state health

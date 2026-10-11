@@ -39,13 +39,13 @@ Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/
 # backend needs a moment to initialize after the driver binds. A short local
 # loop avoids depending on systemd's 30s RestartSec to recover the probe.
 ExecStartPre=/usr/bin/bash -c 'for i in $(seq 1 8); do if llama serve --list-devices 2>/dev/null | grep -q CUDA; then exit 0; fi; echo "llama-cuda: CUDA not ready, attempt $${i}/8, retrying..." >&2; sleep 2; done; echo "llama-cuda: no CUDA device after 8 attempts, refusing to fall back to CPU" >&2; exit 1'
-# The script forks `llama serve` in the background and exits itself.
-ExecStart=/usr/bin/fish /home/jan/.local/bin/restart-llama-cuda.sh
-Type=oneshot
-RemainAfterExit=yes
-# Only the launcher (fish) is tracked; leave the orphaned llama server running
-# when the oneshot launcher exits / the service is stopped.
-KillMode=process
+# The launcher reaps a stale :8081 orphan then `exec`s `llama serve` in the
+# FOREGROUND (see restart-llama-cuda.sh). With Type=exec the exec'd
+# llama-server IS the unit's main process, so `systemctl stop` (default
+# KillMode=control-group) actually kills the backend — the unit is genuinely
+# stoppable. `restart` (not `start`) relaunches after a reaper frees VRAM.
+ExecStart=/usr/bin/bash /home/jan/.local/bin/restart-llama-cuda.sh
+Type=exec
 KillSignal=SIGTERM
 TimeoutStartSec=120s
 # Self-heal: if the unit fails (OOM, or the CUDA probe above), retry after a

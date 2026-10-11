@@ -14,30 +14,16 @@
 #
 # sudo (NOPASSWD drop-in, /usr/bin/systemctl --system) is used ONLY to manage the
 # llama-cuda system unit. vLLM-Omni is a plain background process started by
-# restart-vllm-omni.sh. Reaping the llama backend does NOT umount the shared HF
-# cache bind mount — it must stay mounted for vLLM-Omni / sd.cpp.
+# restart-vllm-omni.sh. The only thing we do to a backend is STOP it — a plain
+# `systemctl stop llama-cuda` or `restart-vllm-omni.sh stop` — no manual signal
+# scanning. Stopping the llama-cuda unit does NOT umount the shared HF cache
+# bind mount — it must stay mounted for vLLM-Omni / sd.cpp.
 set -uo pipefail
 
 RESTART_OMNI="$HOME/.local/bin/restart-vllm-omni.sh"
-SUDO="/usr/bin/systemctl --system"
+SUDO=(sudo systemctl)        # array: invoked as "${SUDO[@]}" so 'sudo systemctl' splits into 2 args
 SD_CLI="/home/jan/projs/stable-diffusion.cpp/build/bin/sd-cli"
 DEFAULT_DEADLINE=300   # seconds the image mode holds the V100 before auto-switch-back
-
-reap() {
-  # port-bound reap of a named binary family (llama / api_server) on $1.
-  local family="$1" port="$2" pid cmd
-  for pid in $(pgrep -x "$family" 2>/dev/null); do
-    [ -r "/proc/$pid/cmdline" ] || continue
-    cmd=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)
-    case "$cmd" in *"$port"*)
-      echo "switch: reaping $family pid $pid on :$port"
-      kill "$pid" 2>/dev/null
-      for _ in $(seq 1 15); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
-      kill -0 "$pid" 2>/dev/null && { kill -9 "$pid" 2>/dev/null; }
-      ;;
-    esac
-  done
-}
 
 wait_ready() {
   local port="$1" i
@@ -64,7 +50,8 @@ restore() {
   local who="$1"
   case "$who" in
     llama)
-      "$SUDO" start llama-cuda
+      "${SUDO[@]}" restart llama-cuda   # NOT start: the unit is RemainAfterExit 'active (exited)', so
+                                      #   start is a no-op and won't relaunch the reaped orphan backend
       if wait_ready 8081; then echo "switch: llama.cpp backend healthy on :8081.";
       else echo "switch: llama.cpp not healthy on :8081." >&2; exit 1; fi
       ;;
@@ -102,7 +89,7 @@ if not calls:
 
 ORDER = ["model", "llm", "vae", "vae-format", "tokenizer",
          "prompt", "seed", "steps", "guidance", "cfg-scale",
-         "width", "height", "flow-shift", "clip", "negative-prompt", "output"]
+         "width", "height", "flow-shift", "negative-prompt", "output"]
 
 def argv_for(call):
     out = dict(shared)
@@ -189,16 +176,14 @@ case "${1:-instruct}" in
   omni)
     [ "${2:-}" != "" ] && MODEL="$2"
     echo "== switching to vLLM-Omni (:8091, $MODEL) =="
-    reap llama 8081                                   # free VRAM (no umount of shared cache)
-    "$SUDO" stop llama-cuda                           # reset the unit so it is not 'active'
+    "${SUDO[@]}" stop llama-cuda                        # stop the llama backend; frees the V100 (HF cache mount stays)
     "$RESTART_OMNI" start "$MODEL"
     exit $?
     ;;
   instruct)
     echo "== switching to llama.cpp (:8081, ornith) =="
-    reap api_server 8091                              # free VRAM from vLLM-Omni
-    "$RESTART_OMNI" stop
-    "$SUDO" start llama-cuda                          # relaunch the llama backend on :8081
+    "$RESTART_OMNI" stop                              # stop vLLM-Omni; frees the V100
+    "${SUDO[@]}" restart llama-cuda                      # relaunch the llama backend on :8081 (see restore: start==no-op on a stale-active oneshot)
     if wait_ready 8081; then
       echo "switch: llama.cpp backend healthy on :8081."
     else
@@ -206,6 +191,7 @@ case "${1:-instruct}" in
     fi
     ;;
   image)
+    shift    # consume the 'image' subcommand token before parsing its options
     BATCH=""
     DEADLINE="$DEFAULT_DEADLINE"
     while [ $# -gt 0 ]; do
@@ -227,16 +213,15 @@ case "${1:-instruct}" in
 
     WHO="$(is_active)"
     echo "== switching to sd.cpp image mode (:V100, deadline ${DEADLINE}s) =="
-    reap llama 8081                                   # free V100 from llama.cpp
-    reap api_server 8091                              # free V100 from vLLM-Omni
-    "$RESTART_OMNI" stop                              # defensive: make sure omni is down
+    "${SUDO[@]}" stop llama-cuda                      # stop the llama backend; frees the V100
+    "$RESTART_OMNI" stop                              # stop vLLM-Omni; frees the V100
     if [ "$(nvidia-smi --query-gpu=memory.used --format=csv,noheader 2>/dev/null | tr -dc 0-9)" != 0 ] 2>/dev/null; then
       echo "switch: WARNING V100 still shows memory used — a non-text holder may hold it" >&2
     fi
 
     RESULTS="$(run_image_batch "$BATCH" "$DEADLINE")"
+    BATCH_RC=$?             # capture BEFORE the echo, else it records echo's exit (0)
     echo "$RESULTS"
-    BATCH_RC=$?
 
     echo "== image batch done; restoring ${WHO:-none} =="
     restore "$WHO"

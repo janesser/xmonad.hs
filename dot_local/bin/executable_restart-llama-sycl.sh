@@ -19,13 +19,18 @@
 #     live  (default) reap any stale :8082 orphan, then (re)start the router
 #     dry   report what would be reaped, kill nothing
 #     stop  reap + umount the shared HF cache
-export HOME=/home/jan
 USER="${USER:-$(id -un)}"
 LIB="$HOME/.local/share/llama-cpp/lib.sh"
 [ -f "$LIB" ] && . "$LIB"
 
 MODE="${1:-live}"
 PORT="${2:-8082}"
+
+
+
+#MODEL="SC117/Ling-3.0-tiny-abliterated-APEX-GGUF:COMPACT"
+MODEL="LiquidAI/LFM2.5-2.6B-GGUF:Q4_K_M"
+PARAM_ADDONS="-c 32768"
 
 if [ "$MODE" = dry ]; then
     # PORT is read from the environment (exported below), NOT from a positional
@@ -124,21 +129,19 @@ export LLAMA_ARG_REPEAT_PENALTY=1.0
 # Enable frequency-based penalty if you want it
 export LLAMA_ARG_FREQUENCY_PENALTY=1.5
 
-MODEL="LiquidAI/LFM2.5-2.6B-GGUF:Q4_K_M"
-
 # --- run a single pinned model (NOT router mode) ---
 # One llama-server instance serves exactly one GGUF, selected with --hf-repo.
 # Olla discovers that single model from /v1/models. --device SYCL0 pins the
 # Intel GPU: fail fast (unit ExecStartPre) rather than silently falling back to
 # CPU when no Intel device is present. Verify the exact index after the build
 # with:  $BUILD_SYCL/bin/llama serve --list-devices
-echo "restart-llama-sycl: (re-)starting single-model server on [::]:$PORT (Intel GPU, --device SYCL0) serving unsloth/Qwen3.5-0.8B-GGUF:Q4_K_M"
-"$BUILD_SYCL/bin/llama-server" \
+# Exec in the foreground so systemd tracks the server (Type=exec): because exec
+# replaces this shell, the server becomes the unit's main process and
+# `systemctl stop` (KillMode=control-group) kills the real backend, so the unit
+# is genuinely stoppable (no orphan). Single pinned model, non-router mode:
+# one llama-server serves exactly one GGUF, selected with --hf-repo.
+exec "$BUILD_SYCL/bin/llama-server" \
   --host :: --port "$PORT" \
-  --hf-repo $MODEL \
+  --hf-repo $MODEL $PARAM_ADDONS \
   --offline \
-  --device SYCL0 --parallel 1 --no-ui \
-  &
-disown
-
-echo "restart-llama-sycl: llama-server (re-)started."
+  --device SYCL0 --parallel 1 --no-ui

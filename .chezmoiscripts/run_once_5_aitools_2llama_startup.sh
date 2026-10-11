@@ -8,11 +8,11 @@
 #   llama-cuda.service -> ~/.local/bin/restart-llama-cuda.sh   :8081 NVIDIA CUDA
 #   llama-sycl.service -> ~/.local/bin/restart-llama-sycl.sh   :8082 Intel SYCL
 #
-# Each unit is Type=oneshot whose launcher detaches the llama-server (fork +
-# disown) and exits, so systemd tracks only the launcher while the orphaned
-# server keeps serving. We enable at boot but only (re)start a backend when it
-# is NOT already serving on its port, so applying this script never kills a live
-# instance.
+# Each unit is Type=exec: the launcher reaps a stale orphan on its port, then
+# `exec`s llama-server in the foreground, so systemd tracks the server itself as
+# the main process and `systemctl stop` (control-group) actually kills it.
+# We enable at boot but only (re)start a backend when it is NOT already serving
+# on its port, so applying this script never kills a live instance.
 #
 # Sudo is used only for commands in the scoped NOPASSWD sudoers drop-in.
 
