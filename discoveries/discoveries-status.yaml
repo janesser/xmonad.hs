@@ -6,16 +6,16 @@
 # actively worked on. See the "Discoveries" section of the repo AGENTS.md for
 # the rules and status buckets. `last_edited` = newest file mtime in the entry.
 #
-# Generated / last rolled up: 2026-10-10
+# Generated / last rolled up: 2026-10-12
 ---
 discoveries:
   summary:
     # total = number of entries in the buckets below (13 top-level *.md files
     # + 4 dirs, with ai-image-gen/ and its abandoned vllm probe listed as
     # separate entries). Adjust when adding/removing discoveries.
-    total: 19
+    total: 20
     done: 4
-    active: 5
+    active: 6
     held: 5
     dormant: 4
     abandoned: 1
@@ -43,6 +43,9 @@ discoveries:
         Explored & verified end-to-end: LaTeX/Graphviz/Pandoc "source -> compile"
         loop proven (beamer + generated DOT + pinned CC figure).
 
+  # incomplete: switchmode smoke test (V100 swap via small agent) NOT yet
+  # verified — run aborted 2026-10-11 on a leading-sudo prompt hang. See
+  # ai-little-brother.md. Re-run the bare command (no leading sudo).
   active:
     - path: ssh-agent-heal-forward.md
       last_edited: 2026-10-10
@@ -68,11 +71,24 @@ discoveries:
         GGUF naming + a Qwen3-4b weight_scale. Qwen-Image-2.1 smoke-test still
         pending; finish on a >=16 GB VRAM box (handover). vLLM-Omni image-gen
         path abandoned (see vllm-omni-2512-probe.md).
+        switchmode (V100 text->image->restore swap) smoke test INCOMPLETE:
+        delegation to the :8082 little brother aborted 2026-10-11 on a
+        leading-`sudo` prompt hang — harness + batch validated, fix (bare
+        command) recorded in ai-little-brother.md; next: re-run.
     - path: ai-server/ai-server.md
       last_edited: 2026-10-09
       note: >
         Design in progress: omni-modality (text+audio+image+video) target
         topology via vLLM-Omni; LocalAI runtime retired. Replaces ai-llama-autostart.md.
+    - path: ai-server/product-idea.md
+      last_edited: 2026-10-11
+      note: >
+        DRAFT. Commercialization thread for the ai-server capability — three
+        avenues (private AI as a service / build-and-handoff consulting /
+        content+small product), a pick framework, and a validate-demand next
+        step. Created for the income question; next: user picks an avenue and
+        validates demand before any build. Move between buckets once demand is
+        known.
     - path: ai-server/ai-emergency-fallback.md
       last_edited: 2026-10-05
       note: >

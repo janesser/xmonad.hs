@@ -25,11 +25,15 @@ checkpoint.
    ```
 3. Run the switchmode with this batch file:
    ```
-   sudo /home/jan/.local/bin/switch-ai-backend.sh \
+   /home/jan/.local/bin/switch-ai-backend.sh \
      image --batch /home/jan/.local/share/chezmoi/discoveries/ai-server/ai-image-gen/tests/switchmode/batch-flux-klein.json \
      --deadline 900
    ```
-   Capture the full output (the per-call JSON plus the restore messages).
+   IMPORTANT: run it WITHOUT a leading `sudo`. The script calls `sudo systemctl`
+   internally, and that is already passwordless via the sudoers drop-in; a
+   leading `sudo switch-ai-backend.sh` fails with "A terminal is required to
+   authenticate". Run the whole command in ONE bash call and capture its full
+   output (the per-call JSON plus the restore messages) and its exit code.
 4. After it finishes, for each output path verify the file is a **fresh new**
    render: it exists, is >0 bytes, and its mtime is **after** the start of this
    run (i.e. it did not exist before step 2). Quick validity check — a real PNG
