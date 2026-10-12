@@ -154,10 +154,90 @@ just unprefixed.
 The smoke-test command and log are kept local (per CONTRIBUTING.md, test
 scripts stay out of the PR).
 
-## Open items
+## Resolved: origin/main works with correct params — no code fix needed
 
-- [x] Build sd.cpp (CUDA) on the target box and smoke SDXL Q8 at 1024² — done;
-  also confirmed with FLUX.2-klein-4b Q4_0 (smoke test passing, PR #2122).
+**PR #2122 was closed by the maintainer (leejet, 2026-10-10) without merging.**
+His resolution: the load failure was **not** a code bug — it was using `-m`/
+`--model` instead of `--diffusion-model`. The fix is a usage fix, not a source
+change, so `origin/main` loads `flux-2-klein-4b-Q4_0.gguf` correctly when the
+standalone-diffusion flag is used.
+
+**Verified against a fresh `origin/main` clone** (`d637cfb`, upstream renamed
+`main`→`master`; our `98de9ab` fix is confirmed **absent**):
+- `-m` / `--model` = *"path to full model"* (`model_path`)
+- `--diffusion-model` = *"path to the standalone diffusion model"*
+  (`diffusion_model_path`)
+- Both live in `SDContextParams` (`examples/common/common.cpp`), which is
+  registered in the CLI parse vector at `examples/cli/main.cpp:294`
+  (`options_vec = {cli, ctx, gen}.get_options()`), so both are real, usable flags.
+- `--diffusion-model` is what tells sd.cpp the GGUF is a standalone diffusion
+  model whose tensor names already carry the `model.diffusion_model.` prefix —
+  exactly the flux-2-klein layout. That is why the upstream binary loads it
+  without PR #2122.
+
+### Confirmed parameters in origin/main (all defined, none added by our PR)
+
+Model components — `SDContextParams` (`examples/common/common.cpp`):
+
+| Flag | Meaning | target field |
+|---|---|---|
+| `-m`, `--model` | path to full model | `model_path` |
+| `--diffusion-model` | path to standalone diffusion model | `diffusion_model_path` |
+| `--llm` | path to llm text encoder (e.g. mistral-small3.2 for flux2) | `llm_path` |
+| `--tokenizer` | tokenizer.json path (repeatable) | `tokenizer` |
+| `--vae` | path to standalone VAE | `vae_path` |
+| `--vae-format` | auto,flux,sd3,**flux2**,wan (default auto) | `vae_format` |
+
+Generation — `SDGenerationParams`:
+
+| Flag | Meaning | default |
+|---|---|---|
+| `-p`, `--prompt` | the prompt to render | — |
+| `--cfg-scale` | unconditional guidance scale | 7.0 |
+| `--guidance` | distilled guidance (models with guidance input) | 3.5 |
+| `--steps` | number of sample steps | 20 |
+| `-H`, `--height` | image height, px | 512 |
+| `-W`, `--width` | image width, px | 512 |
+| `--flow-shift` | shift for Flow models (SD3.x/WAN) | auto |
+
+Plus `-o`, `--output` (write path) in `examples/cli/main.cpp:67`.
+
+**Correct smoke command (origin/main, no patch):** use `--diffusion-model`
+instead of `--model`:
+
+```bash
+./build/bin/sd-cli \
+  --diffusion-model "$MODEL" \
+  --llm "$TE" \
+  --tokenizer "$TOK" \
+  --vae "$VAE" --vae-format flux2 \
+  --prompt "..." --steps 20 --guidance 4 --seed 42 \
+  -H 512 -W 512 --output out.png
+```
+
+**Note for the build:** `origin/main` is a git submodule layout — the `ggml`
+submodule (`https://github.com/leejet/ggml.git`, pinned `d25b121`) must be
+`git submodule update --init` before cmake configures (a shallow `--depth 1`
+clone has it missing, causing `SD_GGML_SOURCE_DIR` errors). The
+`examples/server/frontend`, `thirdparty/libwebp`, `thirdparty/libwebm` submodules
+are not needed for the CLI/CUDA build.
+
+- [x] Build sd.cpp (CUDA) on the target box and smoke SDXL Q8 at 1024² — done.
+  Also confirmed with FLUX.2-klein-4b Q4_0 **on clean origin/master** (d637cfb,
+  no patch): `--diffusion-model` → `Version: Flux.2 klein`, Qwen3-4b text
+  encoder loads (the PR #2122 `weight_scale` assert does **not** fire), valid
+  non-black PNG (CPU smoke run, mean luminance 64.6). PR #2122 was unnecessary.
+
+### Empirical verification (2026-10-12)
+
+Recompiled a clean `origin/master` build (`master-959-d637cfb`, `--DSD_CUDA=ON`,
+118 ggml-cuda objects) after resetting `~/projs/stable-diffusion.cpp` off the
+local `fix/flux-2-klein-gguf-support` branch. Ran on CPU (ornith held the V100)
+with `--backend cpu --diffusion-model …`: loaded all three components,
+`get_learned_condition` in ~50 s, sampler produced `out_originmain_cpu_smoke.png`
+(256×256, exit 0, valid non-black). Confirmed: upstream main works for
+flux-2-klein **when `--diffusion-model` is used** — the fix was a usage fix, not
+a source change.
 - [ ] Pick a box: V100 (32 GB, FLUX/2512 Q8_0) or RTX 2060 Mobile (6 GB, SDXL/SD1.5).
 - [ ] For Qwen-Image-2512: confirm a non-blanking Q8_0 GGUF before committing.
 - [ ] Pin GGUF providers (Civitai/gpustack / `unsloth/*-GGUF`) and verify blob integrity.

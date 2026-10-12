@@ -87,13 +87,15 @@ if not calls:
     print("image-batch: no 'calls' in batch")
     sys.exit(2)
 
-ORDER = ["model", "llm", "vae", "vae-format", "tokenizer",
+ORDER = ["diffusion-model", "llm", "vae", "vae-format", "tokenizer",
          "prompt", "seed", "steps", "guidance", "cfg-scale",
          "width", "height", "flow-shift", "negative-prompt", "output"]
 
 def argv_for(call):
     out = dict(shared)
     out.update({k: v for k, v in call.items() if k != "output"})  # call overrides shared
+    # standalone diffusion GGUF -> --diffusion-model (NOT --model; see leejet sd.cpp #2122)
+    out["diffusion-model"] = out.pop("model")
     output = call.get("output")
     if not output:
         raise SystemExit("image-batch: each call must define 'output' (result location)")
@@ -155,7 +157,9 @@ usage:
                               -> sd.cpp batch on the V100 (default deadline 300s)
 
 image batch file (JSON): shared top-level flags + a 'calls' array; each call
-sets its prompt/params and MUST define 'output' (the result location):
+sets its prompt/params and MUST define 'output' (the result location). The
+top-level 'model' key is the standalone diffusion GGUF and is passed as
+--diffusion-model (NOT --model) so upstream sd.cpp loads the checkpoint.
   {
     "model":   "/path/to/diffusion.gguf",
     "llm":     "/path/to/text_encoder.gguf",
