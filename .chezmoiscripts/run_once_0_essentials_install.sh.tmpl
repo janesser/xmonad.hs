@@ -4,7 +4,8 @@ sudo apt install -y \
     xmonad xmobar libghc-split-dev libghc-hostname-dev suckless-tools \
     haskell-gtk-sni-tray-utils \
     pcmanfm xarchiver \
-    xdotool curl jq
+    xdotool curl jq \
+    inxi fastfetch
 
 sudo apt install -y safe-rm # https://itsfoss.gitlab.io/post/how-to-recover-a-deleted-file-in-linux/
 
@@ -30,10 +31,6 @@ sudo apt install -y aptitude \
         autossh \
         {{ if eq .chezmoi.arch "amd64" }} xautolock {{ end }}
         # FIXME xautolock for arm64 missing
-
-# https://askubuntu.com/questions/622031/how-do-i-exclude-specific-packages-from-installation-with-apt-get
-sudo apt install -y elpa-org default-mta- mail-transport-agent-
-
 {{end}}
 
 {{if .is_install_extras}}
@@ -56,6 +53,11 @@ sudo apt install -y \
 {{end}}
 
 {{if .is_install_org}}
+# https://askubuntu.com/questions/622031/how-do-i-exclude-specific-packages-from-installation-with-apt-get
 sudo apt install -y \
-    elpa-org elpa-org-roam emacs-gtk
+    elpa-org \
+    elpa-org-roam \
+    emacs-gtk \
+    default-mta- mail-transport-agent- # excludes
+
 {{end}}
