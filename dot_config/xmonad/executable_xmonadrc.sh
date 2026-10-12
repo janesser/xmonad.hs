@@ -37,7 +37,7 @@ source "$HOME/.local/bin/executable_x-social.sh"
 ## ADMIN
 # start_once easyeffects
 start_once keepassxc
-start_once pavucontrol
+# start_once pavucontrol # cpu-battery-churn, trying pwvucontrol eventually, otherwise pipemixer tui
 
 ## BACKGROUND
 ~/.local/bin/check_host_online.sh airRohr-505856 &

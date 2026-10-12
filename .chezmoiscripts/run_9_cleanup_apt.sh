@@ -11,6 +11,7 @@ bash "$CHEZMOI_SOURCE_DIR/uninstaller/teamviewer_uninstall.sh"
 sudo apt remove --purge -y unattended-upgrades
 sudo apt remove --purge -y tmux
 sudo apt remove --purge -y postfix
+sudo apt remove --purge -y pavucontrol
 
 # sudo apt -o Dpkg::Options::=--force-confmiss reinstall pi-greeter
 
