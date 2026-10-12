@@ -29,6 +29,12 @@ source "$HOME/.local/share/gpu.func"
 # environment to force a subset — e.g. `export LLAMA_BACKENDS=cuda` makes this a
 # CUDA-only deploy. On a box with no Intel GPU this is naturally "cuda" (this
 # box: lincopta, NVIDIA + AMD — no Intel GPU).
+#
+# HARD GATE: the environment override only *selects*; physical presence (has_nvidia
+# / has_intel_gpu) still *authorizes*. A backend is deployed only when it is both
+# selected AND its accelerator is present. So `export LLAMA_BACKENDS=cuda` on an
+# NVIDIA-less box does nothing — we never hand a CUDA build to a box without CUDA
+# (this is what used to deploy llama-cuda onto peacewagon, an Intel-only laptop).
 read -ra _want_backend_arr <<< "${LLAMA_BACKENDS:-$(has_nvidia && echo cuda; has_intel_gpu && echo sycl)}"
 want_backend() {
     local b="$1" x
@@ -49,9 +55,16 @@ want_backend() {
 # CUDA is the primary backend: it is started on deploy. SYCL is heavy (~3.8 GB),
 # so it is enabled at boot but left to an explicit `systemctl start`. SYCL is
 # only deployed where there is an Intel GPU AND it was requested.
-declare -a BACKENDS=(
-  "llama-cuda.service|.local/bin/restart-llama-cuda.sh|8081|yes"
-)
+# Each entry is UNIT|SCRIPT|PORT|START — see the header above. Backends are
+# added to this array only when selected (LLAMA_BACKENDS) AND their accelerator
+# is physically present; a box without the accelerator simply gets no entry.
+# CUDA is the primary backend: it is started on deploy. SYCL is heavy (~3.8 GB),
+# so it is enabled at boot but left to an explicit `systemctl start`.
+declare -a BACKENDS=()
+# CUDA (NVIDIA) only where there is an NVIDIA GPU.
+if want_backend cuda && has_nvidia; then
+    BACKENDS+=( "llama-cuda.service|.local/bin/restart-llama-cuda.sh|8081|yes" )
+fi
 # SYCL (Intel) only where there is an Intel GPU AND it was requested.
 if want_backend sycl && has_intel_gpu; then
     BACKENDS+=( "llama-sycl.service|.local/bin/restart-llama-sycl.sh|8082|yes" )
