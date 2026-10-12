@@ -121,6 +121,16 @@ discoveries:
         safespot (rollable back). Sibling of ai-server.md / llama-cpp-optimizations/.
 
   held:
+    - path: mise-pypi-tools.md
+      last_edited: 2026-10-12
+      note: >
+        Held — parked on a mise upgrade. The `pypi:` backend (installs PyPI CLIs
+        via `uv tool install` under the hood, expressed as `[tools] "pypi:hf"`
+        in mise.toml) shipped in mise v2026.9.7 (2026-09-13); this box runs
+        v2026.9.3, which predates it. Concrete next step: upgrade mise to
+        v2026.9.7+ (self-update gated by minimum_release_age 24h), then replace
+        run_once_5_aitools_4hf_install.sh with `"pypi:hf" = "latest"`. The
+        run_once script is the current working workaround.
     - path: ai-rehab-handout.md
       last_edited: 2026-09-27
       note: >
