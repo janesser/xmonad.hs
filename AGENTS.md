@@ -377,6 +377,9 @@ Steps:
 
 ### Status buckets
 
+- **hardening** — works, but still needs hardening before it is fully done:
+  a concrete next step remains (cleanup, a reproducibility re-run, edge cases,
+  robustness). Introduced 2026-10-12, positioned between `active` and `done`.
 - **done** — implemented/verified, no pending work (may still be referenced as
   handover).
 - **active** — actively worked on; has a concrete next step.

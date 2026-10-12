@@ -1,8 +1,15 @@
 # Handover to the little brother (small agent) — switchmode smoke test
 
-Status: **INCOMPLETE** (2026-10-11) — the delegation run was aborted before a
-clean pass. The harness and batch are written and validated; the V100
-"switchmode" swap has **not** been executed end-to-end via the small agent yet.
+Status: **hardening** (switchmode verified 2026-10-12) — the V100 text→sd.cpp→text
+"switchmode" swap has now been executed end-to-end and passed: two fresh Flux.2-
+klein Q4_0 renders produced (valid PNGs, both exit 0, ~47s GPU work), the prior
+text backend (llama-cuda on :8081, v0.6.0) restored healthy, no orphaned V100
+holder. Results in `ai-image-gen/tests/switchmode/handover-in.md`. The harness
+and batch remain as the reusable smoke-test tool.
+
+Hardening next step (concrete, before this moves to `done`): clear the now-stale
+`out_switchmode_1.png` / `out_switchmode_2.png` outputs, then re-run the bare
+`switch-ai-backend.sh image` command once more to confirm reproducibility.
 
 ## What this is
 
