@@ -6,17 +6,17 @@
 # actively worked on. See the "Discoveries" section of the repo AGENTS.md for
 # the rules and status buckets. `last_edited` = newest file mtime in the entry.
 #
-# Generated / last rolled up: 2026-10-12
+# Generated / last rolled up: 2026-10-12 (ai-client-only.md added)
 ---
 discoveries:
   summary:
     # total = number of entries in the buckets below (13 top-level *.md files
     # + 4 dirs, with ai-image-gen/ and its abandoned vllm probe listed as
     # separate entries). Adjust when adding/removing discoveries.
-    total: 21
+    total: 22
     done: 4
     active: 6
-    held: 6
+    held: 7
     dormant: 4
     abandoned: 1
 
@@ -130,6 +130,19 @@ discoveries:
         cold on RAM/SSD). Open source, MIT, OpenAI-compatible endpoint at
         :8080. Relevant to the V100<->Iris Xe VRAM-swap work. Next: whether the
         offload strategy suits the V100/Intel box, or a smaller model is simpler.
+    - path: ai-client-only.md
+      last_edited: 2026-10-12
+      note: >
+        HELD. peacewagon is a client-only box (Intel HD 615, no NVIDIA / not
+        Iris). Core done: deploy script GPU-gated (CUDA only if has_nvidia,
+        SYCL only if has_intel_gpu); one-time teardown removed the llama-cuda /
+        llama-sycl units + the HF fstab bind mount (restart loop dead). Leftover:
+        the chezmoi-managed llama symlinks/launchers in ~/.local/bin get recreated
+        by cz apply because their sources are shared with the AI boxes
+        (lincopta, cyberkleiber) — harmless dangling links + unused launchers.
+        Open decision: leave them, or add remove_if guards on the shared sources
+        so czmoi stops recreating them on peacewagon (needs your go-ahead).
+
 
   dormant:
     - path: ai-graph-knowledge.md
