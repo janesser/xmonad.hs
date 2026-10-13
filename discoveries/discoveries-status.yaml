@@ -17,10 +17,10 @@ discoveries:
     # files count as one entry. Adjust when adding/removing discoveries.
     # Recompute after edits: total = hardening + done + active + held +
     # dormant + abandoned (per repo AGENTS.md).
-    total: 30
+    total: 31
     hardening: 1
     done: 5
-    active: 6
+    active: 7
     held: 8
     dormant: 9
     abandoned: 1
@@ -119,6 +119,17 @@ discoveries:
       note: >
         Draft. llama.cpp manual stopgap serving path + pinned production build
         safespot (rollable back). Sibling of ai-server.md / llama-cpp-optimizations/.
+    - path: ai-server/ai-image-input.md
+      last_edited: 2026-10-13
+      note: >
+        ACTIVE (2026-10-13). The current text-only ornith GGUF can't ingest
+        images; a VLM GGUF under the same llama.cpp build would let the pi-agent
+        view screenshots via /v1/chat/completions image_url. Note covers the
+        3 requirements (VLM GGUF with image encoder, a build with vision support
+        compiled in, b64_json data-URI input), stand-up on llama-cuda (:8081,
+        preferred, router-mode) vs llama-sycl (:8082), and the vision smoke
+        test. Next: pick a VLM + run the smoke test, then discuss integration
+        test scenarios.
 
   held:
     - path: mise-pypi-tools.md
