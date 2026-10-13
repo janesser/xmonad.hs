@@ -29,7 +29,7 @@ PORT="${2:-8082}"
 
 
 #MODEL="SC117/Ling-3.0-tiny-abliterated-APEX-GGUF:COMPACT"
-MODEL="LiquidAI/LFM2.5-2.6B-GGUF:Q4_K_M"
+MODEL="LiquidAI/LFM2.5-8B-A1B-GGUF:Q4_0"
 PARAM_ADDONS="-c 32768"
 
 if [ "$MODE" = dry ]; then
