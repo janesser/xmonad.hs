@@ -2,7 +2,7 @@
 
 killall btop # kill dangling instances
 
-xsetroot -solid black # feh for background image
+feh --bg-scale ~/Nextcloud/wallhaven-6leg86.png
 
 gtk-sni-tray-standalone --bottom --beginning --watcher &
 
