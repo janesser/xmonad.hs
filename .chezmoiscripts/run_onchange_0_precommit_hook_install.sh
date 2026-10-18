@@ -9,9 +9,7 @@ if [ ! -d .git ]; then
   exit 1
 fi
 
-eval "$(mise activate bash)"
-mise install uv
-mise use -g uv
+source "$CHEZMOI_SOURCE_DIR/commons/mise_assert-uv.sh"
 
 uv tool install pre-commit
 pre-commit install

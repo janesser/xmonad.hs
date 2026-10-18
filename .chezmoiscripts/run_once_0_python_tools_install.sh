@@ -11,8 +11,6 @@ rm -f ~/.local/bin/uv ~/.local/bin/uvx # remove installer binaries, not mise man
 
 export PATH="$HOME/.local/bin:$PATH"
 
-eval "$(mise activate bash)"
-mise install uv
-mise use -g uv
+source "$CHEZMOI_SOURCE_DIR/commons/mise_assert-uv.sh"
 
 uv python install 3 --default
