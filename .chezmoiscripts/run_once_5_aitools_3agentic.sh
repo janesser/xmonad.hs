@@ -11,8 +11,7 @@ sudo apt remove --purge -y fdclone
 ## https://github.com/earendil-works/pi/issues/3882
 ln -sf /usr/bin/fdfind ~/.pi/agent/bin/fd
 
-mise install pi
-mise use -g pi
+source "$CHEZMOI_SOURCE_DIR/commons/mise_assert-pi.sh"
 
 # by settings.json: pi install npm:pi-olla-autodetect
 # by settings.json: pi install npm:pi-web-access
