@@ -65,6 +65,10 @@ a properly systemd-managed process (`systemctl start llama-sycl`):
 
 ## Refs
 
+- v0.6.0's auto-fit (default `--fit on`) made ctx-size a per-load runtime
+  value — the pin/crossbar decision record (local, git-ignored):
+  `../../_bmad-output/planning-artifacts/architecture/architecture-llama-ctx-crossbar-2026-10-16/DECISIONS.md`
+  (no pin; client-side contextWindow knob instead).
 - Sibling serving-robustness notes: `ai-server/ai-emergency-fallback.md`.
 - The backend table (llama-cuda + llama-sycl deploy) is in the run-once
   `run_once_5_aitools_2llama_startup.sh`.

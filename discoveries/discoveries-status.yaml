@@ -6,8 +6,9 @@
 # actively worked on. See the "Discoveries" section of the repo AGENTS.md for
 # the rules and status buckets. `last_edited` = newest file mtime in the entry.
 #
-# Generated / last rolled up: 2026-10-13 (merged remote ai-client-only.md
-# and local hardening bucket + llama-cpp-optimizations/).
+# Generated / last rolled up: 2026-10-13 (added pipewire/ui-pwvucontrol.md +
+# wm-xmonad-successor/wm-mangowc.md; fixed stale paths for ai-vram-swap.md +
+# wm-xmonad-wayland-alternatives.md; refreshed stale last_edited).
 ---
 discoveries:
   summary:
@@ -17,12 +18,12 @@ discoveries:
     # files count as one entry. Adjust when adding/removing discoveries.
     # Recompute after edits: total = hardening + done + active + held +
     # dormant + abandoned (per repo AGENTS.md).
-    total: 31
+    total: 33
     hardening: 1
     done: 5
-    active: 7
+    active: 8
     held: 8
-    dormant: 9
+    dormant: 10
     abandoned: 1
 
   hardening:
@@ -60,7 +61,7 @@ discoveries:
         Explored & verified end-to-end: LaTeX/Graphviz/Pandoc "source -> compile"
         loop proven (beamer + generated DOT + pinned CC figure).
     - path: ai-server/llama-cpp-v0.6.0-upgrade.md
-      last_edited: 2026-10-11
+      last_edited: 2026-10-12
       note: >
         IMPLEMENTED + VERIFIED (2026-10-12). llama-cuda (:8081, V100) upgraded
         v0.5.0 -> v0.6.0 as a non-disruptive engage: handover to llama-sycl
@@ -81,19 +82,20 @@ discoveries:
         replies is skipped, not hung on). Committed 9997752 + e048af3. Next: your
         test pass against real forwarded connections (stale-socket skip, fresh
         ssh -A, fish prompt, bash -c --emit eval).
-    - path: wm-xmonad-wayland-alternatives.md
-      last_edited: 2026-10-07
+    - path: wm-xmonad-successor/wm-xmonad-wayland-alternatives.md
+      last_edited: 2026-10-13
       note: >
         Sway + Waybar installed, starter config ported from xmonad.hs. Next:
         waybar config.jsonc + style.css (missing) and helper tools (grim,
         slurp, swappy, wl-clipboard, wlsunset, swaylock).
     - path: ai-server/ai-image-gen/
-      last_edited: 2026-10-11
+      last_edited: 2026-10-13
       note: >
         Actively pivoting. stable-diffusion.cpp adopted 2026-10-08 as preferred
         image backend. First successful render: FLUX.2-klein-4b Q4_0 (smoke
-        test passing, PR #2122 upstream) — fix for the checkpoint's unprefixed
-        GGUF naming + a Qwen3-4b weight_scale. Qwen-Image-2.1 smoke-test still
+        test passing) — loads via --diffusion-model on origin/main; PR #2122
+        (checkpoint's unprefixed GGUF naming + Qwen3-4b weight_scale fix) was
+        closed unmerged 2026-10-10 and proved unnecessary. Qwen-Image-2.1 smoke-test still
         pending; finish on a >=16 GB VRAM box (handover). vLLM-Omni image-gen
         path abandoned (see vllm-omni-2512-probe.md).
         switchmode (V100 text->image->restore swap) smoke test VERIFIED
@@ -130,6 +132,16 @@ discoveries:
         preferred, router-mode) vs llama-sycl (:8082), and the vision smoke
         test. Next: pick a VLM + run the smoke test, then discuss integration
         test scenarios.
+    - path: pipewire/ui-pwvucontrol.md
+      last_edited: 2026-10-13
+      note: >
+        Notes (2026-10-13). pavucontrol polls in a way that causes a moderate
+        CPU base load; pwvucontrol (pipewire/wireplumber-native) is the
+        replacement. Build/install steps recorded (libwireplumber-0.5,
+        libpipewire-0.3, libadwaita-1, libgtk-4, libglib2.0 dev deps; meson;
+        clone at ~/projs/pwvucontrol). Not installed yet (neither binary on
+        PATH). Next: build + install pwvucontrol and use it instead of
+        pavucontrol.
 
   held:
     - path: mise-pypi-tools.md
@@ -158,7 +170,7 @@ discoveries:
         Proposal (scriptable export/import of Google Home settings). Not
         implemented — blocked on feasibility probe + which-settings decision.
     - path: pi-windbg/
-      last_edited: 2026-09-18
+      last_edited: 2026-10-13
       note: >
         Design finalized / frozen and internally consistent; execution (P1
         spike on the Windows target) never started. Best candidate to either
@@ -168,7 +180,7 @@ discoveries:
       note: >
         Windows setup notes for HP Z6 G4 (chezmoi-on-Windows, openssh,
         windows-via-ssh, BIOS reset). No clear next action.
-    - path: ai-vram-swap.md
+    - path: ai-server/ai-vram-swap.md
       last_edited: 2026-10-11
       note: >
         Strata — runs a ~125B MoE (Qwen3.8-Flash-Next) on a 12 GB consumer PC
@@ -243,6 +255,14 @@ discoveries:
       note: >
         Reminder note: share a compiled unit right after testing so it can be
         used productively without recompiling. No active follow-up.
+    - path: wm-xmonad-successor/wm-mangowc.md
+      last_edited: 2026-10-13
+      note: >
+        Reference note (2026-10-13): mangowm (github.com/mangowm/mango) as a
+        possible xmonad successor — "maybe very low resource footprint".
+        Part of the wm-xmonad-successor/ exploration; the active thread is the
+        Sway work in sibling wm-xmonad-wayland-alternatives.md. No planned
+        follow-up yet.
 
   abandoned:
     - path: ai-server/ai-image-gen/vllm-omni-2512-probe.md
@@ -255,4 +275,5 @@ themes:
   - "AI server stack is the live cluster: ai-server.md (topology) + ai-image-gen/ (image backend) + ai-emergency-fallback.md (serving robustness). ai-little-brother.md is now VERIFIED (switchmode V100<->sd.cpp swap smoke test, 2026-10-12)."
   - "llama-cpp-optimizations/ (V100 CUDA + Iris Xe SYCL join, parallel context, model table) is a parked tuning cluster — themed around the same stack but held pending builds."
   - "Home Assistant automations (bath humidity, Google Home) are proposals parked pending a host."
-  - "Window-manager work (xmonad -> Sway) is the other active thread."
+  - "Window-manager work (xmonad -> Sway) is the other active thread; wm-mangowc.md parks a low-footprint candidate (mango) in the same cluster."
+  - "pipewire/ui-pwvucontrol.md: swap pavucontrol for pwvucontrol to cut a moderate CPU base load (build steps recorded, not installed yet)."

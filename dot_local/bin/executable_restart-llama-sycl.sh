@@ -29,8 +29,9 @@ PORT="${2:-8082}"
 
 
 #MODEL="SC117/Ling-3.0-tiny-abliterated-APEX-GGUF:COMPACT"
-MODEL="LiquidAI/LFM2.5-8B-A1B-GGUF:Q4_0"
-PARAM_ADDONS="-c 32768"
+#MODEL="LiquidAI/LFM2.5-8B-A1B-GGUF:Q8_0"
+MODEL="unsloth/gemma-4-E2B-it-GGUF:Q4_K_M"
+PARAM_ADDONS="" #"-c 32768"
 
 if [ "$MODE" = dry ]; then
     # PORT is read from the environment (exported below), NOT from a positional

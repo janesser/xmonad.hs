@@ -47,3 +47,10 @@
    (vision+video).
 3. Optional: verify the SYCL build's vision support before considering
    :8082 as a VLM host.
+4. **Context-window reliability (separate thread, same fork):** v0.6.0's
+   auto-fit makes `ctx-size` a per-load runtime value; the crossbar
+   contextWindow chain and pi's compaction budget interact (the 128k-on-
+   resume / 256k-fresh symptom). Decision record (local, git-ignored):
+   `_bmad-output/planning-artifacts/architecture/architecture-llama-ctx-crossbar-2026-10-16/DECISIONS.md`
+   — pinning dropped as obsolete; PR work = contextWindow knob with source
+   labeling + resume re-probe + wait-for-load status.
