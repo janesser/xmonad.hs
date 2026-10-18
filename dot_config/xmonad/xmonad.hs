@@ -62,7 +62,7 @@ myKeysConfig :: XConfig l -> XConfig l
 myKeysConfig =
   addDescrKeys
     ((mod4Mask .|. shiftMask, xK_h), noName . xKeysPrompt def)
-    (myBasicKeys <+> myWindowKeys <+> myJournalKeys)
+    (myBasicKeys <+> myWindowKeys <+> myJournalKeys <+> myAgentKeys)
 
 myBasicKeyMap :: [(String, NamedAction)]
 myBasicKeyMap =
@@ -140,7 +140,7 @@ myWindowKeys c =
 
 myJournalKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
 myJournalKeys c =
-  subtitle "My Keys"
+  subtitle "My Journal Keys"
     : mkNamedKeymap
       c
       [ ("M-o S-j", openJournal "journal.org.d/journal.org")
@@ -151,6 +151,15 @@ myJournalKeys c =
       ]
     where
       openJournal j = spawn' $ "emacs ~/Nextcloud/" ++ j
+
+myAgentKeys :: XConfig l -> [((KeyMask, KeySym), NamedAction)]
+myAgentKeys c = 
+  subtitle "My Agent Keys"
+    : mkNamedKeymap 
+      c 
+      [
+        ("M-C-h", spawn' "zutty herdr")
+      ]
 
 monWs :: String
 monWs = "top"
