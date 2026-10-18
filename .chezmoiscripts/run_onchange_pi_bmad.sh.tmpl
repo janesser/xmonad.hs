@@ -60,7 +60,7 @@ SKILLS_DIR="${HOME}/.pi/agent/skills"
 # Prerequisite: Node (the installer needs Node >= 20.12).
 if ! command -v node >/dev/null 2>&1; then
   echo "[bmad] node not found — skipping BMAD update (needs Node >= 20.12)."
-  exit 0
+  exit 1
 fi
 
 mkdir -p "${STAGE}" "${SKILLS_DIR}"
@@ -79,7 +79,7 @@ rc=$?
 if [ ${rc} -ne 0 ]; then
   echo "[bmad] WARNING: bmad-method install exited ${rc} (offline? stale npx?)."
   echo "[bmad] skills left as-is."
-  exit 0
+  exit 1
 fi
 
 # Publish generated skills to the pi user-level skills directory.
