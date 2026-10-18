@@ -4,6 +4,4 @@
 
 rm -fR ~/.nvm
 
-export PATH="$HOME/.local/bin:$PATH"
-eval "$(mise activate bash)"
-mise install nodejs
+source "$CHEZMOI_SOURCE_DIR/commons/mise_assert-node.sh"
