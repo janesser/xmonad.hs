@@ -9,6 +9,7 @@ if [ ! -d .git ]; then
   exit 1
 fi
 
+eval "$(mise activate bash)"
 mise install uv
 mise use -g uv
 

@@ -1,8 +1,12 @@
 #!/bin/bash
 
-echo Uninstalling Logseq and flatpak
+if command -v flatpak; then
+    echo Uninstalling Logseq and flatpak
 
-flatpak uninstall -y --delete-data com.logseq.Logseq
-flatpak uninstall --unused
+    flatpak uninstall -y --delete-data com.logseq.Logseq
+    flatpak uninstall --unused
 
-sudo apt remove --purge -y flatpak
+    sudo apt remove --purge -y flatpak
+else
+    echo flatpak already uninstalled !
+fi

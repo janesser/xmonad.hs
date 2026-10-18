@@ -10,7 +10,9 @@ rm -f ~/.config/fish/completions/pipx.fish
 rm -f ~/.local/bin/uv ~/.local/bin/uvx # remove installer binaries, not mise managed anymore
 
 export PATH="$HOME/.local/bin:$PATH"
+
 eval "$(mise activate bash)"
 mise install uv
+mise use -g uv
 
 uv python install 3 --default
