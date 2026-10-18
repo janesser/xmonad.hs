@@ -8,13 +8,10 @@ echo "--- Starting SSH Agent Setup ---"
 # 1. Create the systemd user-level config directory
 mkdir -p ~/.config/systemd/user/
 
-echo "Created directory: ~/.config/systemd/user/"
-
 # 2. Create the service unit file
-SERVICE_FILE="~/.config/systemd/user/ssh-agent.service"
-echo "Creating service unit file: $SERVICE_FILE"
+SERVICE_FILE="$HOME/.config/systemd/user/ssh-agent.service"
 
-cat <<EOF > "$SERVICE_FILE"
+cat > "$SERVICE_FILE" <<'EOF'
 [Unit]
 Description=SSH key agent
 
@@ -28,5 +25,4 @@ WantedBy=default.target
 EOF
 
 # 3. Enable and start the unit
-echo "Enabling and starting ssh-agent service..."
 systemctl --user enable ssh-agent --now
