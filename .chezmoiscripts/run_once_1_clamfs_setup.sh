@@ -12,5 +12,4 @@ else
 
     clamfs ~/.config/clamfs.d/downloads.xml
     echo clamfs activated.
-    return 0
 fi
