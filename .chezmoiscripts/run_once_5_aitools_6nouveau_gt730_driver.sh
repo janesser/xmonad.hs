@@ -29,7 +29,7 @@ UNIT=nouveau-gt730.service
 UNIT_SRC="${SRC_DIR}/etc/systemd/system/${UNIT}"
 UNIT_DEST="/etc/systemd/system/${UNIT}"
 LAUNCHER=/usr/local/bin/load-nouveau-gt730.sh
-LAUNCHER_SRC="${SRC_DIR}/usr_local/bin/load-nouveau-gt730.sh"
+LAUNCHER_SRC="${SRC_DIR}/usr/local/bin/load-nouveau-gt730.sh"
 
 # --- 1. hardware guard: deploy only where a GT730 AND a V100 coexist ---------
 if ! has_nvidia_gt730 || ! has_v100; then
