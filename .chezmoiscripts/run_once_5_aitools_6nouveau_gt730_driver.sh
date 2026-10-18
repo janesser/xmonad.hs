@@ -23,7 +23,7 @@
 set -euo pipefail
 
 SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
-source "$HOME/.local/share/gpu.func"
+source "$CHEZMOI_SOURCE_DIR/gpu-detect.sh"
 
 UNIT=nouveau-gt730.service
 UNIT_SRC="${SRC_DIR}/etc/systemd/system/${UNIT}"

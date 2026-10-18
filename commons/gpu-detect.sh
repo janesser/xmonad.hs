@@ -1,4 +1,7 @@
 #!/bin/bash
+
+rm -f ~/.local/share/gpu.func
+
 # gpu.func — shared GPU-presence + access safeguards for chezmoi run scripts.
 #
 # Sourced (NOT executed) by installer scripts that must detect a accelerator

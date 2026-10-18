@@ -37,16 +37,7 @@ LIB="$LIB_DIR/lib.sh"
 
 log() { echo "$(basename "$0"): $*"; }
 
-# Shared GPU-presence + render/video-group safeguards (single source of truth,
-# see dot_local/private_share/gpu.func -> ~/.local/share/gpu.func). Source it
-# rather than re-implementing has_nvidia/has_intel_gpu/grant_render_video_groups
-# here — the same helpers are sourced by run_once_3_devtools_3podman_nvidia_cdi.sh.
-source "$HOME/.local/share/gpu.func"
-
-# Detection itself is now centralised in gpu.func. lspci needs no driver loaded,
-# so these are never false-negatives. The "only the LAST grep in a pipeline may
-# use -q" rule (which once hid the Intel DG1 behind an earlier NVIDIA match) lives
-# in gpu.func as the single documented home.
+source "$CHEZMOI_SOURCE_DIR/gpu-detect.sh"
 
 # --- builders ---------------------------------------------------------------
 # NOTE: the source dir is passed EXPLICITLY to cmake (-B build $LLAMA_DIR) so a
