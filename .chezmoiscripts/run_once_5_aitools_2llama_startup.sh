@@ -21,7 +21,7 @@ set -euo pipefail
 SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
 
 # GPU-presence helpers (has_nvidia / has_intel_gpu). Sourced, not executed.
-source "$CHEZMOI_SOURCE_DIR/gpu-detect.sh"
+source "$CHEZMOI_SOURCE_DIR/commons/gpu-detect.sh"
 
 # --- 1. backend selection (configurable) ------------------------------------
 # LLAMA_BACKENDS is a space-separated list of backends to deploy ("cuda",

@@ -80,7 +80,7 @@ BTOP_STAMP="$HOME/.local/share/btop_deployed_commit"
 
 # Detection + the capability helper live in gpu.func (rendered to
 # ~/.local/share by chezmoi before run scripts execute).
-source "$CHEZMOI_SOURCE_DIR/gpu-detect.sh"
+source "$CHEZMOI_SOURCE_DIR/commons/gpu-detect.sh"
 
 log() { echo "$(basename "$0"): $*"; }
 

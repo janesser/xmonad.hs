@@ -37,7 +37,7 @@ LIB="$LIB_DIR/lib.sh"
 
 log() { echo "$(basename "$0"): $*"; }
 
-source "$CHEZMOI_SOURCE_DIR/gpu-detect.sh"
+source "$CHEZMOI_SOURCE_DIR/commons/gpu-detect.sh"
 
 # --- builders ---------------------------------------------------------------
 # NOTE: the source dir is passed EXPLICITLY to cmake (-B build $LLAMA_DIR) so a
