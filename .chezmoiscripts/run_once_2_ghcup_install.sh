@@ -7,8 +7,15 @@ if [ -n "$GHCUP_ON_PATH" ]; then
 fi
 
 sudo apt install -y build-essential curl libffi-dev libffi8 libgmp-dev libgmp10 libncurses-dev libncurses6 libtinfo6 pkg-config
-# answer N to fish.config PATH prepending
-# answer Y to haskell-language-server
-curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | BOOTSTRAP_HASKELL_NONINTERACTIVE=1 sh
 
-# TODO try https://github.com/sestrella/asdf-ghcup
+mise install ghcup
+mise use ghcup@latest
+eval "$(mise activate bash)"
+
+# TODO make proper update cycle
+ghcup install ghc@recommended
+ghcup install --set ghc recommended
+ghcup install --set cabal recommended
+ghcup install --set hls recommended
+ghcup install --set stack recommended
+ghcup gc --unset
