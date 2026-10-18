@@ -56,36 +56,19 @@ fi
 # mise shims are handled by ~/.config/fish/conf.d/mise.fish (interactive) and
 # mise activate in scripts; no static asdf-shims line needed anymore.
 
-EDITOR=hx
+export PATH=$PATH
 
-# SSH agent lazy-activation
-setenv () { export $1=$2; }
+export EDITOR=hx
 
 if command -v rustup; then
     rustup default stable 2>&1
 fi
 
-rm -f ~/.ssh/env # cleanup
-## FIXME should .ssh/ssh_auth_sock be rred here ?
-if [ -n "$SSH_AUTH_SOCK" ] && ssh-add -l >/dev/null
-then
-    echo ssh-agent via forwarding $SSH_AUTH_SOCK.
-elif source ~/.ssh/my-env 2>/dev/null
-then
-    if $(ps -p "$SSH_AGENT_PID" >/dev/null)
-    then
-        echo ssh-agent $SSH_AGENT_PID alive.
-    else
-        echo No re-usable ssh-agent found.
-        echo "# GENERATED FILE" >~/.ssh/my-env
-        ssh-agent -c >>~/.ssh/my-env
-        source ~/.ssh/my-env
-    fi
+if [ -n "$SSH_AUTH_SOCK" ]; then
+    echo ssh-agent via forwaring $SSH_AUTH_SOCK
 else
-    # creates ~/.ssh/my-env initially
-    echo "# GENERATED FILE" >~/.ssh/my-env
-    ssh-agent -c >>~/.ssh/my-env
-    source ~/.ssh/my-env
+    export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/ssh-agent.socket"
 fi
+
 
 export GTK_THEME=Adwaita:dark
