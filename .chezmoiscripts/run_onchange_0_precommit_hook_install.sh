@@ -9,15 +9,15 @@ if [ ! -d .git ]; then
   exit 1
 fi
 
-# 2. Try using uv (your preference)
 if command -v uv >/dev/null 2>&1; then
-  echo "🚀 uv detected. Using uvx to install pre-commit hooks..."
-  # uvx runs the command in a transient environment, perfect for one-off setup
-  uv tool install pre-commit
-  pre-commit install
-  echo "✅ Pre-commit hooks installed via uvx."
-  
+  echo "✅ uv found on PATH"
 else
-  echo ⚠️  No uvx available
-  exit 1
+  eval "$(mise activate bash)"
+  mise install uv
+  mise use -g uv
+  echo "✅ uv installed by mise"
 fi
+
+uv tool install pre-commit
+pre-commit install
+echo "✅ Pre-commit hooks installed via uvx."
