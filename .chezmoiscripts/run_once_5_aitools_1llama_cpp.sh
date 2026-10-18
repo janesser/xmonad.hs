@@ -24,9 +24,12 @@
 set -o pipefail
 export DEBIAN_FRONTEND=noninteractive
 
+LLAMA_REF="v0.7.0"
+log "Building $LLAMA_REF"
+
+
+source "$CHEZMOI_SOURCE_DIR/commons/mise_assert-uv.sh"
 uv tool install gpustat
-sudo apt install -y igt-gpu-tools
-sudo setcap cap_perfmon=ep $(which intel_gpu_top)
 
 # --- paths ------------------------------------------------------------------
 LLAMA_DIR="$HOME/projs/llama.cpp"
@@ -215,13 +218,6 @@ fi
 
 grant_render_video_groups
 
-# Build from the pinned release tag v0.5.0 rather than unpinned master, so the
-# CUDA/SYCL builds are reproducible. v0.5.0 (the latest release) already carries
-# the --cache-list (HF cache) flag the wrappers rely on, so nothing is lost vs.
-# master.
-LLAMA_REF="v0.5.0"
-log "Building $LLAMA_REF"
-
 # --- backend selection (configurable) --------------------------------------
 # LLAMA_BACKENDS is a space-separated list of backends to build ("cuda",
 # "sycl"). It defaults to what the box actually has; override it in the
@@ -253,6 +249,8 @@ log "Done. Backend-specific commands:"
 log "  llama-server-cuda   # NVIDIA / CUDA  (build_cuda)"
 if want_backend sycl; then
     log "  llama-server-sycl   # Intel  / SYCL  (build_sycl, built lazily on first run)"
+    sudo apt install -y igt-gpu-tools
+    sudo setcap cap_perfmon=ep $(which intel_gpu_top)
 else
     rm -f "$HOME/.local/bin/llama-server-sycl" "$LIB"
     log "  llama-server-sycl   # disabled — no Intel GPU here (or LLAMA_BACKENDS excludes sycl)"
