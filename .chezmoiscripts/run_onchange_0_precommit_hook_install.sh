@@ -9,14 +9,8 @@ if [ ! -d .git ]; then
   exit 1
 fi
 
-if command -v uv >/dev/null 2>&1; then
-  echo "✅ uv found on PATH"
-else
-  eval "$(mise activate bash)"
-  mise install uv
-  mise use -g uv
-  echo "✅ uv installed by mise"
-fi
+mise install uv
+mise use -g uv
 
 uv tool install pre-commit
 pre-commit install
