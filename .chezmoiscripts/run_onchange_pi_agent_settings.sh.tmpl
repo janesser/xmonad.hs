@@ -21,7 +21,7 @@
 # unchanged applies the script is skipped entirely — no agentic rerun — so this
 # never re-runs needlessly.
 #
-#   encrypted settings hash: {{ include "dot_pi/agent/encrypted_settings.json.age" | sha256sum }}
+#   encrypted settings hash: {{ include "dot_pi/agent/encrypted_private_settings.json.age" | sha256sum }}
 # ------------------------------------------------------------------------------
 
 set -uo pipefail
