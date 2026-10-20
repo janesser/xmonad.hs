@@ -24,11 +24,13 @@
 set -o pipefail
 export DEBIAN_FRONTEND=noninteractive
 
+log() { echo "$(basename "$0"): $*"; }
+
 LLAMA_REF="v0.7.0"
 log "Building $LLAMA_REF"
 
 
-source "$CHEZMOI_SOURCE_DIR/commons/mise_assert-uv.sh"
+source "${CHEZMOI_SOURCE_DIR:-$HOME/.local/share/chezmoi}/commons/mise_assert-uv.sh"
 uv tool install gpustat
 
 # --- paths ------------------------------------------------------------------
@@ -38,9 +40,7 @@ NCPUS="$(grep -c '^processor' /proc/cpuinfo 2>/dev/null || echo 4)"
 LIB_DIR="$HOME/.local/share/llama-cpp"
 LIB="$LIB_DIR/lib.sh"
 
-log() { echo "$(basename "$0"): $*"; }
-
-source "$CHEZMOI_SOURCE_DIR/commons/gpu-detect.sh"
+source "${CHEZMOI_SOURCE_DIR:-$HOME/.local/share/chezmoi}/commons/gpu-detect.sh"
 
 # --- builders ---------------------------------------------------------------
 # NOTE: the source dir is passed EXPLICITLY to cmake (-B build $LLAMA_DIR) so a
@@ -224,7 +224,7 @@ grant_render_video_groups
 # environment to force a subset — e.g. `export LLAMA_BACKENDS=cuda` makes this a
 # CUDA-only build. On a box with no Intel GPU this is naturally "cuda" (this
 # box: lincopta).
-if [ -z "${LLAMA_BACKENDS:-}" ]; then
+if [ -z "${LLAMA_BACKENDS}" ]; then
     _auto=""; has_nvidia && _auto="cuda"; has_intel_gpu && _auto="${_auto:+$_auto }sycl"
     LLAMA_BACKENDS="${_auto:-}"
 fi

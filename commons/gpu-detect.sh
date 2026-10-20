@@ -21,7 +21,7 @@ rm -f ~/.local/share/gpu.func
 
 # has_nvidia -> true if an NVIDIA GPU is present (driver not required).
 has_nvidia() {
-    lspci 2>/dev/null | grep -qiE 'nvidia'
+    lspci 2>/dev/null | grep -iE 'vga|3d|display' | grep -qi 'nvidia'
 }
 
 # has_intel_gpu -> true if an Intel GPU is present.
