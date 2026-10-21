@@ -1,5 +1,5 @@
 _bmad*
-.agents
+.pre-commit-config.yaml
 
 etc
 usr
@@ -9,8 +9,6 @@ commons
 discoveries
 devices
 uninstaller
-systemd/system
-docs
 
 LICENSE
 COMPILE.md

@@ -30,17 +30,29 @@
 
 ------------------------------------------------------------------------------------------
 
-hl.unbind("SUPER + P")
-o.bind("SUPER + P", "Omarchy menu", "omarchy-menu toggle root")
+-- https://github.com/omacom/omarchy/blob/quattro/default/hypr/bindings/tiling.lua
+
+local paths = require("default.hypr.paths")
+require(paths.omarchy_path .. "/default/hypr/bindings/tiling")
+require(paths.omarchy_path .. "/default/hypr/bindings/media")
 
 o.bind("SUPER + SHIFT + C", "Close window", hl.dsp.window.close())
-o.bind("SUPER + SHIFT + Q", "System", "FIXME" )
+
+-- https://github.com/omacom/omarchy/blob/quattro/default/hypr/bindings/utilities.lua
+
+o.bind("SUPER + P", "Omarchy menu", "omarchy-menu toggle root")
+o.bind("SUPER + SHIFT + Q", "System", "omarchy-menu toggle system" )
+
+o.bind_toggle("SUPER + SHIFT + T", "Toggle locking on idle", "idle" )
+o.bind_toggle("SUPER + RETURN", "Toggle full screen desktop", "fullscreen-desktop")
 
 o.bind("SUPER + SHIFT + COMMA", "Config (omarchy)", "code.omarchy")
 o.bind("SUPER + SHIFT + PERIOD", "Config (chezmoi)", "code.chezmoi")
 
 o.bind("SUPER + SHIFT + H", "Keybindings", "omarchy-menu-keybindings")
 o.bind("SUPER + SHIFT + CTRL + H", "Keybindings (herdr)", "omarchy-menu-herdr-keybindings")
+
+o.bind("SUPER + SHIFT + L", "Lock system", "omarchy-system-lock")
 
 -- https://wiki.archlinux.de/title/XKB#Umlaute_(normale_Definition)
 o.bind("CTRL + odiaeresis", "Clipboard manager", "omarchy-shell shell toggle omarchy.clipboard")
@@ -49,10 +61,7 @@ o.bind("CTRL + odiaeresis", "Clipboard manager", "omarchy-shell shell toggle oma
 
 hl.unbind("SUPER + SHIFT + RETURN")
 o.bind("SUPER + SHIFT + RETURN", "Terminal", "foot")
-o.bind("SUPER + SHIFT + CTRL + RETURN", "Terminal", "foot herdr")
+o.bind("SUPER + SHIFT + CTRL + RETURN", "Terminal (herdr)", "foot herdr")
 
 o.bind("SUPER + E", "File manager", "pcmanfm")
 o.bind("SUPER + SHIFT + W", "Browser", { omarchy = "browser" })
-
-
-
