@@ -1,0 +1,4 @@
+#!/bin/bash
+
+codium ~/.config/hypr
+chezmoi add -r ~/.config/hypr
