@@ -24,6 +24,7 @@ set -u
 
 PORT=8081
 MODE="${1:-live}"
+GGML_CUDA_P2P=1
 
 if [ "$MODE" = dry ]; then
     echo "restart-llama-cuda: DRY-RUN would reap stale :$PORT orphans (none killed)"
@@ -78,6 +79,6 @@ exec llama serve \
     --host :: \
     --port "$PORT" \
     --models-max 1 \
-    --parallel 1 \
-    --device CUDA0 \
+    --parallel 4 \
+    --metrics \
     --no-ui
