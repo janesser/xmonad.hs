@@ -9,8 +9,10 @@ o.launch_on_start("signal-desktop")
 
 -- https://wiki.hypr.land/configuring/core/rules/window-rules/
 
+-- $ hyprctl clients
+
 hl.window_rule( { match = { class = "signal" }, workspace = "2 silent" } )
-hl.window_rule( { match = { class = "hl.window_ruleco.hyprlab.Hylki" }, workspace = "2 silent" } )
+hl.window_rule( { match = { class = "co.hyprlab.Hylki" }, workspace = "2 silent" } )
 hl.window_rule( { match = { class = "rencal" }, workspace = "2 silent" } )
 
 hl.window_rule( { match = { class = "zen" }, workspace = 3 } )
