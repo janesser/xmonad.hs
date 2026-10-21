@@ -34,6 +34,7 @@ hl.unbind("SUPER + P")
 o.bind("SUPER + P", "Omarchy menu", "omarchy-menu toggle root")
 
 o.bind("SUPER + SHIFT + C", "Close window", hl.dsp.window.close())
+o.bind("SUPER + SHIFT + Q", "System", "FIXME" )
 
 o.bind("SUPER + SHIFT + COMMA", "Config (omarchy)", "code.omarchy")
 o.bind("SUPER + SHIFT + PERIOD", "Config (chezmoi)", "code.chezmoi")
@@ -51,7 +52,7 @@ o.bind("SUPER + SHIFT + RETURN", "Terminal", "foot")
 o.bind("SUPER + SHIFT + CTRL + RETURN", "Terminal", "foot herdr")
 
 o.bind("SUPER + E", "File manager", "pcmanfm")
-o.bind("SUPER + SHIFT + CTRL + RETURN", "Browser", { omarchy = "browser" })
+o.bind("SUPER + SHIFT + W", "Browser", { omarchy = "browser" })
 
 
 
