@@ -54,3 +54,5 @@
 hl.animation({leaf="global", enabled=false})
 hl.config({ decoration = { blur = { enabled = false } } })
 hl.config({ decoration = { shadow = { enabled = false } } })
+
+hl.workspace_rule({ workspace = "2", layout="scrolling" })
