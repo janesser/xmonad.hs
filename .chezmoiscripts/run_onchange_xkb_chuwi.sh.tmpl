@@ -1,0 +1,53 @@
+#!/bin/bash
+# run_onchange_xkb_chuwi.sh.tmpl
+#
+# Deploy the Chuwi UBook XPro xkb extension (adds the variant
+# "chuwi_ubook_xpro" to the German layout, binding | < > which the stock
+# 104-key German layout leaves unreachable) to /etc/xkb/symbols/. That
+# directory is searched by libxkbcommon before the packaged
+# xkeyboard-config, so the variant is visible to every user on the
+# machine.
+#
+# Input (plain file in the ignored source tree, deployed by this script):
+#   etc/xkb/symbols/de
+#
+# Deploys to:
+#   /etc/xkb/symbols/de    (0644 root:root)
+#
+# One-time companion step, run by the operator (not from here):
+#   sudo localectl set-x11-keymap de pc105 chuwi_ubook_xpro --no-convert
+# /etc/vconsole.conf is owned by systemd-localed; localectl writes
+# XKBVARIANT there and validates the change by compiling the keymap.
+# Omarchy then feeds layout+variant to Hyprland.
+#
+# Sudo is required for the /etc install; it is scoped to the drop-in
+# documented in AGENTS.md.
+#
+# --- chezmoi change filter (re-run when the input changes) -------------------
+# The SHA256 of the input is embedded below, so the rendered script
+# changes whenever the input changes and chezmoi re-runs it. On
+# unchanged applies the script is skipped — no sudo, no prompt.
+#
+#   inputs hash: {{ print (include "etc/xkb/symbols/de") | sha256sum }}
+# ------------------------------------------------------------------------------
+
+set -euo pipefail
+
+SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
+SRC="${SRC_DIR}/etc/xkb/symbols"
+DEST_DIR=/etc/xkb/symbols
+
+[ -f "${SRC}/de" ] || { echo "⚠️  missing source: ${SRC}/de"; exit 1; }
+
+echo "Deploying Chuwi xkb extension to ${DEST_DIR}/de."
+sudo mkdir -p "${DEST_DIR}"
+sudo cp "${SRC}/de" "${DEST_DIR}/de"
+sudo chmod 0644 "${DEST_DIR}/de"
+sudo chown root:root "${DEST_DIR}/de"
+
+echo "✅ /etc/xkb/symbols/de installed."
+if ! grep -qE '^XKBVARIANT=chuwi_ubook_xpro$' /etc/vconsole.conf 2>/dev/null; then
+    echo "Variant not active yet. Run once:"
+    echo "  sudo localectl set-x11-keymap de pc105 chuwi_ubook_xpro --no-convert"
+fi
+echo "Verify: localectl status && localectl list-x11-keymap-variants de | grep chuwi"
