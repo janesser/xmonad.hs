@@ -1,6 +1,13 @@
 # llama.cpp Dual-GPU Backends — Handover
 
-**Last updated:** 2026-09-21
+> **SUPERSEDED (2026-10-23):** the SYCL/Iris-Xe backend is gone — the box no
+> longer has an Intel GPU (the unit was a crash-looping zombie with no device
+> and has been removed). The "second backend" is now the little brother's
+> CUDA server on card 2 — see `little-brother-card2-swap.md`. The
+> mutual-support handover protocol is retired (see AGENTS.md). Kept as a
+> historical record of the dual-backend era.
+
+**Last updated:** 2026-09-21 (superseded 2026-10-23)
 **Repo:** `~/.local/share/chezmoi` (dotfiles) · **Target:** X11 desktop, NVIDIA Tesla V100-SXM2-32GB + Intel Iris Xe (DG1-class, 3.8 GiB shared)
 **Spec:** `_bmad-output/implementation-artifacts/spec-dual-backend-llama-cpp-build.md`
 

@@ -122,123 +122,18 @@ Because it is a system unit, no `loginctl enable-linger` is required.
 - Lifecycle: `systemctl --system enable --now llama-cuda`,
   `journalctl --system -u llama-cuda -f`.
 
-### Mutual support protocol: llama-cuda → llama-sycl handover (cyberkleiber ONLY)
+### Mutual support protocol — RETIRED (2026-10-23)
 
-On **cyberkleiber** the single Tesla V100 is owned by `llama-cuda` (:8081, CUDA;
-~27 GB ornith), while `llama-sycl` (:8082, Intel Iris Xe) is the steady
-companion and does **not** use the V100. Whenever `llama-cuda` is **unloaded /
-stopped** on this box, serving must be handed to `llama-sycl` so an inference
-backend stays available. This is **mandatory** — do not stop `llama-cuda` on
-cyberkleiber without first recording the handover, and complete the handover
-before finishing the session that caused the stop.
-
-It is coordinated by **two files** (triggered by a single `pi-command` — step 1
-below):
-
-- Request marker: `~/.local/share/llama-cpp/handover/requested` (JSON, one event).
-- Event log:      `~/.local/share/llama-cpp/handover/handover.log` (append-only).
-
-**1. Record the stop (mandatory trigger).** When you stop/unload `llama-cuda`
-on cyberkleiber, write the marker right away with the helper
-`~/.local/bin/llama-handover-request.sh`. This is the **only** step that runs
-`pi` and names an explicit `--provider` (the :8082 sycl provider). `PI_SESSION_ID`
-is the pi session id — it is stamped on both files so the handover is always
-attributable. The helper auto-picks the handover model (first id from
-`curl :8082/v1/models`) and embeds the ready-to-run command as `pi_command` in
-the marker. **Calling it also triggers step 2 — the marker write is what runs
-the executor:**
-
-```bash
-~/.local/bin/llama-handover-request.sh "stop" "systemctl stop llama-cuda"
-```
-
-**2. Execute the handover (executor — a result of step 1's call).** Writing the
-marker triggers `~/.local/bin/llama-handover.sh`. **Precondition:**
-`llama-sycl` (:8082) is already up. The executor owns tearing down `llama-cuda`
-(the caller never runs `systemctl stop llama-cuda` itself). It reads the marker,
-stops `llama-cuda` (:8081), verifies :8081 is down, confirms :8082 answers, and
-logs the event — **leaves the marker in place** so a resumed caller can read the
-ready `pi_command`. It never runs `pi --provider`. In order:
-
-1. No `~/.local/share/llama-cpp/handover/requested` → print “nothing to do” and
-   exit 0.
-2. Stop `llama-cuda` (`sudo systemctl stop llama-cuda`) and verify :8081 is
-   down (`curl :8081/v1/models` must fail). If :8081 is still up, abort — aborts
-   keep the marker and log an `EVENT=aborted` (retryable).
-3. Assume `llama-sycl` (:8082) is already up — just confirm it answers
-   (`curl :8082/v1/models`); do NOT wait-start here (it is a boot unit). If :8082
-   is not reachable, abort (marker kept).
-4. Complete the ready `pi_command` the resumed caller will run. The model is
-   normally pre-picked by llama-handover-request.sh (embedded in the marker as
-   `pi_command`/`handover_model`); fill it in here only if sycl was down at
-   request time. Print it for convenience — the marker is deliberately **not**
-   cleared so the caller can read the command from it.
-5. Append a `completed` log line. The marker is **left in place** (cleared only
-   on return/cancel):
-   ```
-   <ISO8601> | SESSION=$PI_SESSION_ID | EVENT=completed | :8082 serving; pi_command=<as in marker>
-   ```
-
-**3. Caller resumes — read the handover file (human-triggered).** After the
-executor frees the V100, the caller reads `pi_command` from the marker at the
-predefined location `~/.local/share/llama-cpp/handover/requested` — the spot
-where the caller-agent expects to retrieve the handover outcome — and runs it.
-This is the sole `pi --provider` in the flow (the command embedded by step 1):
-
-```bash
-eval "$(python3 -c 'import json;print(json.load(open("$HOME/.local/share/llama-cpp/handover/requested"))["pi_command"])')"
-```
-
-**4. Return the handover (llama-cuda comes back).** When `llama-cuda` is
-started again, complete the reverse and clear the marker. `defaultProvider` is
-never used or changed — the :8082 `--provider` only ever lived in step 1, so pi
-is simply back on llama-cuda (:8081):
-
-```bash
-sudo systemctl restart llama-cuda          # :8081 back up (see stop test below)
-MODEL=$(curl -fsS http://127.0.0.1:8081/v1/models \
-  | python3 -c 'import json,sys;print(json.load(sys.stdin)["data"][0]["id"])')
-pi --model "$MODEL"
-echo "$(date --iso-8601=seconds) | SESSION=${PI_SESSION_ID:-unknown} | EVENT=restored | llama-cuda back on :8081" >> "$HOME/.local/share/llama-cpp/handover/handover.log"
-rm -f "$HOME/.local/share/llama-cpp/handover/requested"
-```
-
-Boot note: both `llama-cuda` and `llama-sycl` are boot units
-(`WantedBy=multi-user.target`) and come back up on their own, so after a wake
-the handed-over workload is already serving on :8082 and `llama-cuda` is back on
-:8081 — nothing to do by hand. The only manual case is an **interrupted
-handover** — if the marker is still present on wake (the executor did not finish
-before power-off), just re-run `llama-handover.sh`; it sees the pending marker and
-completes (or aborts cleanly) the handover.
-
-**Event-log schema** (one line per event, append-only):
-`<ISO8601> | SESSION=<pi-session-id> | EVENT=<requested|completed|restored|cancelled> | <human note>`.
-
-**Guards.**
-- This protocol is **cyberkleiber-only** (the only V100 + Iris Xe box). On any
-  other host, stopping `llama-cuda` does **not** trigger a handover.
-- Never stop `llama-cuda` on cyberkleiber without first writing the marker —
-  an untracked stop leaves no audit trail and no handover is guaranteed.
-- `llama-cuda` is now `Type=exec` (reworked to `Type=exec`, see below), so
-  `systemctl stop` genuinely kills :8081 and `is_active` is reliable — verify
-  `:8081` is down in step 2 before trusting the marker.
-- The `pi --provider` appears **only in step 1's embedded `pi_command`** (per
-  invocation override — never writes `~/.pi/agent/settings.json`). Steps 2
-  (executor), 3 (caller resume) and 4 (return) never set a `--provider` of
-  their own, and `defaultProvider` is never used or changed at any point. The
-  handover model is auto-picked (first id from `curl :8082/v1/models`).
-
-**Pending decision (open — do not treat as final).** The handover is currently
-SPLIT across two scripts + the caller: `llama-handover-request.sh` writes the
-marker **and triggers the executor** (`llama-handover.sh`); the executor stops
-`llama-cuda` + confirms :8082 (leaving the marker intact) so the resumed caller
-reads `pi_command` from the marker and runs it; the return (restart
-`llama-cuda`) clears the marker. Whether to MERGE this into fewer script(s) —
-e.g. one
-`llama-handover.sh` that owns `stop cuda → confirm sycl`, paired with a single
-`up cuda → hand back` command — is UNRESOLVED. Keep the current split until jan
-decides; do not refactor these scripts until this flag is cleared.
-
+The llama-cuda → llama-sycl handover (marker + executor + caller-resume +
+return, via `llama-handover-request.sh` / `llama-handover.sh`, event log under
+`~/.local/share/llama-cpp/handover/`) is retired: this box no longer has an
+Intel GPU (the SYCL backend was a crash-looping zombie with no device), and
+the little brother's text backend on card 2 (`llama-little-brother`, :8082 —
+CUDA, not SYCL) will provide a permanent second text backend. Design and the
+full retirement list: `discoveries/ai-server/little-brother-card2-swap.md`.
+The event log is kept at `~/.local/share/llama-cpp/handover/handover.log` as
+an audit trail. **Until the card-2 backend is deployed, stopping `llama-cuda`
+leaves no local text backend — plan around that.**
 ## btop: dual GPU (Iiris Xe + NVIDIA) visibility
 
 btop only shows the NVIDIA box for the Intel Iris Xe / DG1 (gpu1). This is a

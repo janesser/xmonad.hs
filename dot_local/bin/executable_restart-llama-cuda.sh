@@ -79,6 +79,8 @@ exec llama serve \
     --host :: \
     --port "$PORT" \
     --models-max 1 \
-    --parallel 4 \
+    --parallel 1 -cram 20480 --cache-type-k q4_1 --cache-type-v q4_1 \
+    -dev CUDA0 \
     --metrics \
+    -kvu \
     --no-ui

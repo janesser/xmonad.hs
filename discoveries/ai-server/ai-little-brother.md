@@ -1,6 +1,14 @@
 # Handover to the little brother (small agent) — switchmode smoke test
 
-Status: **hardening** (switchmode verified 2026-10-12) — the V100 text→sd.cpp→text
+> **SUPERSEDED for the swap mechanics (2026-10-23):** the switchmode eviction
+> and the mutual-support handover protocol described below are retired — the
+> little brother now gets a dedicated card (CUDA1 / PCIe V100) with its own
+> resident text backend + on-demand sd.cpp, so the main V100 (CUDA0) is never
+> evicted. Design: `little-brother-card2-swap.md`. The verified smoke-test
+> harness (`tests/switchmode/`) remains the batch-runner reference for the new
+> card-2 swap.
+
+Status: **hardening (superseded 2026-10-23; switchmode verified 2026-10-12)** — the V100 text→sd.cpp→text
 "switchmode" swap has now been executed end-to-end and passed: two fresh Flux.2-
 klein Q4_0 renders produced (valid PNGs, both exit 0, ~47s GPU work), the prior
 text backend (llama-cuda on :8081, v0.6.0) restored healthy, no orphaned V100

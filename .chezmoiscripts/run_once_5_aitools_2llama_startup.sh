@@ -1,12 +1,10 @@
 #!/bin/bash
 # run_once_5_aitools_2llama_startup.sh
 #
-# Install the boot-time systemd units for jan's dual llama.cpp backends, plus
-# the huggingface-hub bind mount, WITHOUT a login required. Both backends are
-# provisioned by this one script:
+# Install the boot-time systemd unit for jan's llama.cpp CUDA backend, plus
+# the huggingface-hub bind mount, WITHOUT a login required:
 #
 #   llama-cuda.service -> ~/.local/bin/restart-llama-cuda.sh   :8081 NVIDIA CUDA
-#   llama-sycl.service -> ~/.local/bin/restart-llama-sycl.sh   :8082 Intel SYCL
 #
 # Each unit is Type=exec: the launcher reaps a stale orphan on its port, then
 # `exec`s llama-server in the foreground, so systemd tracks the server itself as
@@ -24,18 +22,17 @@ SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
 source "$CHEZMOI_SOURCE_DIR/commons/gpu-detect.sh"
 
 # --- 1. backend selection (configurable) ------------------------------------
-# LLAMA_BACKENDS is a space-separated list of backends to deploy ("cuda",
-# "sycl"). It defaults to what the box actually has; override it in the
-# environment to force a subset — e.g. `export LLAMA_BACKENDS=cuda` makes this a
-# CUDA-only deploy. On a box with no Intel GPU this is naturally "cuda" (this
-# box: lincopta, NVIDIA + AMD — no Intel GPU).
+# LLAMA_BACKENDS is a space-separated list of backends to deploy ("cuda").
+# It defaults to what the box actually has; override it in the environment to
+# force a subset.
 #
-# HARD GATE: the environment override only *selects*; physical presence (has_nvidia
-# / has_intel_gpu) still *authorizes*. A backend is deployed only when it is both
-# selected AND its accelerator is present. So `export LLAMA_BACKENDS=cuda` on an
-# NVIDIA-less box does nothing — we never hand a CUDA build to a box without CUDA
-# (this is what used to deploy llama-cuda onto peacewagon, an Intel-only laptop).
-read -ra _want_backend_arr <<< "${LLAMA_BACKENDS:-$(has_nvidia && echo cuda; has_intel_gpu && echo sycl)}"
+# HARD GATE: the environment override only *selects*; physical presence
+# (has_nvidia) still *authorizes*. The backend is deployed only when it is both
+# selected AND its accelerator is present. So an empty LLAMA_BACKENDS on an
+# NVIDIA-less box does nothing — we never hand a CUDA build to a box without
+# CUDA (this is what used to deploy llama-cuda onto peacewagon, an Intel-only
+# laptop).
+read -ra _want_backend_arr <<< "${LLAMA_BACKENDS:-$(has_nvidia && echo cuda)}"
 want_backend() {
     local b="$1" x
     for x in ${_want_backend_arr[@]}; do [ "$x" = "$b" ] && return 0; done
@@ -47,27 +44,16 @@ want_backend() {
 #   UNIT   systemd unit name (etc/systemd/system/<UNIT>)
 #   SCRIPT home-relative launcher path (no leading ~ — `read` does not expand
 #          tildes, so paths are joined with $HOME below); we only act when this
-#          file exists, so a machine without the Intel SYCL build simply skips.
-#          (The legacy scripts used bare `~/...` at assignment time, which is why
-#          tilde expansion happened there — not to be reproduced here.)
+#          file exists.
 #   PORT   backend http port, used for the "already serving?" liveness probe.
 #   START  "yes" => enable + start-if-not-serving ; "no" => enable-only.
-# CUDA is the primary backend: it is started on deploy. SYCL is heavy (~3.8 GB),
-# so it is enabled at boot but left to an explicit `systemctl start`. SYCL is
-# only deployed where there is an Intel GPU AND it was requested.
-# Each entry is UNIT|SCRIPT|PORT|START — see the header above. Backends are
-# added to this array only when selected (LLAMA_BACKENDS) AND their accelerator
-# is physically present; a box without the accelerator simply gets no entry.
-# CUDA is the primary backend: it is started on deploy. SYCL is heavy (~3.8 GB),
-# so it is enabled at boot but left to an explicit `systemctl start`.
+# Backends are added to this array only when selected (LLAMA_BACKENDS) AND
+# their accelerator is physically present; a box without the accelerator
+# simply gets no entry. CUDA is the primary backend: it is started on deploy.
 declare -a BACKENDS=()
 # CUDA (NVIDIA) only where there is an NVIDIA GPU.
 if want_backend cuda && has_nvidia; then
     BACKENDS+=( "llama-cuda.service|.local/bin/restart-llama-cuda.sh|8081|yes" )
-fi
-# SYCL (Intel) only where there is an Intel GPU AND it was requested.
-if want_backend sycl && has_intel_gpu; then
-    BACKENDS+=( "llama-sycl.service|.local/bin/restart-llama-sycl.sh|8082|yes" )
 fi
 
 # Bail early (no sudo, no fstab change) when neither launcher is present.
