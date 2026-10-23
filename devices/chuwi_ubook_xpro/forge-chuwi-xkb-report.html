@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forge Report — Chuwi UBook XPro keybindings (de chuwi_ubook_xpro)</title>
+<style>
+  :root { --ink:#2b2620; --paper:#f7f2e7; --accent:#7a1f1f; --ok:#2f5d3a; }
+  body { font-family: Georgia, 'Times New Roman', serif; background: var(--paper); color: var(--ink);
+         max-width: 780px; margin: 2rem auto; padding: 0 1.2rem; line-height: 1.5; }
+  h1 { font-size: 1.5rem; margin-bottom: .2rem; }
+  h2 { font-size: 1.05rem; text-transform: uppercase; letter-spacing: .08em; border-bottom: 1px solid #c9bda3;
+       padding-bottom: .25rem; margin-top: 1.8rem; }
+  .meta { color: #6d6353; font-size: .9rem; }
+  .seal { display: block; margin: 1.4rem auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid #ddd2bb; vertical-align: top; }
+  code { font-family: 'DejaVu Sans Mono', monospace; font-size: .88em; background: #efe7d4; padding: 0 .3em; border-radius: 3px; }
+  ul { margin: .4rem 0; padding-left: 1.3rem; }
+  li { margin: .25rem 0; }
+  .persona { font-style: italic; color: #5c5244; font-size: .9rem; }
+  .outcome { display:inline-block; font-weight: bold; color: var(--ok); }
+</style>
+</head>
+<body>
+
+<h1>Forged idea — Chuwi UBook XPro keybindings on Arch</h1>
+<p class="meta">2026-10-23 · session: pi (bmad-forge-idea, in-conversation — no BMad core installed, no memlog) · machine: flowerpower (UBook XPro, Hyprland/Omarchy)</p>
+
+<svg class="seal" width="170" height="170" viewBox="0 0 170 170" role="img" aria-label="Seal: HARDENED">
+  <defs>
+    <radialGradient id="wax" cx="42%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="#a03030"/>
+      <stop offset="70%" stop-color="#7a1f1f"/>
+      <stop offset="100%" stop-color="#5c1414"/>
+    </radialGradient>
+  </defs>
+  <circle cx="85" cy="85" r="80" fill="url(#wax)"/>
+  <circle cx="85" cy="85" r="80" fill="none" stroke="#4a0f0f" stroke-width="3"
+          stroke-dasharray="4 7" opacity=".6"/>
+  <circle cx="85" cy="85" r="64" fill="none" stroke="#e8c9a0" stroke-width="2" opacity=".55"/>
+  <text x="85" y="80" text-anchor="middle" font-family="Georgia, serif" font-size="19"
+        font-weight="bold" fill="#f4e3c8" letter-spacing="2">HARDENED</text>
+  <text x="85" y="102" text-anchor="middle" font-family="Georgia, serif" font-size="11"
+        fill="#e8c9a0" letter-spacing="1">de · chuwi_ubook_xpro</text>
+</svg>
+
+<p><span class="outcome">Outcome: Hardened.</span> The idea — "tweak keybindings for the Chuwi UBook XPro
+keyboard on Arch, replacing a stale Debian-era xkb fork" — survived scrutiny and left the session as a
+27-line, system-wide, upstream-tracking xkb variant, implemented and verified. Not merely clarified.</p>
+
+<h2>The idea, examined</h2>
+<p>The Chuwi keyboard cover is a 104-key board: no key emits the scancode of <code>&lt;LSGT&gt;</code>
+(<code>KEY_102ND</code>, 86) — confirmed by evtest (key left of <code>1</code> = <code>KEY_GRAVE</code>,
+key left of left-Shift = <code>KEY_BACKSLASH</code>). The stock German layout binds <code>|</code>
+(bar), <code>&lt;</code> (less), <code>&gt;</code> (greater) <em>only</em> to that missing key, so on
+this hardware all three characters were unreachable. The user's original file was a 1261-line full fork
+of <code>de</code>, frozen at the pre-2023-08 DIN revision, deployed to package-owned
+<code>/usr/share/X11/xkb</code> — and not actually deployed on this machine at all.</p>
+
+<h2>Locked decisions</h2>
+<table>
+<tr><th style="width:26%">Decision</th><th>What</th><th style="width:34%">Why (pressure tested)</th></tr>
+<tr><td>Shape</td>
+    <td><strong>Variant</strong> <code>de(chuwi_ubook_xpro)</code> via a local file named <code>de</code>
+        defining only that group</td>
+    <td>Empirically proven: libxkbcommon falls through to the next include path per (file, group) —
+        <code>de(basic)</code>, <code>de(e1)</code>, … keep resolving to the package; <code>include
+        "de(basic)"</code> inside the local file resolves to the package file, not itself. No fork,
+        tracks upstream.</td></tr>
+<tr><td>Placement</td>
+    <td><code>/etc/xkb/symbols/de</code></td>
+    <td>System-level (any user) was a requirement. <code>/etc/xkb</code> is searched before the packaged
+        xkeyboard-config. <code>~/.config/xkb</code> rejected (per-user only); <code>/usr</code> rejected
+        (package-owned).</td></tr>
+<tr><td>Binding</td>
+    <td><code>AltGr+y = |</code>, <code>AltGr+Shift+y = &lt;</code>, <code>AltGr+Shift+x = &gt;</code></td>
+    <td>The user's April 2025 settlement, re-confirmed with eyes open: it costs <code>»</code> (was
+        AltGr+y) and <code>›‹</code> (upstream's 2023-08 level-4) — a conscious trade for the characters
+        actually typed. Git history of the file showed three prior design iterations; this is the settled one.</td></tr>
+<tr><td>Activation</td>
+    <td><code>sudo localectl set-x11-keymap de pc105 chuwi_ubook_xpro --no-convert</code></td>
+    <td><code>/etc/vconsole.conf</code> is owned by systemd-localed — edit it through its owner, not
+        <code>sed</code>. <code>--no-convert</code> keeps the console <code>KEYMAP=de</code>.
+        localectl compiles the keymap before writing — order (file first) is enforced and it doubles as
+        the end-to-end check.</td></tr>
+<tr><td>Deployment</td>
+    <td>Change-hash-gated <code>run_onchange</code> script (repo convention, auto-poweroff pattern);
+        old 1261-line fork <code>git rm</code>'d</td>
+    <td>Re-runs only when the input changes; idempotent. The fork was the disease: stale since 2020-11,
+        re-merging upstream by hand. Commit <code>ed649d6</code>.</td></tr>
+</table>
+
+<h2>Rejected, and why</h2>
+<ul>
+<li><strong>Full fork of <code>de</code> under a new layout name</strong> (the status quo) — stale, 1261
+    lines, package-owned target dir. Killed.</li>
+<li><strong>Standalone layout <code>de.chuwi_ubook_xpro</code></strong> — dot-named files are standalone
+    layouts, proven; worked, but costs a layout-name change in vconsole and in the bar widget. Superseded
+    by the variant (lighter, per user requirement).</li>
+<li><strong>Shadowing <code>de</code> with a full copy</strong> — initially believed necessary; the
+    per-group fall-through test killed it. Would have been the 1261-line disease in new clothing.</li>
+<li><strong>xkb options file (<code>chuwi:pipe</code>)</strong> — the only true "extension" besides the
+    variant, but no <code>XKBOPTIONS</code> carrier in vconsole.conf and Omarchy hard-codes
+    <code>kb_options</code>; can't be turned on system-wide.</li>
+<li><strong>Hyprland <code>bind</code> / udev hwdb / compose sequence</strong> — wrong layer for a
+    character everyone needs (TUIs, login manager, fcitx5 passthrough), or too deep for frequent use.</li>
+<li><strong>Editing vconsole.conf by hand (<code>sed</code>)</strong> — file is labeled systemd-owned;
+    localectl validates by compiling, manual editing does not.</li>
+</ul>
+
+<h2>Weak points that survived scrutiny</h2>
+<ul>
+<li><code>localectl list-x11-keymap-variants de</code> does <em>not</em> list local
+    <code>/etc/xkb</code> variants (registry listing quirk) — cosmetic, compiler path is proven.</li>
+<li>The repo's <code>dot_bashrc</code> is stale (pre-Omarchy) — every <code>cz apply</code> prompts;
+    answer <code>N</code> or re-add the live file when convenient. Unrelated, pre-existing.</li>
+<li>If any other machine still has the old <code>/usr/share/X11/xkb/symbols/de.chuwi_ubook_xpro</code>
+    deployed (pre-<code>usr/</code>-ignore), remove it by hand — chezmoi no longer ships or removes it.</li>
+<li>tty console keymap still has no <code>|</code> (out of scope by design).</li>
+<li>The <code>»</code>/<code>›‹</code> loss is real: if German typography usage grows, the slot for
+    <code>»</code> (e.g. TLDE level 3/4, currently ′/″) is the natural re-placement target.</li>
+</ul>
+
+<h2>Credits</h2>
+<p class="persona">No BMad persona pool installed — voices generated in-session: <strong>Renate</strong>
+(embedded input engineer; insisted on scancode ground truth before any keymap talk), <strong>the
+xkbcommon resolution tests</strong> (C programs compiled against the machine's real libxkbcommon 1.13.2 —
+the session's de facto expert witness), and <strong>git archaeology</strong> of the user's own three
+design iterations (2024-04, 2024-11, 2025-04), which turned "unsolved design problem" into "settlement to
+re-confirm".</p>
+
+</body>
+</html>

@@ -1,0 +1,31 @@
+// de — local extension (system-wide)
+//
+// Adds the variant "chuwi_ubook_xpro" to the packaged German layout for
+// the Chuwi UBook XPro keyboard cover (104-key board: no key emits the
+// scancode of <LSGT> (KEY_102ND), where the stock German layout keeps
+// "|" (bar), "<" (less), ">" (greater)).
+//
+// Only this variant is defined here; every other de variant (basic, e1,
+// nodeadkeys, ...) still resolves to the packaged layout, because
+// libxkbcommon falls through to the next include path when a file does
+// not define the requested group.
+//
+// Rebinding in chuwi_ubook_xpro (rest identical to de(basic)):
+//     y + AltGr           -> |
+//     y + AltGr + Shift   -> <
+//     x + AltGr + Shift   -> >
+// Given up: guillemotright (was AltGr+y) and ›/‹ (AltGr+Shift+y/x since
+// the 2023-08 DIN revision).
+//
+// Select with: sudo localectl set-x11-keymap de pc105 chuwi_ubook_xpro --no-convert
+// (writes XKBVARIANT into /etc/vconsole.conf; Omarchy feeds it to Hyprland.)
+
+partial alphanumeric_keys
+xkb_symbols "chuwi_ubook_xpro" {
+    include "de(basic)"
+
+    name[Group1] = "German (Chuwi UBook XPro)";
+
+    key <AB01> { [ y, Y, bar, less ] };
+    key <AB02> { [ x, X, guillemotleft, greater ] };
+};
