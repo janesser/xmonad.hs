@@ -352,30 +352,44 @@ Consequences:
 exploring or has explored. It is **not** managed into the system — these are
 working notes.
 
-### `discoveries/discoveries-status.yaml` — keep it up to date
+### Project status — shared memory (the rollup is a live query)
 
-`discoveries/discoveries-status.yaml` is the canonical quick-view / status
-rollup of everything under `discoveries/`. It mirrors the per-file `Status`
-banner of each discovery, grouped into buckets.
+The static `discoveries-status.yaml` is **retired** (pi-hermes-memory v2,
+FR-11): project status lives in the shared LAN memory on cyberkleiber, and
+the rollup is a **live query** — the latest status entry per project by
+`updated_at` — never a file that must be kept in sync. There is no YAML, no
+`MAP.md`, no summary to bump.
 
-**When a discovery changes state, update this YAML in the same change.**
+**When a project changes state, update the status fact in shared memory in
+the same change** — with the pi-hermes-memory `memory_status` tool
+(registered when this box is enrolled in the shared memory):
+
+- Set: `memory_status { project, state, content }` — `state` is one of the
+  six words below; `content` is a short note (why it changed / what is next).
+  It is visible from every box immediately, with machine + session provenance.
+- Query: `memory_status { project }` — current state, note, last state
+  change, and which machine made it. Works on a box WITHOUT the project
+  checked out (resolution goes through the registry).
+
 Trigger events:
 
-- creating, resolving, or abandoning a discovery (file or dir)
-- a discovery moving between buckets (e.g. `active` → `done`, or `held` →
-  `abandoned`)
-- editing an existing discovery's status banner
+- a project starting or resuming active work (`active`)
+- a project verified but with a concrete next step remaining (`hardening`)
+- a project finishing — work verified / handed over (`done`)
+- a project being parked with no imminent action (`held`)
+- a project superseded or with no planned follow-up (`dormant`)
+- a project explicitly killed in favour of something else (`abandoned`)
 
-Steps:
-1. Add/remove the entry (or move it to another bucket list).
-2. `last_edited` = the newest file mtime inside the entry
-   (`find <entry> -type f -printf '%T@\n' | sort -rn | head -1`).
-3. Bump `summary.{done,active,held,dormant,abandoned,total}` (total = sum of the
-   bucket counts).
-4. (Optional) keep `discoveries/MAP.md` in sync — it is the same rollup as a
-   human-readable markdown table; the YAML is the source of truth.
+When the hub (cyberkleiber) is down the tool says so explicitly: a query
+reports live status unavailable, and a set lands in the local project memory
+(visible on this box only) — re-issue the set when the hub is back if it must
+be shared.
 
 ### Status buckets
+
+(The six words live in the shared vocabulary of pi-hermes-memory —
+`STATUS_WORDS` — and in the `memory_status` tool schema; this list is the
+human-facing meaning.)
 
 - **hardening** — works, but still needs hardening before it is fully done:
   a concrete next step remains (cleanup, a reproducibility re-run, edge cases,
