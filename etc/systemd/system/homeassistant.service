@@ -1,0 +1,42 @@
+# Home Assistant — container (rootless podman, runs as jan)
+#
+# Source of truth: chezmoi. etc/ is in .chezmoiignore, so this file is
+# deployed by .chezmoiscripts/run_onchange_hass_install.sh.tmpl, not applied
+# directly. Image updates come from .chezmoiscripts/run_9_update_hass.sh.tmpl
+# on every cz apply (HA's in-UI update button does not work for container
+# installs).
+#
+# Design notes:
+# - System unit + User=jan => rootless podman, no user lingering needed.
+# - Foreground `podman run` (no -d): systemd tracks the container lifetime;
+#   ExecStartPre drops any stale/orphaned container first.
+# - /config is a persistent host volume (survives container recreation).
+# - --privileged: official container-install baseline (matches the ad-hoc
+#   container this replaces); follow-up increment to drop it.
+
+[Unit]
+Description=Home Assistant container (rootless podman)
+Documentation=https://www.home-assistant.io/installation/linux
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=jan
+Group=jan
+Environment=HOME=/home/jan
+ExecStartPre=-/usr/bin/podman rm -f homeassistant
+ExecStart=/usr/bin/podman run --name homeassistant \
+    --privileged \
+    -v /etc/localtime:/etc/localtime:ro \
+    -v /home/jan/.local/share/homeassistant/config:/config \
+    -e TZ=Europe/Berlin \
+    -p 8123:8123 \
+    docker.io/homeassistant/home-assistant:stable
+ExecStop=-/usr/bin/podman stop -t 60 homeassistant
+TimeoutStopSec=120
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

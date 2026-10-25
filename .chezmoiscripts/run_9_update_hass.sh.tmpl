@@ -1,0 +1,37 @@
+#!/bin/bash
+# run_9_update_hass.sh.tmpl
+#
+# Keep the Home Assistant container image fresh. Runs on every apply (like
+# the other run_9_update_* scripts). `podman pull` on an up-to-date :stable
+# tag is a cheap manifest check, so this is safe to run always. If the image
+# actually changed, restart the service so the container comes up on the new
+# image.
+#
+# This is the update path for container installs: HA's in-UI update button
+# does not work (no container engine inside the container).
+#
+# Host-gated: only active on raspberrypi; renders to a no-op elsewhere.
+
+{{ if eq .chezmoi.hostname "raspberrypi" }}
+set -euo pipefail
+
+IMAGE=docker.io/homeassistant/home-assistant:stable
+CNAME=homeassistant
+
+podman pull "${IMAGE}" || { echo "⚠️  pull failed; keeping current image."; exit 0; }
+
+# NOTE: podman's --format uses Go-template syntax; escape the braces for
+# chezmoi's template pass (same idiom as run_onchange_auto_poweroff_*).
+NEW_ID="$(podman image inspect --format '{{ "{{" }}.Id{{ "}}" }}' "${IMAGE}")"
+OLD_ID="$(podman inspect --format '{{ "{{" }}.Image{{ "}}" }}' "${CNAME}" 2>/dev/null || true)"
+
+if [ -n "${OLD_ID}" ] && [ "${OLD_ID}" != "${NEW_ID}" ]; then
+    echo "📦 ${IMAGE} changed (${OLD_ID:0:12} → ${NEW_ID:0:12}); restarting homeassistant."
+    sudo systemctl --system restart homeassistant
+else
+    echo "ℹ️  homeassistant image up to date."
+fi
+{{ else }}
+# not the Home Assistant host — nothing to do.
+exit 0
+{{ end }}

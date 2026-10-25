@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  homeassistant:
+    image: homeassistant/home-assistant:stable
+    container_name: homeassistant
+    restart: unless-stopped
+    privileged: true # Required for some integrations, adjust as needed later
+
+# You might need to add volumes for persistent data and configuration here later.
+# volumes:
+#   - /path/to/your/homeassistant/config:/config
+
+# labels are not strictly necessary for podman-compose, but kept for compatibility if needed.
+# labels:
+#   - "com.docker.compose.project=homeassistant"

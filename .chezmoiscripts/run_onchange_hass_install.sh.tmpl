@@ -1,0 +1,81 @@
+#!/bin/bash
+# run_onchange_hass_install.sh.tmpl
+#
+# Install + enable the Home Assistant container service (rootless podman,
+# runs as jan) and, one-time, migrate the pre-existing ad-hoc container.
+#
+# Inputs (source blobs in the ignored tree, deployed by this script):
+#   etc/systemd/system/homeassistant.service
+#
+# Deploys to:
+#   /etc/systemd/system/homeassistant.service   (0644 root:root)
+#   ~/.local/share/homeassistant/config/        (persistent /config volume)
+#
+# Sudo is used only for commands allowed by the scoped NOPASSWD sudoers
+# drop-in (see AGENTS.md): mkdir, cp, chmod, chown, systemctl.
+#
+# Host-gated: only active on raspberrypi; renders to a no-op elsewhere.
+#
+# --- chezmoi change filter (re-run when the unit file changes) ---------------
+# The SHA256 of the input is embedded below as a comment, so the *rendered*
+# script changes whenever the input changes and chezmoi re-runs it. On
+# unchanged applies the script is skipped entirely — no `sudo`, no prompt.
+#
+#   inputs hash: {{ print (include "etc/systemd/system/homeassistant.service") | sha256sum }}
+# ------------------------------------------------------------------------------
+
+{{ if eq .chezmoi.hostname "raspberrypi" }}
+set -euo pipefail
+
+SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
+UNIT_SRC="${SRC_DIR}/etc/systemd/system/homeassistant.service"
+UNIT_NAME=homeassistant.service
+CONFIG_DIR="$HOME/.local/share/homeassistant/config"
+CNAME=homeassistant
+
+[ -f "${UNIT_SRC}" ] || { echo "⚠️  missing source: ${UNIT_SRC}"; exit 1; }
+
+# --- migrate the ad-hoc container (one-time) ---------------------------------
+# Earlier experiment (2026-10-18): an unmanaged rootless container
+# `homeassistant` — no /config mount, no published port, onboarding done.
+# If it still exists and is unmanaged (zero mounts), stop it, copy its
+# /config to the persistent volume and remove it. Refuse to touch it if the
+# target dir is already populated.
+if podman container exists "${CNAME}" 2>/dev/null; then
+    # NOTE: podman's --format uses Go-template syntax; escape the braces for
+    # chezmoi's template pass (same idiom as run_onchange_auto_poweroff_*).
+    MOUNTS="$(podman inspect --format '{{ "{{" }}len .Mounts{{ "}}" }}' "${CNAME}")"
+    if [ "${MOUNTS}" != "0" ]; then
+        echo "ℹ️  container '${CNAME}' has mounts; assuming managed — skipping migration."
+    elif [ -d "${CONFIG_DIR}" ] && [ -n "$(ls -A "${CONFIG_DIR}" 2>/dev/null)" ]; then
+        echo "⚠️  unmanaged container '${CNAME}' exists but ${CONFIG_DIR} is not empty."
+        echo "   Inspect by hand, then remove the container (its config would be lost)."
+        exit 1
+    else
+        echo "Migrating ad-hoc container '${CNAME}' → ${CONFIG_DIR}"
+        mkdir -p "${CONFIG_DIR}"
+        podman stop "${CNAME}"
+        podman cp "${CNAME}:/config/." "${CONFIG_DIR}/"
+        podman rm "${CNAME}"
+    fi
+fi
+
+# --- persistent config volume --------------------------------------------------
+mkdir -p "${CONFIG_DIR}"
+
+# --- install unit ----------------------------------------------------------------
+sudo mkdir -p /etc/systemd/system
+sudo cp "${UNIT_SRC}" "/etc/systemd/system/${UNIT_NAME}"
+sudo chmod 0644 "/etc/systemd/system/${UNIT_NAME}"
+sudo chown root:root "/etc/systemd/system/${UNIT_NAME}"
+
+sudo systemctl --system daemon-reload
+sudo systemctl --system enable --now "${UNIT_NAME}"
+
+echo "✅ homeassistant.service installed + enabled."
+echo "   UI: http://<this-host>:8123/  (first boot takes ~30-60 s)"
+echo "   Check: systemctl --system status ${UNIT_NAME}"
+{{ else }}
+# not the Home Assistant host — nothing to do.
+exit 0
+{{ end }}
