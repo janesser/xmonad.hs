@@ -1,0 +1,64 @@
+# Installed by
+# .chezmoiscripts/run_once_5_aitools_2llama_startup.sh
+# to /etc/systemd/system/llama-little-brother.service
+#
+# Runs jan's ~/.local/bin/start-little-brother.sh at system boot, BEFORE any
+# login. This is a *system* unit (not a user unit): only a system unit starts
+# at boot without a logged-in session, so no `loginctl enable-linger` is
+# required.
+#
+# GPU pinning (Era 2 = one-line re-pin): the PCIe V100 on card 2 is pinned by
+# UUID via Environment=CUDA_VISIBLE_DEVICES below — this line is the SINGLE
+# SOURCE OF TRUTH for which physical card this unit owns. The launcher then
+# runs `-dev CUDA0`, which is index 0 in the remapped space, i.e. always the
+# UUID-pinned card, never the 27B card on CUDA0 (:8081). The run script's
+# install gate and card2-swap.sh both read this line, so a card swap only
+# requires editing it here.
+#
+# Port :8082 reuses the contract of the retired SYCL backend: anything already
+# pointed at :8082 (Olla endpoint, crossbar LAN provider, little-brother agent)
+# keeps working.
+
+[Unit]
+Description=Little brother — llama.cpp text backend on card 2 (PCIe V100), [::]:8082
+# Wait for filesystems (incl. the passeport automount), the NVIDIA persistence
+# daemon, and the NVIDIA kernel driver to be ready — same ordering rationale as
+# llama-cuda.service (the driver-bind device is the real "driver ready" signal).
+After=local-fs.target media-passeport.mount nvidia-persistenced.service sys-bus-pci-drivers-nvidia.device
+Wants=nvidia-persistenced.service
+
+[Service]
+User=jan
+Environment=HOME=/home/jan
+Environment=USER=jan
+Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Pin card 2 by UUID (never global index): in the remapped space it becomes
+# CUDA0. See the file header — this line is the single source of truth.
+Environment=CUDA_VISIBLE_DEVICES=GPU-fb929bd0-1296-491c-ed72-8f8494addcb8
+# Fail fast: refuse to start (and let systemd abort the unit) unless the
+# UUID-pinned card exposes CUDA. This probe runs UNDER the remapped env above,
+# so it sees exactly card 2. Without it, llama.cpp silently falls back to CPU
+# when VRAM is unusable, loads the ~22 GB model into system RAM and OOMs.
+#
+# Retry a few times: even with the driver ordered above, the CUDA userspace
+# backend needs a moment to initialize after the driver binds. A short local
+# loop avoids depending on systemd's RestartSec to recover the probe.
+ExecStartPre=/usr/bin/bash -c 'for i in $(seq 1 8); do if llama serve --list-devices 2>/dev/null | grep -q CUDA; then exit 0; fi; echo "llama-little-brother: CUDA not ready, attempt $${i}/8, retrying..." >&2; sleep 2; done; echo "llama-little-brother: no CUDA device after 8 attempts, refusing to fall back to CPU" >&2; exit 1'
+# The launcher reaps a stale :8082 orphan (port-bound, never the :8081 router)
+# then `exec`s `llama serve` in the FOREGROUND (see
+# start-little-brother.sh). With Type=exec the exec'd llama-server IS the unit's
+# main process, so `systemctl stop` (default KillMode=control-group) actually
+# kills the backend — the unit is genuinely stoppable, which card2-swap.sh
+# depends on.
+ExecStart=/usr/bin/bash /home/jan/.local/bin/start-little-brother.sh
+Type=exec
+KillSignal=SIGTERM
+TimeoutStartSec=120s
+# Self-heal: if the unit fails (OOM, or the CUDA probe above), retry after a
+# short delay so the text backend comes back once CUDA/VRAM is available again
+# instead of requiring a manual restart.
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

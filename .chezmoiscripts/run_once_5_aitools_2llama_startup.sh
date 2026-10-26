@@ -1,10 +1,16 @@
 #!/bin/bash
 # run_once_5_aitools_2llama_startup.sh
 #
-# Install the boot-time systemd unit for jan's llama.cpp CUDA backend, plus
-# the huggingface-hub bind mount, WITHOUT a login required:
+# Install the boot-time systemd units for jan's llama.cpp text backends,
+# WITHOUT a login required:
 #
-#   llama-cuda.service -> ~/.local/bin/restart-llama-cuda.sh   :8081 NVIDIA CUDA
+#   llama-cuda.service           -> ~/.local/bin/restart-llama-cuda.sh
+#                                   :8081, the 27B on the shared V100 (SXM2)
+#   llama-little-brother.service -> ~/.local/bin/start-little-brother.sh
+#                                   :8082, the "little brother" on the dedicated
+#                                   PCIe V100 (card 2, UUID-pinned in the unit
+#                                   file; deployed ONLY when that exact card is
+#                                   present)
 #
 # Each unit is Type=exec: the launcher reaps a stale orphan on its port, then
 # `exec`s llama-server in the foreground, so systemd tracks the server itself as
@@ -50,10 +56,27 @@ want_backend() {
 # Backends are added to this array only when selected (LLAMA_BACKENDS) AND
 # their accelerator is physically present; a box without the accelerator
 # simply gets no entry. CUDA is the primary backend: it is started on deploy.
+# (The card-2 little brother below has its OWN dedicated card, so it is gated
+# on that card's UUID presence, not on LLAMA_BACKENDS.)
 declare -a BACKENDS=()
 # CUDA (NVIDIA) only where there is an NVIDIA GPU.
 if want_backend cuda && has_nvidia; then
     BACKENDS+=( "llama-cuda.service|.local/bin/restart-llama-cuda.sh|8081|yes" )
+fi
+
+# Card-2 little brother: deployed ONLY when the exact GPU named in the unit
+# file is physically present (Era-2-safe: the gate reads the UUID from the
+# unit source, so re-pinning the unit follows the gate). A box without that
+# card gets a loud skip and nothing else.
+LITTLE_BROTHER_UNIT="llama-little-brother.service"
+LB_UNIT_SRC="${SRC_DIR}/etc/systemd/system/${LITTLE_BROTHER_UNIT}"
+if [ -f "${LB_UNIT_SRC}" ]; then
+    LB_UUID="$(sed -n 's/^Environment=CUDA_VISIBLE_DEVICES=//p' "${LB_UNIT_SRC}" | head -1)"
+    if [ -n "${LB_UUID}" ] && nvidia-smi -L 2>/dev/null | grep -qF "${LB_UUID}"; then
+        BACKENDS+=( "llama-little-brother.service|.local/bin/start-little-brother.sh|8082|yes" )
+    else
+        echo "ℹ️  ${LITTLE_BROTHER_UNIT} skipped — GPU ${LB_UUID:-<no UUID in unit>} not in nvidia-smi -L (box without card 2)."
+    fi
 fi
 
 # Bail early (no sudo, no fstab change) when neither launcher is present.
@@ -66,6 +89,16 @@ done
     echo "$(basename "$0"): no llama backend launcher found — nothing to install."
     exit 0
 }
+
+# --- 2. retire the dead SYCL text backend (idempotent one-time cleanup) -----#
+# llama-sycl.service (the old Intel SYCL backend on :8082) is retired: the box
+# no longer has an Intel GPU. Remove any leftover unit so it cannot start and
+# hold :8082 (the port now belongs to the card-2 little brother).
+if [ -f /etc/systemd/system/llama-sycl.service ]; then
+    sudo systemctl disable --now llama-sycl 2>/dev/null || true
+    sudo rm -f /etc/systemd/system/llama-sycl.service
+    echo "✅ retired leftover llama-sycl.service"
+fi
 
 # --- 3. install each unit, enable, and (maybe) start ------------------------
 for entry in "${BACKENDS[@]}"; do

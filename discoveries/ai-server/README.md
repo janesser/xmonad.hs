@@ -578,3 +578,8 @@ Killjoy/Splinter) resolved the shape. Outcome:
 **Still open:** crossbar auto-failover to SYCL on swap (§13 / crossbar config);
 confirm `:8091`-style online serving for Qwen-Image is *not* needed unless Jan later
 wants a person-facing ComfyUI front (he hasn't).
+
+
+#### Resources
+
+List of Quantization Formats (HF): https://huggingface.co/docs/hub/en/gguf#quantization-types

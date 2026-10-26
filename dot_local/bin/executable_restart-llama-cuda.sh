@@ -9,10 +9,10 @@
 # the launcher. THIS is what makes the unit genuinely stoppable.
 #
 # Reap ONLY our own CUDA backend: a process named llama / llama-server whose
-# cmdline is bound to OUR port (:8081). This must never match the SYCL backend
-# on :8082, whose llama.cpp binary is also literally named `llama-server` -- a
-# blunt killall would kill it too; the match is port-bound. Bounded SIGTERM
-# -> SIGKILL wait.
+# cmdline is bound to OUR port (:8081). This must never match the little
+# brother's card-2 backend on :8082 (llama-little-brother), whose llama.cpp
+# binary is also literally named `llama-server` -- a blunt killall would kill
+# it too; the match is port-bound. Bounded SIGTERM -> SIGKILL wait.
 #
 # Usage:
 #   restart-llama-cuda.sh [live|dry|stop]
@@ -37,7 +37,7 @@ if [ "$MODE" = stop ]; then
     exit 0
 fi
 
-# live: reap any stale :8081 orphan (port-bound; never a sibling SYCL backend).
+# live: reap any stale :8081 orphan (port-bound; never the little-brother card-2 backend on :8082).
 got=0
 for pid in $(pgrep -x llama 2>/dev/null; pgrep -x llama-server 2>/dev/null); do
     [ -r "/proc/$pid/cmdline" ] || continue
@@ -79,8 +79,8 @@ exec llama serve \
     --host :: \
     --port "$PORT" \
     --models-max 1 \
-    --parallel 1 -cram 20480 --cache-type-k q4_1 --cache-type-v q4_1 \
+    --parallel 1 -cram 0 --cache-idle-slots \
+    -sps 0.0 \
     -dev CUDA0 \
     --metrics \
-    -kvu \
     --no-ui

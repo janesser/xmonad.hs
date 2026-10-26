@@ -75,5 +75,17 @@ Cmnd_Alias SYSTEMCTL_UNIT = \
     /usr/bin/systemctl --system *, \
     /usr/bin/systemctl --user * \
 
+# --- scoped systemd-run: card-2 swap self-detach -----------------------------
+# jan-approved 2026-10-23 (card-2 little-brother design; see
+# discoveries/ai-server/little-brother-card2-swap.md): card2-swap.sh --detach
+# registers its stop-batch-restore sequence as a transient root unit
+# (`systemd-run --unit=card2-image-<ts> ...`). The grant is ANY ARGS — the
+# command the unit executes cannot be pinned without flag-order brittleness —
+# so this is the broadest line in the file (it can create arbitrary transient
+# root units). Sole intended consumer: /home/jan/.local/bin/card2-swap.sh.
+# Remove this alias and the grant below when card2-swap.sh is retired.
+Cmnd_Alias SYSTEMD_RUN_CARD2 = \
+    /usr/bin/systemd-run \
+
 # --- grant to this user only ---
-jan ALL=(root) NOPASSWD: CHEZMOI_PKGS, SYSTEMCTL_UNIT
+jan ALL=(root) NOPASSWD: CHEZMOI_PKGS, SYSTEMCTL_UNIT, SYSTEMD_RUN_CARD2

@@ -153,8 +153,10 @@ usage() {
 usage:
   $0 instruct                 -> llama.cpp (:8081, ornith)
   $0 omni [MODEL]             -> vLLM-Omni (:8091)
-  $0 image --batch FILE [--deadline SECONDS]
+  $0 image --batch FILE [--deadline SECONDS] [--no-evict]
                               -> sd.cpp batch on the V100 (default deadline 300s)
+                              --no-evict: do NOT stop/restore the text backends
+                              (card2-swap.sh uses this for card-2 batches)
 
 image batch file (JSON): shared top-level flags + a 'calls' array; each call
 sets its prompt/params and MUST define 'output' (the result location). The
@@ -198,10 +200,12 @@ case "${1:-instruct}" in
     shift    # consume the 'image' subcommand token before parsing its options
     BATCH=""
     DEADLINE="$DEFAULT_DEADLINE"
+    NO_EVICT=0
     while [ $# -gt 0 ]; do
       case "$1" in
         --batch) BATCH="${2:-}"; shift 2 ;;
         --deadline) DEADLINE="${2:-}"; shift 2 ;;
+        --no-evict) NO_EVICT=1; shift ;;
         *) echo "image: unknown option: $1" >&2; usage; exit 2 ;;
       esac
     done
@@ -215,20 +219,30 @@ case "${1:-instruct}" in
     fi
     [ -x "$SD_CLI" ] || { echo "image: sd-cli not found at $SD_CLI" >&2; exit 1; }
 
-    WHO="$(is_active)"
-    echo "== switching to sd.cpp image mode (:V100, deadline ${DEADLINE}s) =="
-    "${SUDO[@]}" stop llama-cuda                      # stop the llama backend; frees the V100
-    "$RESTART_OMNI" stop                              # stop vLLM-Omni; frees the V100
-    if [ "$(nvidia-smi --query-gpu=memory.used --format=csv,noheader 2>/dev/null | tr -dc 0-9)" != 0 ] 2>/dev/null; then
-      echo "switch: WARNING V100 still shows memory used — a non-text holder may hold it" >&2
+    WHO=""
+    if [ "${NO_EVICT}" -eq 1 ]; then
+      echo "== sd.cpp image mode, --no-evict (shared card, deadline ${DEADLINE}s) =="
+      echo "switch: --no-evict: leaving text backends (llama-cuda :8081 / vLLM-Omni) running."
+    else
+      WHO="$(is_active)"
+      echo "== switching to sd.cpp image mode (:V100, deadline ${DEADLINE}s) =="
+      "${SUDO[@]}" stop llama-cuda                      # stop the llama backend; frees the V100
+      "$RESTART_OMNI" stop                              # stop vLLM-Omni; frees the V100
+      if [ "$(nvidia-smi --query-gpu=memory.used --format=csv,noheader 2>/dev/null | tr -dc 0-9)" != 0 ] 2>/dev/null; then
+        echo "switch: WARNING V100 still shows memory used — a non-text holder may hold it" >&2
+      fi
     fi
 
     RESULTS="$(run_image_batch "$BATCH" "$DEADLINE")"
     BATCH_RC=$?             # capture BEFORE the echo, else it records echo's exit (0)
     echo "$RESULTS"
 
-    echo "== image batch done; restoring ${WHO:-none} =="
-    restore "$WHO"
+    if [ "${NO_EVICT}" -eq 1 ]; then
+      echo "== image batch done (--no-evict: nothing to restore) =="
+    else
+      echo "== image batch done; restoring ${WHO:-none} =="
+      restore "$WHO"
+    fi
     exit "${BATCH_RC}"
     ;;
   *)
