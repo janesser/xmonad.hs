@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# switch-ai-backend.sh {omni|instruct|image} [opts]
+# switch-ai-backend.sh {instruct|image} [opts]
 #
 # Swap which backend holds the single V100 (32 GB). Only ONE workload holds it
 # at a time:
 #   * instruct -> llama.cpp CUDA backend  (:8081, ornith)  [llama-cuda.service, boot default]
-#   * omni     -> vLLM-Omni               (:8091, Qwen2.5-Omni-7B by default)
 #   * image    -> sd.cpp (stable-diffusion.cpp) sd-cli, runs a batch file
 #
 # Olla (:40114) routes each request by model id to whichever backend is live
@@ -13,14 +12,12 @@
 # or sd.cpp holds the V100 (no :8081) would fail; Olla's periodic refresh is enough.
 #
 # sudo (NOPASSWD drop-in, /usr/bin/systemctl --system) is used ONLY to manage the
-# llama-cuda system unit. vLLM-Omni is a plain background process started by
-# restart-vllm-omni.sh. The only thing we do to a backend is STOP it — a plain
-# `systemctl stop llama-cuda` or `restart-vllm-omni.sh stop` — no manual signal
-# scanning. Stopping the llama-cuda unit does NOT umount the shared HF cache
-# bind mount — it must stay mounted for vLLM-Omni / sd.cpp.
+# llama-cuda system unit. The only thing we do to a backend is STOP it — a plain
+# `systemctl stop llama-cuda` — no manual signal scanning. Stopping the llama-cuda
+# unit does NOT umount the shared HF cache bind mount — it must stay mounted for
+# sd.cpp.
 set -uo pipefail
 
-RESTART_OMNI="$HOME/.local/bin/restart-vllm-omni.sh"
 SUDO=(sudo systemctl)        # array: invoked as "${SUDO[@]}" so 'sudo systemctl' splits into 2 args
 SD_CLI="/home/jan/projs/stable-diffusion.cpp/build/bin/sd-cli"
 DEFAULT_DEADLINE=300   # seconds the image mode holds the V100 before auto-switch-back
@@ -34,13 +31,12 @@ wait_ready() {
   return 1
 }
 
-# is_active BACKEND: "llama" | "omni" | "" — which text backend currently holds
-# the V100, so image mode can restore it afterwards.
+# is_active BACKEND: "llama" | "" — which text backend currently holds
+# the V100, so image mode can restore it afterwards. vLLM-Omni (:8091) is
+# retired — the V100 now hosts the 27B on :8081 or an sd.cpp batch.
 is_active() {
   if systemctl --system is-active --quiet llama-cuda 2>/dev/null; then
     echo llama
-  elif curl -fsS "http://127.0.0.1:8091/v1/models" >/dev/null 2>&1; then
-    echo omni
   else
     echo ""
   fi
@@ -54,9 +50,6 @@ restore() {
                                       #   start is a no-op and won't relaunch the reaped orphan backend
       if wait_ready 8081; then echo "switch: llama.cpp backend healthy on :8081.";
       else echo "switch: llama.cpp not healthy on :8081." >&2; exit 1; fi
-      ;;
-    omni)
-      "$RESTART_OMNI" start
       ;;
     *)
       echo "switch: no prior text backend recorded; leaving V100 free."
@@ -152,7 +145,6 @@ usage() {
   cat >&2 <<EOF
 usage:
   $0 instruct                 -> llama.cpp (:8081, ornith)
-  $0 omni [MODEL]             -> vLLM-Omni (:8091)
   $0 image --batch FILE [--deadline SECONDS] [--no-evict]
                               -> sd.cpp batch on the V100 (default deadline 300s)
                               --no-evict: do NOT stop/restore the text backends
@@ -177,18 +169,9 @@ top-level 'model' key is the standalone diffusion GGUF and is passed as
 EOF
 }
 
-MODEL="Qwen/Qwen2.5-Omni-7B"
 case "${1:-instruct}" in
-  omni)
-    [ "${2:-}" != "" ] && MODEL="$2"
-    echo "== switching to vLLM-Omni (:8091, $MODEL) =="
-    "${SUDO[@]}" stop llama-cuda                        # stop the llama backend; frees the V100 (HF cache mount stays)
-    "$RESTART_OMNI" start "$MODEL"
-    exit $?
-    ;;
   instruct)
     echo "== switching to llama.cpp (:8081, ornith) =="
-    "$RESTART_OMNI" stop                              # stop vLLM-Omni; frees the V100
     "${SUDO[@]}" restart llama-cuda                      # relaunch the llama backend on :8081 (see restore: start==no-op on a stale-active oneshot)
     if wait_ready 8081; then
       echo "switch: llama.cpp backend healthy on :8081."
@@ -222,12 +205,11 @@ case "${1:-instruct}" in
     WHO=""
     if [ "${NO_EVICT}" -eq 1 ]; then
       echo "== sd.cpp image mode, --no-evict (shared card, deadline ${DEADLINE}s) =="
-      echo "switch: --no-evict: leaving text backends (llama-cuda :8081 / vLLM-Omni) running."
+      echo "switch: --no-evict: leaving the llama-cuda backend on :8081 running."
     else
       WHO="$(is_active)"
       echo "== switching to sd.cpp image mode (:V100, deadline ${DEADLINE}s) =="
       "${SUDO[@]}" stop llama-cuda                      # stop the llama backend; frees the V100
-      "$RESTART_OMNI" stop                              # stop vLLM-Omni; frees the V100
       if [ "$(nvidia-smi --query-gpu=memory.used --format=csv,noheader 2>/dev/null | tr -dc 0-9)" != 0 ] 2>/dev/null; then
         echo "switch: WARNING V100 still shows memory used — a non-text holder may hold it" >&2
       fi

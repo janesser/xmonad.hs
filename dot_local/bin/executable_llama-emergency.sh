@@ -40,7 +40,7 @@ SUDO="/usr/bin/systemctl --system"
 LOG="$HOME/.local/log/llama-emergency.log"
 # Best-effort list of managed units that can hold the V100. Only units that
 # actually exist on this box are touched (portable across boxes).
-UNITS=(llama-cuda vllm-omni)
+UNITS=(llama-cuda)
 
 usage() {
   awk '/^# Usage:/{f=1;next} /^# Notes:/{f=0} f && /^#   /{sub(/^#   /," ");print}' "$0"
