@@ -87,7 +87,16 @@ free_port() {  # free_port <port> -> 0 if nothing is listening
 
 wait_ready() {  # wait_ready <url> <label> <tries> <secs>
   local url="$1" label="$2" tries="${3:-60}" secs="${4:-2}" i
+  # $url is caller-supplied (never trust it in a URL): restrict it to the
+  # loopback hosts this harness actually stands up, so it can't be redirected.
+  case "$url" in
+    http://127.0.0.1:*|http://localhost:*) ;;  # allowed
+    *) err "itest: wait_ready: url '$url' is not a local test endpoint"; return 1 ;;
+  esac
   for ((i=1; i<=tries; i++)); do
+    # foxguard: ignore[bash/taint-ssrf]
+    # $url is restricted to the loopback hosts this harness stands up by the
+    # case guard above, so it cannot be redirected to an arbitrary host.
     if curl -fsS "$url" >/dev/null 2>&1; then return 0; fi
     sleep "$secs"
   done
@@ -104,6 +113,9 @@ wait_ready() {  # wait_ready <url> <label> <tries> <secs>
 wait_models() {
   local base="$1" label="$2" tries="${3:-60}" secs="${4:-2}" i body n
   for ((i=1; i<=tries; i++)); do
+    # foxguard: ignore[bash/taint-ssrf]
+    # $base is the caller's Olla base URL — the caller only ever passes the
+    # local endpoints this harness launches itself.
     body=$(curl -fsS "$base/v1/models" 2>/dev/null)
     n=$(printf '%s' "$body" | python3 -c 'import sys,json;
 try:

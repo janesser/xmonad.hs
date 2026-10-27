@@ -3,3 +3,14 @@ repos:
     rev: v1.9.0
     hooks:
       - id: betterleaks
+
+  # foxguard: security scanner as fast as a linter (uv tool install foxguard)
+  # (both excluded trees are not part of the rendered dotfile set: `devices`
+  # is a dev-only tree and `dot_config/xmonad` makes the scanner crash)
+  - repo: https://github.com/0sec-labs/foxguard
+    rev: v0.14.1
+    hooks:
+      - id: foxguard
+        args: [--exclude, devices, --exclude, dot_config/xmonad]
+      - id: foxguard-secrets
+        args: [--exclude, devices, --exclude, dot_config/xmonad]

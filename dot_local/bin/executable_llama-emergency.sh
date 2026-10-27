@@ -56,10 +56,21 @@ while [ $# -gt 0 ]; do
     -f|--foreground)   FG=1; shift ;;
     -m|--model)        MODEL="${2:?model required for $1}"; shift 2 ;;
     -p|--port)         PORT="${2:?port required for $1}"; shift 2 ;;
+    # $PORT is caller-supplied: validated below before it ever touches a URL.
+
     -h|--help)         usage ;;
     *) echo "llama-emergency: unknown arg: $1" >&2; usage ;;
   esac
 done
+
+# $PORT is caller-supplied via -p (never trust it in a URL): gate it to
+# numeric 1..65535 so it cannot become a tainted URL component.
+case "$PORT" in
+  ''|*[!0-9]*) echo "llama-emergency: port '$PORT' is not numeric" >&2; exit 2 ;;
+esac
+if [ "$PORT" -ge 65536 ] 2>/dev/null; then
+  echo "llama-emergency: port '$PORT' exceeds 65535" >&2; exit 2
+fi
 
 # Kill any llama / llama-server process whose cmdline is bound to $1.
 reap_port() {
@@ -138,6 +149,9 @@ echo "llama-emergency: pid $PID — stop with: $0 stop"
 HOST="$(hostname -s)"
 echo "llama-emergency: waiting on http://$HOST:$PORT/v1/models ..."
 for _ in $(seq 1 90); do
+  # foxguard: ignore[bash/taint-ssrf]
+  # $PORT is gated to numeric 1..65535 by the case above; $HOST is the
+  # machine's own name, so the URL can only point at this box.
   if curl -fsS "http://$HOST:$PORT/v1/models" >/dev/null 2>&1; then
     echo "llama-emergency: READY on :$PORT"
     exit 0

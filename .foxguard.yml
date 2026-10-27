@@ -1,0 +1,15 @@
+# foxguard repo config (auto-discovered from the scan path upward).
+#
+# Note: the config has no path-exclusion key for the main scan, so the
+# excluded trees below are passed via the pre-commit hook's --exclude flags
+# instead (see .pre-commit-config.yaml):
+#
+#   * `devices/` is a chezmoi-ignored dev/driver notes tree (not rendered by
+#     chezmoi, never part of the dotfile set)
+#   * `dot_config/xmonad` is a Haskell tree that makes foxguard 0.14.1 abort
+#     with a heap-corruption error (`corrupted size vs. prev_size`), so it is
+#     never scanned here
+#
+# Accepted findings (validated input the taint engine does not recognise as a
+# sanitizer) carry a `# foxguard: ignore[<rule-id>]` directive next to the
+# code that gates them, see the respective scripts.
