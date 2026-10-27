@@ -13,4 +13,4 @@ repos:
       - id: foxguard
         args: [--exclude, devices, --exclude, dot_config/xmonad]
       - id: foxguard-secrets
-        args: [--exclude, devices, --exclude, dot_config/xmonad]
+        args: [--exclude-path, devices, --exclude-path, dot_config/xmonad]

@@ -1,8 +1,11 @@
 # foxguard repo config (auto-discovered from the scan path upward).
 #
 # Note: the config has no path-exclusion key for the main scan, so the
-# excluded trees below are passed via the pre-commit hook's --exclude flags
+# excluded trees below are passed via the pre-commit hook's exclusion flags
 # instead (see .pre-commit-config.yaml):
+#
+#   * `foxguard` uses `--exclude <glob|prefix>` (repeatable)
+#   * `foxguard-secrets` uses `--exclude-path <glob|prefix>` (repeatable)
 #
 #   * `devices/` is a chezmoi-ignored dev/driver notes tree (not rendered by
 #     chezmoi, never part of the dotfile set)
