@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# SAFEGUARD: apt-only script. `apt` does not exist on a pacman/yay box, so skip
+# silently instead of failing the whole `cz apply`.
+command -v apt >/dev/null || exit 0
+
 ## Github Act
 sudo apt install -y podman-docker golang-go
 go install github.com/nektos/act@latest

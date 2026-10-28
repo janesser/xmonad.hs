@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# SAFEGUARD: apt/snap-only script. `apt` and `snap` are apt-flavoured package
+# managers — on a pacman/yay box (e.g. omarchy) neither exists, so skip silently
+# instead of failing the whole `cz apply`.
+command -v apt >/dev/null || exit 0
+
 # delete everything under ~/.pi except agent/sessions (keep conversation history)
 find -mindepth 1 "$HOME/.pi" \
   -path "$HOME/.pi/agent/sessions" -prune -o \

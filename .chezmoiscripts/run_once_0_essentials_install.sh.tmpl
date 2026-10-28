@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# SAFEGUARD: apt-only script. `apt` is an apt-flavoured package manager — on a
+# pacman/yay box (e.g. omarchy) it does not exist, so skip silently instead of
+# failing the whole `cz apply`.
+command -v apt >/dev/null || exit 0
+
 sudo apt install -y \
     xmonad xmobar libghc-split-dev libghc-hostname-dev suckless-tools \
     haskell-gtk-sni-tray-utils \

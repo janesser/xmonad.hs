@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# SAFEGUARD: apt-only script. `apt` does not exist on a pacman/yay box, so skip
+# silently instead of failing the whole `cz apply`.
+command -v apt >/dev/null || exit 0
+
 ZAPZAP_VERSION=6.5.2.5
 
 uv tool install poetry

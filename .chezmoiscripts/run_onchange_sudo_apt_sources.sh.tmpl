@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# SAFEGUARD: apt-only script. `apt` keyrings/sources live under /etc/apt — on a
+# pacman/yay box that directory does not exist, so skip silently instead of
+# failing the whole `cz apply`.
+command -v apt >/dev/null || exit 0
+
 if [ ! -t 0 ]; then
     echo "⚠️  No interactive terminal — cannot ask for consent."
     echo "   Aborting; re-run under an interactive cz apply."

@@ -5,6 +5,10 @@
 # sources + keyrings and their apt packages (charm, glow, signal-desktop,
 # element-desktop). Runs once (run_once) during `cz apply`.
 #
+# SAFEGUARD: apt-only script. `apt` does not exist on a pacman/yay box, so skip
+# silently instead of failing the whole `cz apply`.
+command -v apt >/dev/null || exit 0
+#
 # The snap migration (install snapd, then snap install signal-desktop /
 # element-desktop) now lives in run_once_9_cleanup_snap_install.sh, which is
 # ordered to run AFTER this script (alphabetically: "remove_legacy" < "snap_

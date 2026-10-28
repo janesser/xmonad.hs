@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# SAFEGUARD: apt-only script. The wezterm apt keyring lives under /etc/apt — on a
+# pacman/yay box that directory does not exist, so skip silently instead of
+# failing the whole `cz apply`.
+command -v apt >/dev/null || exit 0
+
 curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /etc/apt/keyrings/wezterm-fury.gpg
 sudo chmod 644 /etc/apt/keyrings/wezterm-fury.gpg
 echo 'deb [signed-by=/etc/apt/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list

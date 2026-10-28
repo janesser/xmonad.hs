@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# SAFEGUARD: apt-only script. `add-apt-repository` and `apt` do not exist on a
+# pacman/yay box, so skip silently instead of failing the whole `cz apply`.
+command -v apt >/dev/null || exit 0
+
 if command -v add-apt-repository >/dev/null 2>&1
 then
     # removal after disfunction FIXME find replacement

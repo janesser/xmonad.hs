@@ -16,6 +16,11 @@
 set -o pipefail
 export DEBIAN_FRONTEND=noninteractive
 
+# SAFEGUARD: apt-only script. The CUDA build dependencies are apt packages
+# (`glslang-dev`, `nvidia-cuda-toolkit`, ...) — on a pacman/yay box they cannot be
+# installed, so skip silently instead of failing the whole `cz apply`.
+command -v apt >/dev/null || exit 0
+
 log() { echo "$(basename "$0"): $*"; }
 
 LLAMA_REF="v0.7.0"

@@ -3,6 +3,10 @@
 # Install mise — the drop-in replacement for asdf — and wire it into fish.
 # asdf is fully removed; tool versions are pinned in dot_config/mise/config.toml.
 # See mise-migration-plan.md.
+#
+# SAFEGUARD: apt-only script. `apt` does not exist on a pacman/yay box, so skip
+# silently instead of failing the whole `cz apply`.
+command -v apt >/dev/null || exit 0
 
 export PATH="$HOME/.local/bin:$PATH"
 

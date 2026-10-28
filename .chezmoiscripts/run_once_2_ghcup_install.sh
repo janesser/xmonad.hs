@@ -6,6 +6,10 @@ if [ -n "$GHCUP_ON_PATH" ]; then
     exit 0;
 fi
 
+# SAFEGUARD: apt-only script. `apt` does not exist on a pacman/yay box, so skip
+# silently instead of failing the whole `cz apply`.
+command -v apt >/dev/null || exit 0
+
 sudo apt install -y build-essential curl libffi-dev libffi8 libgmp-dev libgmp10 libncurses-dev libncurses6 libtinfo6 pkg-config
 
 mise install ghcup

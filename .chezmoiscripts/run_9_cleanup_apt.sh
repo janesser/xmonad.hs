@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# SAFEGUARD: apt-only script. On a pacman/yay box (e.g. omarchy) `apt` does not
+# exist — skip silently instead of failing the whole `cz apply`.
+command -v apt >/dev/null || exit 0
+
 sudo apt clean
 
 ## CLEAN UPS
