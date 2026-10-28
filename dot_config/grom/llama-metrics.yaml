@@ -1,0 +1,109 @@
+# grom dashboard for the two llama.cpp routers.
+#
+# Prometheus scrapes both routers every 15s (see /etc/prometheus/prometheus.yml,
+# jobs `llama-cuda` on :8081 and `llama-little-brother` on :8082). Both are
+# router servers, so Prometheus fetches them with ?model=
+# InternScience/Sage-A1.5-Q4_K_M-GGUF:Q4_K_M, which is the model loaded on
+# both right now. The metrics are per-model-instance: cumulative since the
+# child instance of that model started.
+#
+# Run: grom run --config ~/.config/grom/llama-metrics.yaml --prom http://127.0.0.1:9090
+title: llama.cpp
+theme: tokyo-night
+refresh: 10s
+range: 1h
+
+widgets:
+  # Row 1 — headline stats.
+  - type: stat
+    title: prompt tokens (ornith :8081)
+    unit: short
+    sparkline: true
+    grid: { x: 0, y: 0, w: 6, h: 4 }
+    queries:
+      - expr: llamacpp:prompt_tokens_total{job="llama-cuda"}
+
+  - type: stat
+    title: prompt tokens (little brother :8082)
+    unit: short
+    sparkline: true
+    grid: { x: 6, y: 0, w: 6, h: 4 }
+    queries:
+      - expr: llamacpp:prompt_tokens_total{job="llama-little-brother"}
+
+  - type: stat
+    title: decode total (ornith)
+    unit: short
+    sparkline: true
+    grid: { x: 12, y: 0, w: 6, h: 4 }
+    queries:
+      - expr: llamacpp:n_decode_total{job="llama-cuda"}
+
+  - type: stat
+    title: decode total (little brother)
+    unit: short
+    sparkline: true
+    grid: { x: 18, y: 0, w: 6, h: 4 }
+    queries:
+      - expr: llamacpp:n_decode_total{job="llama-little-brother"}
+
+  # Row 2 — live load + tokens predicted.
+  - type: stat
+    title: requests processing (ornith)
+    unit: short
+    sparkline: true
+    grid: { x: 0, y: 4, w: 6, h: 4 }
+    queries:
+      - expr: llamacpp:requests_processing{job="llama-cuda"}
+
+  - type: stat
+    title: requests processing (little brother)
+    unit: short
+    sparkline: true
+    grid: { x: 6, y: 4, w: 6, h: 4 }
+    queries:
+      - expr: llamacpp:requests_processing{job="llama-little-brother"}
+
+  - type: stat
+    title: tokens predicted (ornith)
+    unit: short
+    sparkline: true
+    grid: { x: 12, y: 4, w: 6, h: 4 }
+    queries:
+      - expr: llamacpp:tokens_predicted_total{job="llama-cuda"}
+
+  - type: stat
+    title: tokens predicted (little brother)
+    unit: short
+    sparkline: true
+    grid: { x: 18, y: 4, w: 6, h: 4 }
+    queries:
+      - expr: llamacpp:tokens_predicted_total{job="llama-little-brother"}
+
+  # Row 3 — prompt tokens over time.
+  - type: timeseries
+    title: prompt tokens / s
+    unit: short
+    grid: { x: 0, y: 8, w: 12, h: 8 }
+    queries:
+      - expr: sum by (job) (rate(llamacpp:prompt_tokens_total[5m]))
+        legend: "{{job}}"
+
+  # Row 4 — decode over time.
+  - type: timeseries
+    title: decode / s
+    unit: short
+    stacked: true
+    grid: { x: 0, y: 16, w: 12, h: 8 }
+    queries:
+      - expr: sum by (job) (rate(llamacpp:n_decode_total[5m]))
+        legend: "{{job}}"
+
+  # Row 5 — prompt seconds (time spent prompting).
+  - type: timeseries
+    title: prompt seconds (cumulative)
+    unit: s
+    grid: { x: 12, y: 8, w: 12, h: 8 }
+    queries:
+      - expr: llamacpp:prompt_seconds_total{job="llama-cuda"}
+      - expr: llamacpp:prompt_seconds_total{job="llama-little-brother"}
