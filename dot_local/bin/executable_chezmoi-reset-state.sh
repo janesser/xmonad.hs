@@ -22,7 +22,7 @@
 #
 set -euo pipefail
 
-CHEZMOI="${CHEZMOI:-$(command -v chezmoi)}"
+CHEZMOI="$(command -v chezmoi)"
 
 usage() {
     cat <<'EOF'

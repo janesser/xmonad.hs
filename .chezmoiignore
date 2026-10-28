@@ -14,3 +14,7 @@ LICENSE
 COMPILE.md
 README.md
 AGENTS.md
+
+{{- if eq .chezmoi.hostname "flowerpower" }}
+.chezmoiscripts/*.fish
+{{- end }}
