@@ -11,6 +11,7 @@ fi
 
 source "$CHEZMOI_SOURCE_DIR/commons/mise_assert-uv.sh"
 
-uv tool install pre-commit foxguard
+uv tool install pre-commit
+uv tool install foxguard
 pre-commit install
 echo "✅ Pre-commit hooks installed via uvx."
