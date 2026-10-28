@@ -1,3 +1,5 @@
+# Guard: fish must be present for these files to have any effect.
+command -v fish >/dev/null || exit 0
 # mise shell integration (replaces the old asdf.fish).
 # Puts mise's shims on PATH and updates tool versions as you cd between dirs.
 if not contains "$HOME/.local/bin" $PATH

@@ -1,3 +1,5 @@
+# Guard: fish must be present for these files to have any effect.
+command -v fish >/dev/null || exit 0
 # fish function: ssh-heal-forward
 # Heals the calling shell's SSH_AUTH_SOCK and then runs a command.
 # No eval is needed — the function runs in the parent process, so it can set
