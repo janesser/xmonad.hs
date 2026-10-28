@@ -25,21 +25,16 @@ command -v yay >/dev/null || exit 0
 
 echo "==> pacman: installing official repo packages"
 sudo pacman -S --noconfirm --needed \
-    zen-browser-bin \
     signal-desktop \
     nextcloud-client \
     keepassxc \
     helix \
-    neovim \
     rustdesk
 
 echo "==> yay: installing AUR packages"
 yay -S --noconfirm --needed \
     vscodium-bin \
     hylki \
-    hylki-debug \
-    libgnome-keyring \
-    libgnome-keyring-debug \
     pwvucontrol \
     rencal-bin \
     rptui-bin
