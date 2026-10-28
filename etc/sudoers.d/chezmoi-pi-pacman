@@ -1,0 +1,21 @@
+# /etc/sudoers.d/chezmoi-pi-pacman
+# pi-agent: passwordless sudo ONLY for pacman/yay package management.
+#
+# SEPARATE from chezmoi-pi by design: apt boxes and pacman boxes must never
+# share this file (an apt drop-in on a pacman box is invalid, and vice versa).
+# Review + validate with:
+#   visudo -cf /etc/sudoers.d/chezmoi-pi-pacman
+#
+# Target: pacman-based boxes (omarchy). On apt boxes this file is never
+# installed — see .chezmoiscripts/run_onchange_sudo_sudoers_chezmoi_pi_pacman.sh.tmpl.
+#
+# NOTE: `yay` itself does not need sudo (it runs `su` internally), so only the
+# pacman commands need a rule here.
+
+# --- package managers (any args) ---
+Cmnd_Alias CHEZMOI_PKGS = \
+    /usr/bin/pacman, \
+    /usr/bin/pacman-mirrors \
+
+# --- grant to this user only ---
+jan ALL=(root) NOPASSWD: CHEZMOI_PKGS

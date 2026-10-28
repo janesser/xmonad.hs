@@ -4,7 +4,8 @@
 #   visudo -cf /etc/sudoers.d/chezmoi-pi
 # Source copy lives in this repo under etc/sudoers.d/ (NOT applied by chezmoi:
 # etc/ is in .chezmoiignore). It is installed, with explicit user consent, by
-# .chezmoiscripts/run_9_0_sudoers_chezmoi_pi.sh as part of cz update.
+# .chezmoiscripts/run_onchange_sudo_sudoers_chezmoi_pi.sh.tmpl as part of
+# cz update.
 # NOTE: do NOT add `Defaults !requiretty` here. `requiretty` was removed from
 # sudo (1.9.x); listing it makes visudo treat the file as invalid and breaks
 # sudo entirely. Modern sudo no longer requires a tty for these rules.

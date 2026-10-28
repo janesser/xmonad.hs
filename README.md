@@ -51,6 +51,11 @@ installed file is already correct it exits immediately. It asks for an explicit
 **yes/no confirmation** before writing anything under `/etc`, and when `cz
 update` runs without a TTY it aborts and prints the manual install commands.
 
+The repo has a second drop-in for pacman boxes, installed by
+`.chezmoiscripts/run_onchange_sudo_sudoers_chezmoi_pi_pacman.sh.tmpl` from
+`etc/sudoers.d/chezmoi-pi-pacman` — each box flavour gets only its own rules,
+and each script skips silently on the wrong flavour.
+
 Manual install / validate (fallback, e.g. before the run script has ever run):
 
 ```
@@ -74,6 +79,9 @@ update-alternatives, mkdir, chmod, chown, tee, cp, gpg, mv, sed, extrepo,
 dpkg, curl, install, cmp, rm` — plus `bash -c "chmod/chown ..."` for the podman.sock steps
 and the ollama-uninstall script `uninstaller/ollama_uninstall.sh`.
 Anything else is denied.
+
+On pacman boxes the second drop-in additionally allows `pacman` and
+`pacman-mirrors`.
 
 ### Tighten later (optional)
 - `curl *` is broad (arbitrary download path). Scope it:

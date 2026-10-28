@@ -17,6 +17,14 @@
 #   chezmoi-pi source hash: {{ include "etc/sudoers.d/chezmoi-pi" | sha256sum }}
 # ------------------------------------------------------------------------------
 #
+# --- guard: apt-based boxes only ---
+# `apt` and `nala` do not exist on pacman boxes (omarchy): the apt drop-in
+# would be invalid there, so skip silently instead of failing `cz apply`.
+if ! command -v apt >/dev/null && ! command -v nala >/dev/null; then
+    echo "==> sudoers: no apt/nala found (not an apt box) — skipping"
+    exit 0
+fi
+
 # Idempotent (backstop): only writes when the installed file is missing or differs.
 # Consent : asks for a yes/no confirmation before writing anything under /etc.
 

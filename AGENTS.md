@@ -59,18 +59,29 @@ Rules:
   (`rm -rf`, `reset`/`rebase`, `shutdown`) just because it was "prepared" —
   the user wanted it ready to fire, not fired. Confirm before applying.
 
-## Sudoers file (repo-managed under `etc/`)
-Source: `etc/sudoers.d/chezmoi-pi` (a normal chezmoi file, but `etc/` is in
-`.chezmoiignore`, so it is never auto-applied to `/etc`). Installed, with an
-interactive yes/no confirmation, by the chezmoi **`run_onchange`** script
-`.chezmoiscripts/run_onchange_9_0_sudoers_chezmoi_pi.sh.tmpl` as part of `cz
-update`. The script embeds a SHA256 of the sudoers source file, so chezmoi only
-runs it when that source file changes (skipped — no `sudo`, no prompt — on
-every other apply).
+## Sudoers files (repo-managed under `etc/`)
+Two drop-ins, split by package manager so each box gets only the rules it can
+use:
+
+| Drop-in | Box flavour | Install script |
+|---|---|---|
+| `etc/sudoers.d/chezmoi-pi` | apt / nala / snap | `run_onchange_sudo_sudoers_chezmoi_pi.sh.tmpl` |
+| `etc/sudoers.d/chezmoi-pi-pacman` | pacman / yay | `run_onchange_sudo_sudoers_chezmoi_pi_pacman.sh.tmpl` |
+
+Source files are normal chezmoi files (but `etc/` is in `.chezmoiignore`, so
+neither is auto-applied to `/etc`). Each is installed, with an interactive
+yes/no confirmation, by its `run_onchange` script as part of `cz update`. Each
+script embeds a SHA256 of its own source file, so chezmoi only runs it when that
+source file changes (skipped — no `sudo`, no prompt — on every other apply).
+
+Each install script also skips silently on the wrong box flavour: the apt
+script needs `apt` or `nala` (absent on omarchy), the pacman script needs
+`pacman` (absent on apt boxes). Both are safe to run on the whole fleet.
+
 Manual fallback + validation: the "pi-agent scoped sudo for `cz update`" section
 of the top-level README.md.
 
-The old `pi/` scaffold has been removed — the sudoers file now lives in the
+The old `pi/` scaffold has been removed — the sudoers files now live in the
 natural `etc/` tree, so `pi/` is obsolete.
 
 ## Encryption (age-encrypted / concealed files)
