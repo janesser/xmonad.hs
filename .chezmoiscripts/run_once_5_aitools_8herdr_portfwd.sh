@@ -6,7 +6,7 @@
 # cyberkleiber`: on the server (every action/pane/link-handler runs there) and
 # on the machine you sit at (the local agent that actually binds the ports).
 #
-#   ~/.config/herdr-portfwd/hosts.toml   -> hosts to tunnel (shared)
+#   ~/.config/herdr-portfwd/hosts.toml   -> hosts to tunnel (shared, encrypted)
 #   ~/.config/herdr-portfwd/config.toml   -> plugin settings (shared)
 #   herdr plugin install ...              -> the plugin itself on the remote
 #   ~/.local/bin/herdr-portfwd            -> the CLI (installed by the plugin)
@@ -19,9 +19,10 @@
 # Gated to herdr-only boxes: on any host without herdr this logs and exits 0.
 # Sudo is used only for commands in the scoped NOPASSWD sudoers drop-in.
 #
-# NOTE: hosts.toml (the LAN topology) is still cleartext here — it is an
-# age-encrypted blob in a follow-up change (the config dir is rendered on every
-# box, so the topology would leak to every host).
+# NOTE: hosts.toml (the LAN topology) is an age-encrypted blob in the repo
+# (encrypted_dot_config/herdr-portfwd/hosts.toml.age) so the topology does not
+# leak to the other boxes — chezmoi renders it into
+# ~/.config/herdr-portfwd/hosts.toml on every box.
 
 set -euo pipefail
 
@@ -67,17 +68,24 @@ herdr server reload-config >/dev/null 2>&1 || {
 # them into ~/.config/herdr-portfwd/ on every box. The plugin reads whichever
 # of the two files exists first on the machine the command runs on.
 for f in hosts.toml config.toml; do
-    if [ -f "${SRC_DIR}/dot_config/herdr-portfwd/${f}" ]; then
+    # hosts.toml is age-encrypted (it carries the LAN topology) — the source is
+    # under encrypted_dot_config/, everything else is in dot_config/.
+    if [ "${f}" = "hosts.toml" ]; then
+        SRC="${SRC_DIR}/encrypted_dot_config/herdr-portfwd/${f}.age"
+    else
+        SRC="${SRC_DIR}/dot_config/herdr-portfwd/${f}"
+    fi
+    if [ -f "${SRC}" ]; then
         DEST="${PORTFWD_CONFIG_DIR}/${f}"
-        if [ -f "${DEST}" ] && cmp -s "${SRC_DIR}/dot_config/herdr-portfwd/${f}" "${DEST}"; then
-            echo "✅ ${DEST}/${f} up to date."
+        if [ -f "${DEST}" ]; then
+            echo "✅ ${DEST}/${f} already present (chezmoi keeps it up to date)."
         else
             mkdir -p "${PORTFWD_CONFIG_DIR}"
-            install -m 0644 "${SRC_DIR}/dot_config/herdr-portfwd/${f}" "${DEST}"
+            install -m 0644 "${SRC}" "${DEST}"
             echo "✅ installed ${DEST}/${f}"
         fi
     else
-        echo "⚠️  ${f} source not found in dot_config/herdr-portfwd/."
+        echo "⚠️  ${f} source not found (${SRC})."
     fi
 done
 
