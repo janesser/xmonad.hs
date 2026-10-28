@@ -6,6 +6,11 @@
 > CUDA server on card 2 — see `little-brother-card2-swap.md`. The
 > mutual-support handover protocol is retired (see AGENTS.md). Kept as a
 > historical record of the dual-backend era.
+>
+> **RETIRED (2026-10-28):** `olla.service` (the Olla proxy systemd unit on
+> :40114) is retired and removed from the repo. Machines that still have it are
+> cleaned by `uninstaller/olla_service_uninstall.sh` (called from
+> `run_9_cleanup_apt.sh` on every apply).
 
 **Last updated:** 2026-09-21 (superseded 2026-10-23)
 **Repo:** `~/.local/share/chezmoi` (dotfiles) · **Target:** X11 desktop, NVIDIA Tesla V100-SXM2-32GB + Intel Iris Xe (DG1-class, 3.8 GiB shared)
