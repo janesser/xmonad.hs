@@ -1,0 +1,30 @@
+# herdr-portfwd plugin settings
+#
+# Rendered by chezmoi into ~/.config/herdr-portfwd/config.toml on every box.
+# Read on whichever machine the command runs on — under `herdr --remote
+# cyberkleiber` that means the agent's settings are the ones on your machine,
+# and `scan`'s are the ones on the remote.
+
+# How often the local agent polls for requests and for new listeners. 0
+# disables discovery; requests are still picked up every 5s. Read where the
+# agent runs.
+poll_seconds = 5
+
+# Offer newly detected ports through a Herdr notification. Default: true.
+# Read where the agent runs; the notification is shown in your Herdr session.
+offer_new_listeners = true
+
+# Only consider listeners that belong to a Herdr pane. Default: true.
+# Read by the agent, and by `scan` wherever `scan` runs.
+require_pane_attribution = true
+
+# Land a Ctrl+click on the confirmation pane instead of forwarding and opening
+# the browser in one motion. Default: true. Read where the *plugin* runs, which
+# under `herdr --remote` is the remote host — the same side that shows the pane.
+confirm_on_click = true
+
+# Opt-in automatic forwarding, matched per workspace. Empty by default, and
+# acted on only by the agent.
+# [[auto]]
+# workspace = "scholion"
+# ports = [5173, 8787]
