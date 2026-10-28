@@ -1,6 +1,4 @@
 #!/bin/fish
-# Guard: fish must be present for these files to have any effect.
-command -v fish >/dev/null || exit 0
 
 # To use fish's autoloading feature, kitty prepends the vendored integration script directory to XDG_DATA_DIRS.
 # The original paths needs to be restored here to not affect other programs.

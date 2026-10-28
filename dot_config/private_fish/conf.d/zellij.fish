@@ -1,5 +1,3 @@
-# Guard: fish must be present for these files to have any effect.
-command -v fish >/dev/null || exit 0
 # ~/.config/fish/conf.d/zellij.fish
 #
 # Persistent "always the same session" zellij setup.
