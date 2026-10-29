@@ -1,7 +1,8 @@
 [tools]
-codex = "latest"
-node = "26.12.1"
+node = "latest"
 pi = "latest"
+uv = "latest"
+ghcup = "latest"
 
 [settings.upgrade]
 auto_prune = false
