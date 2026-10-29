@@ -38,4 +38,4 @@ exit 0
 
 ## clean-up alacritty if present
 sudo update-alternatives --remove x-terminal-emulator $HOME/.cargo/bin/alacritty
-cargo uninstall alacritty
+cargo uninstall alacritty 2>/dev/null || true

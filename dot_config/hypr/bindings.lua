@@ -31,20 +31,23 @@
 ------------------------------------------------------------------------------------------
 
 -- https://github.com/omacom/omarchy/blob/quattro/default/hypr/bindings/tiling.lua
+-- https://github.com/omacom/omarchy/blob/quattro/default/hypr/bindings/media.lua
 
 local paths = require("default.hypr.paths")
 require(paths.omarchy_path .. "/default/hypr/bindings/tiling")
 require(paths.omarchy_path .. "/default/hypr/bindings/media")
 
+o.bind("SUPER + RETURN", "Move to root", hl.dsp.layout("movetoroot"))
+o.bind("SUPER + SPACE", "Cycle workspace layout", "omarchy-hyprland-workspace-layout-toggle")
 o.bind("SUPER + SHIFT + C", "Close window", hl.dsp.window.close())
 
 -- https://github.com/omacom/omarchy/blob/quattro/default/hypr/bindings/utilities.lua
 
+hl.unbind("SUPER + P")
 o.bind("SUPER + P", "Omarchy menu", "omarchy-menu toggle root")
 o.bind("SUPER + SHIFT + Q", "System", "omarchy-menu toggle system" )
 
 o.bind_toggle("SUPER + SHIFT + T", "Toggle locking on idle", "idle" )
-o.bind_toggle("SUPER + RETURN", "Toggle full screen desktop", "fullscreen-desktop")
 
 o.bind("SUPER + SHIFT + COMMA", "Config (omarchy)", "code.omarchy")
 o.bind("SUPER + SHIFT + PERIOD", "Config (chezmoi)", "code.chezmoi")

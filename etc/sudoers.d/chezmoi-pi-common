@@ -1,0 +1,40 @@
+# /etc/sudoers.d/chezmoi-pi-common
+# pi-agent: passwordless sudo for the commands every box needs to run
+# `cz update` — journalctl cleanup, unit management, file writes.
+#
+# SEPARATE from the per-package-manager drop-ins (`chezmoi-pi` for apt/nala/snap
+# boxes, `chezmoi-pi-pacman` for pacman/yay boxes) so that every box receives
+# the rules it needs without picking up rules it can't use.
+#
+# Review + validate with:
+#   visudo -cf /etc/sudoers.d/chezmoi-pi-common
+# Source copy lives in this repo under etc/sudoers.d/ (NOT applied by chezmoi:
+# etc/ is in .chezmoiignore). It is installed, with explicit user consent, by
+# .chezmoiscripts/run_onchange_sudo_sudoers_chezmoi_pi_common.sh.tmpl as part
+# of cz update.
+
+# --- commands every box needs for `cz update` -------------------------------
+# journalctl: the journal cleanup run script compacts the systemd journal on
+# every box. systemctl: unit management for the llama / memory-hub / poweroff
+# run scripts. The file-write commands let the run scripts and the sudoers
+# install scripts place files under /etc (scoped to those binaries only, any
+# args) — no shell access is granted.
+Cmnd_Alias COMMON = \
+    /usr/bin/journalctl, \
+    /usr/bin/systemctl, \
+    /usr/bin/install, \
+    /usr/bin/mkdir, \
+    /usr/bin/cp, \
+    /usr/bin/chmod, \
+    /usr/bin/chown, \
+    /usr/bin/rm, \
+    /usr/bin/tee, \
+    /usr/bin/mv, \
+    /usr/bin/sed, \
+    /usr/bin/gpg, \
+    /usr/bin/curl, \
+    /usr/bin/cmp, \
+    /usr/bin/visudo \
+
+# --- grant to this user only ---
+jan ALL=(root) NOPASSWD: COMMON

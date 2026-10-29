@@ -13,19 +13,19 @@ update`). This rule overrides any general "omit timeout unless needed" guidance.
 
 ## pi-agent's sudo boundary (important)
 pi-agent MAY run `cz update` (chezmoi pull + apply). Privileged steps run under a
-scoped NOPASSWD sudoers drop-in at `/etc/sudoers.d/chezmoi-pi`, which grants root
-**only** for the exact command families chezmoi run scripts use:
+scoped NOPASSWD sudoers drop-ins under `/etc/sudoers.d/`, each granting root
+**only** for the exact command families chezmoi run scripts use. Every box
+gets `chezmoi-pi-common` (journalctl, systemctl, the file-write commands);
+apt/nala/snap boxes additionally get `chezmoi-pi`, pacman/yay boxes get
+`chezmoi-pi-pacman`; the camera-debug box gets `chezmoi-pi-camera-debug`.
 
-`apt, add-apt-repository, nala, snap, usermod, groupadd, systemctl,
-update-alternatives, mkdir, chmod, chown, tee, cp, gpg, mv, sed, extrepo,
-dpkg, curl, rm, install, cmp, journalctl, setcap cap_perfmon+ep /usr/bin/btop`, plus direct `chmod`/`chown` on the podman.sock path (the
-`CHEZMOI_PKGS` alias authorizes `/usr/bin/chmod`/`/usr/bin/chown` with any
-args; the shell glob is expanded before sudo, so no wildcard reaches it).
-
-Cleanup scripts only ever use `apt`/`rm`/`install`, so they run under this
-same alias **without a new sudoers entry** — don't add one just because a
-cleanup script calls `sudo apt`/`sudo rm`. The TeamViewer uninstaller at
-`uninstaller/teamviewer_uninstall.sh` is an example: it uses only those.
+The per-box drop-in grants the package-manager family plus what that box
+needs (e.g. `setcap cap_perfmon+ep /usr/bin/btop` on the apt box with an
+Intel GPU). Cleanup scripts only ever use `apt`/`rm`/`install`, so they run
+under the package-manager family **without a new sudoers entry** — don't add
+one just because a cleanup script calls `sudo apt`/`sudo rm`. The TeamViewer
+uninstaller at `uninstaller/teamviewer_uninstall.sh` is an example: it uses
+only those.
 
 **Don't be explicit about sudoers in repo files.** Point to this AGENTS.md
 section instead of documenting sudo **authorization** specifics inline. In
@@ -60,23 +60,29 @@ Rules:
   the user wanted it ready to fire, not fired. Confirm before applying.
 
 ## Sudoers files (repo-managed under `etc/`)
-Two drop-ins, split by package manager so each box gets only the rules it can
-use:
+Three drop-ins, split so each box gets only the rules it can use: a common
+drop-in (rules every box needs for `cz update`), plus one per package manager
+flavour:
 
 | Drop-in | Box flavour | Install script |
 |---|---|---|
+| `etc/sudoers.d/chezmoi-pi-common` | **all** boxes | `run_onchange_sudo_sudoers_chezmoi_pi_common.sh.tmpl` |
 | `etc/sudoers.d/chezmoi-pi` | apt / nala / snap | `run_onchange_sudo_sudoers_chezmoi_pi.sh.tmpl` |
 | `etc/sudoers.d/chezmoi-pi-pacman` | pacman / yay | `run_onchange_sudo_sudoers_chezmoi_pi_pacman.sh.tmpl` |
 
+`etc/sudoers.d/chezmoi-pi-camera-debug` (camera debug stack) is installed
+manually, only on the Chuwi box.
+
 Source files are normal chezmoi files (but `etc/` is in `.chezmoiignore`, so
-neither is auto-applied to `/etc`). Each is installed, with an interactive
+none is auto-applied to `/etc`). Each is installed, with an interactive
 yes/no confirmation, by its `run_onchange` script as part of `cz update`. Each
 script embeds a SHA256 of its own source file, so chezmoi only runs it when that
 source file changes (skipped — no `sudo`, no prompt — on every other apply).
 
 Each install script also skips silently on the wrong box flavour: the apt
 script needs `apt` or `nala` (absent on omarchy), the pacman script needs
-`pacman` (absent on apt boxes). Both are safe to run on the whole fleet.
+`pacman` (absent on apt boxes), and the common script runs on every flavour.
+All three are safe to run on the whole fleet.
 
 Manual fallback + validation: the "pi-agent scoped sudo for `cz update`" section
 of the top-level README.md.
