@@ -16,5 +16,8 @@ README.md
 AGENTS.md
 
 {{- if eq .chezmoi.hostname "flowerpower" }}
+# ignore fish scripts
 .chezmoiscripts/*.fish
+# ignore crossbar.json (might vary a lot)
+**/crossbar.json
 {{- end }}
