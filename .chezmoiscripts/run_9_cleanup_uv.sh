@@ -1,7 +1,6 @@
 #!/bin/bash
-# uv is managed by mise (replaces asdf); shims on PATH via activate.
-export PATH="$HOME/.local/bin:$PATH"
-eval "$(mise activate bash)"
+
+source "$CHEZMOI_SOURCE_DIR/commons/mise_assert-uv.sh"
 
 # TODO clean-up old python versions
 ## uv python list --only-installed --managed-python
