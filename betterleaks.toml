@@ -1,0 +1,8 @@
+# Global filtering for betterleaks (pre-commit hook).
+#
+# Sudoers drop-ins legitimately contain `jan ALL=(root) NOPASSWD: ...` grant
+# lines; betterleaks' generic-password rule flags them as a false positive.
+# Skip the whole `etc/sudoers.d/` tree instead of the rule.
+prefilter = '''
+filter.matchesAny(attributes["path"], [`^etc/sudoers\\.d/`])
+'''
