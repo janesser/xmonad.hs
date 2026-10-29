@@ -1,6 +1,1 @@
 .nodeswitcher
-
-# Local AI-agent scaffolding (not dotfiles; not used by chezmoi).
-_bmad/
-_bmad-output/
-.agents/
