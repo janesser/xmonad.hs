@@ -33,11 +33,13 @@ Cmnd_Alias CAMERA_DEBUG = \
 # All root:root 0600; ec/ dir is 0700 root. Read-only = safe/reversible.
 # (Writing camera power to the port EC needs iopl(3) on 0x62/0x63 — custom root
 #  binary, kept strictly last. Not granted here.)
+# NOTE: the /sys/kernel/debug/ec/<ec>/ paths are dynamic, and sudoers forbids
+# wildcards in command arguments, so the individual tools cannot be granted
+# directly. A root-owned read-only wrapper (usr_local/bin/camera_ec_debug.sh,
+# installed to /usr/local/bin/) enumerates and reads the region; the grant
+# below is scoped to that wrapper only.
 Cmnd_Alias CAMERA_EC_DEBUG = \
-    /usr/bin/ls /sys/kernel/debug/ec/*, \
-    /usr/bin/cat  /sys/kernel/debug/ec/*, \
-    /usr/bin/od   -A x -t x1z /sys/kernel/debug/ec/*, \
-    /usr/bin/xxd  /sys/kernel/debug/ec/*
+    /usr/local/bin/camera_ec_debug.sh
 
 # --- grant to this user only ---
 jan ALL=(root) NOPASSWD: CAMERA_DEBUG

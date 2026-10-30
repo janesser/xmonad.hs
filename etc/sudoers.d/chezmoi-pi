@@ -31,8 +31,8 @@ Cmnd_Alias CHEZMOI_PKGS = \
 # root:docker, socket 0660), so `podman system prune` needs root — granted
 # here because podman only exists on apt boxes.
 Cmnd_Alias CHEZMOI_PODMAN = \
-    /usr/bin/podman \
-    /usr/bin/podman-compose \
+    /usr/bin/podman, \
+    /usr/bin/podman-compose
 
 # --- scoped systemd-run: card-2 swap self-detach -----------------------------
 # jan-approved 2026-10-23 (card-2 little-brother design; see
