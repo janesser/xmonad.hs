@@ -23,7 +23,7 @@ command -v apt >/dev/null || exit 0
 
 log() { echo "$(basename "$0"): $*"; }
 
-LLAMA_REF="v0.7.0"
+LLAMA_REF="v0.8.0"
 log "Building $LLAMA_REF"
 
 

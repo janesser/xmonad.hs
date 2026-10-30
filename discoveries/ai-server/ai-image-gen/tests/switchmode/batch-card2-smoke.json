@@ -1,7 +1,7 @@
 {
-  "model": "/media/sailor/ai-server/sd-probe/diffusion_models/flux-2-klein-4b-Q4_0.gguf",
-  "llm": "/media/sailor/ai-server/sd-probe/text_encoders_gguf/flux2-klein-4b-uncensored-q8_0.gguf",
-  "vae": "/media/sailor/ai-server/sd-probe/vae/flux2-vae.safetensors",
+  "model": "/media/sailor/ai-server/sd-probe/diffusion_models_gguf/flux3-image-klein-base-Q8_0.gguf",
+  "llm": "/media/sailor/ai-server/sd-probe/text_encoders_gguf/Qwen3VL-4B-Instruct-Q8_0.gguf",
+  "vae": "/media/sailor/ai-server/sd-probe/vae/flux3/flux2-vae.safetensors",
   "vae-format": "flux2",
   "tokenizer": "/media/sailor/ai-server/sd-probe/tokenizers/flux2-klein-qwen3-tokenizer.json",
   "calls": [
@@ -12,7 +12,7 @@
       "guidance": 4,
       "width": 512,
       "height": 512,
-      "output": "/media/sailor/ai-server/sd-probe/out_card2_1.png"
+      "output": "/media/sailor/ai-server/sd-probe/out_card2_flux3_1.png"
     },
     {
       "prompt": "an abstract landscape of stacked neon geometric shapes",
@@ -21,7 +21,7 @@
       "guidance": 4,
       "width": 512,
       "height": 512,
-      "output": "/media/sailor/ai-server/sd-probe/out_card2_2.png"
+      "output": "/media/sailor/ai-server/sd-probe/out_card2_flux3_2.png"
     }
   ]
 }
