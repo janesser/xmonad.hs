@@ -40,4 +40,7 @@ yay -S --noconfirm --needed \
     rptui-bin
 
 echo "==> pacman: done"
+
+omarchy plugin add https://github.com/jesusarchive/omarchy-dynamic-menu.git --enable
+
 exit 0

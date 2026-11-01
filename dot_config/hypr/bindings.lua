@@ -44,7 +44,8 @@ o.bind("SUPER + SHIFT + C", "Close window", hl.dsp.window.close())
 -- https://github.com/omacom/omarchy/blob/quattro/default/hypr/bindings/utilities.lua
 
 hl.unbind("SUPER + P")
-o.bind("SUPER + P", "Omarchy menu", "omarchy-menu toggle root")
+o.bind("SUPER + P", "Dynamic menu", "~/.config/omarchy/plugins/jesusarchive.dynamic-menu/bin/dmenu_run")
+o.bind("SUPER + SHIFT + P", "Omarchy menu", "omarchy-menu toggle root")
 o.bind("SUPER + SHIFT + Q", "System", "omarchy-menu toggle system" )
 
 o.bind_toggle("SUPER + SHIFT + T", "Toggle locking on idle", "idle" )
