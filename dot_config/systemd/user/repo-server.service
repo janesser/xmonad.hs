@@ -1,0 +1,16 @@
+[Unit]
+Description=Jan's pacman repo HTTP server (userspace, python http.server)
+Documentation=man:python3(1)
+After=network.target
+
+[Service]
+Type=simple
+Environment=HOME=/home/jan
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/python3 -m http.server 8080 --bind 0.0.0.0
+WorkingDirectory=/srv/repo
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

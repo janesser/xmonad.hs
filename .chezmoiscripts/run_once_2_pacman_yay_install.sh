@@ -11,8 +11,13 @@
 # these are the packages that are *not* in the base ISO:
 #   official repo: zen-browser-bin signal-desktop nextcloud-client keepassxc
 #                  helix neovim rustdesk
-#   AUR (yay):     vscodium-bin hylki hylki-debug libgnome-keyring
+#   AUR (yay):     vscodium-bin hylki-debug libgnome-keyring
 #                  libgnome-keyring-debug pwvucontrol rencal-bin rptui-bin
+#
+# NOTE: hylki comes from the Raspberry Pi repo server now ([repo] in
+# /etc/pacman.conf, Server = http://raspberrypi:8080/) — see
+# run_once_5_aitools_9pacman_repo_conf.sh. Only set up the repo server first,
+# then the next cz update will install hylki from there.
 #
 # SAFEGUARD: `pacman` and `yay` do not exist on apt boxes, so skip silently
 # instead of failing the whole `cz apply`.
@@ -34,7 +39,6 @@ sudo pacman -S --noconfirm --needed \
 echo "==> yay: installing AUR packages"
 yay -S --noconfirm --needed \
     vscodium-bin \
-    hylki \
     pwvucontrol \
     rencal-bin \
     rptui-bin

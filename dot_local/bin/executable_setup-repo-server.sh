@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
-# setup-repo-server.sh — nginx repo server on the Raspberry Pi.
+# executable_setup-repo-server.sh — userspace pacman repo server on the
+# Raspberry Pi.
 #
-#   executable_setup-repo-server.sh [--repo-dir <dir>]
+#   executable_setup-repo-server.sh
 #
-#   --repo-dir   Directory to serve (default: /srv/repo).
+# Serves the pacman repo (built by executable_build-hylki.sh and rsynced to
+# /srv/repo) over HTTP in userspace: python3 -m http.server on port 8080,
+# started as a systemd user unit (dot_config/systemd/user/repo-server.service).
+# No nginx, no system packages, no port 80, no root.
 #
-# Serves the pacman repo (built by executable_build-hylki.sh) over HTTP. The
-# repo must already exist at the target dir (rsynced from the build host) —
-# this script only installs nginx and configures it to expose it.
+# The repo must already exist at /srv/repo (rsynced from the build host) — this
+# script only creates it if needed, installs the unit and starts the server.
 #
-# sudo is used (scoped NOPASSWD drop-in) only for apt/systemctl/nginx.
+# sudo is used (scoped NOPASSWD drop-in) only for the /srv/repo creation.
 
 set -uo pipefail
 
@@ -17,59 +20,45 @@ SCRIPT_NAME="$(basename "$0")"
 
 # --- hostname guard: only meaningful on the Pi ---
 if [ "$(hostname)" != "raspberrypi" ]; then
-    echo "=> $SCRIPT_NAME: only intended for the Raspberry Pi (raspberry)"
+    echo "=> $SCRIPT_NAME: only intended for the Raspberry Pi (raspberrypi)"
     echo "=> $SCRIPT_NAME: run on the Pi, not on $(hostname)"
     exit 1
 fi
 
 REPO_DIR="${REPO_DIR:-/srv/repo}"
+REPO_PORT=8080
+UNIT="repo-server.service"
+UNIT_DEST="${HOME}/.config/systemd/user/${UNIT}"
 
-while [ $# -gt 0 ]; do
-    case "$1" in
-        --repo-dir)
-            REPO_DIR="$2"; shift 2 ;;
-        --repo-dir=*)
-            REPO_DIR="${1#*=}"; shift ;;
-        -h|--help)
-            head -8 "$0"; exit 0 ;;
-        *)
-            echo "=> $SCRIPT_NAME: unknown arg: $1"; exit 1 ;;
-    esac
-done
+echo "=> $SCRIPT_NAME: serving $REPO_DIR on the Pi (port $REPO_PORT)"
 
+# --- 1. the repo dir (needs root to create under /srv) -------------------------
 if [ ! -d "$REPO_DIR" ]; then
-    echo "=> $SCRIPT_NAME: repo dir $REPO_DIR does not exist"
+    echo "=> $SCRIPT_NAME: creating $REPO_DIR (jan-owned)"
+    sudo mkdir -p "$REPO_DIR" && sudo chown jan:jan "$REPO_DIR" || {
+        echo "=> $SCRIPT_NAME: ERROR: could not create $REPO_DIR"
+        exit 1
+    }
+else
+    echo "=> $SCRIPT_NAME: $REPO_DIR exists"
+fi
+
+# --- 2. the userspace unit (renders via chezmoi, enabled here) -----------------
+if [ ! -f "$UNIT_DEST" ]; then
+    echo "=> $SCRIPT_NAME: ERROR: $UNIT not present at $UNIT_DEST"
     exit 1
 fi
 
-echo "=> $SCRIPT_NAME: serving $REPO_DIR on the Pi"
-
-# --- install nginx ---
-if ! command -v nginx >/dev/null 2>&1; then
-    echo "=> $SCRIPT_NAME: installing nginx"
-    sudo apt-get update
-    sudo apt-get install -y nginx
-else
-    echo "=> $SCRIPT_NAME: nginx already installed"
-fi
-
-# --- serve the repo ---
-SITE="/etc/nginx/sites-available/repo"
-echo "=> $SCRIPT_NAME: writing nginx site config: $SITE"
-sudo bash -c "cat > $SITE <<EOF
-server {
-    listen 80 default_server;
-    server_name _;
-    root $REPO_DIR;
-    autoindex on;
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
+systemctl --user enable "$UNIT" --now || {
+    echo "=> $SCRIPT_NAME: ERROR: could not enable $UNIT"
+    exit 1
 }
-EOF"
+echo "=> $SCRIPT_NAME: $UNIT enabled and started"
 
-sudo ln -sf "$SITE" /etc/nginx/sites-enabled/repo
-sudo nginx -t && sudo systemctl enable --now nginx
-
-echo "=> $SCRIPT_NAME: repo available at http://<pi-ip>/"
-echo "=> $SCRIPT_NAME: verify: curl -s http://$(hostname -I | awk '{print $1}')/ | head"
+# --- 3. verify -----------------------------------------------------------------
+if curl -fsS -m 5 "http://127.0.0.1:${REPO_PORT}/" >/dev/null 2>&1; then
+    echo "=> $SCRIPT_NAME: repo server up at http://<pi-ip>:${REPO_PORT}/"
+else
+    echo "=> $SCRIPT_NAME: WARNING: repo server not responding on :${REPO_PORT}"
+    exit 1
+fi

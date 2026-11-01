@@ -13,7 +13,7 @@
 #                and rsync to the Pi.
 #
 # Flow: clone the PKGBUILD -> makepkg in an Arch container (memory capped) ->
-# repo-add -> rsync to the Pi -> omarchy installs from http://<pi>/repo/
+# repo-add -> rsync to the Pi -> omarchy installs from http://<pi>:8080/
 #
 # Sudo is used only for the memory-capped container (needed on the build host)
 # and the run is scoped to the build host via the hostname guard below.
@@ -35,7 +35,7 @@ AUR_PKG="hylki"
 CONTAINER_ENGINE="${CONTAINER_ENGINE:-docker}"
 BUILD_HOST="${BUILD_HOST:-cyberkleiber}"
 PI_HOST="${PI_HOST:-f3nt0t9dnh9t8l0v.myfritz.net}"
-PI_USER="pi"
+PI_USER="jan"
 PI_DIR="/srv/repo"
 
 KEEP_SRC=0
@@ -144,4 +144,4 @@ if [ "$KEEP_SRC" == "0" ]; then
     rm -rf "$BUILD_DIR/hylki"
 fi
 
-echo "=> $SCRIPT_NAME: done. omarchy: pacman -Sy && pacman -S hylki"
+echo "=> $SCRIPT_NAME: done. omarchy: pacman -Sy && pacman -S hylki (from http://<pi>:8080/)"
