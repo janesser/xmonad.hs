@@ -3,6 +3,9 @@
 Personal chezmoi dotfiles repo (xmonad / X11 Linux desktop). Managed via
 `chezmoi` (alias `cz`). GitHub: `janesser/xmonad.hs.git`. Human guide: `README.md`.
 
+The `README.md` is the human guide — for topics not covered in this AGENTS.md
+(e.g. the full sudoers setup, package lists), it is the source of truth.
+
 ## Tool usage: every bash command needs a timeout
 Run **every** `bash` tool call with an explicit `timeout`, without exception —
 even quick, obviously-fast commands. There is no default timeout, so omitting
@@ -10,6 +13,94 @@ it leaves a hung process (slow apt/snap/network step, a stalled `cz`, a
 waiting consent prompt) to block the session indefinitely. Pick a sane value for
 the command's nature (seconds for local greps/edits; minutes for apt/snap/`cz
 update`). This rule overrides any general "omit timeout unless needed" guidance.
+
+## Agent directives: every system change via chezmoi
+
+**Mandatory rule for the agent:** every system change must be managed through
+chezmoi — never edit a file directly in its target location
+(`~/.config/...`, `/etc/...`, `~/.local/...`, `~/.ssh/...`, etc.). This is a
+strong recommendation for **every** system adjustment, not an option.
+
+- **Create in place, then `chezmoi add`.** Write the file exactly where it
+  belongs and add it with `cz add <destination>` so it is tracked in the
+  source tree. Do **not** create it elsewhere and copy it over, and never
+  leave a managed file untracked.
+- **Encrypt what the repo must not see.** If a file is too revealing for the
+  public GitHub repo, add it with `cz add --encrypt <destination>` (or
+  `cz encrypt <dest>` then `cz re-add --encrypt <dest>` for a file already
+  managed, refreshed with `cz re-add --encrypt`). When in doubt, encrypt.
+  See the [Encryption](#encryption-age-encrypted--concealed-files) section
+  for the full rules.
+- **Ask before fixing pre-commit hooks.** If a pre-commit hook reports a
+  false positive (e.g. `betterleaks`/`foxguard` flagging a file it should
+  ignore), **STOP and ask me** before running any `cz` command to fix it.
+  Do **not** blindly re-run with `--no-verify`, `--force`, or any other
+  bypass.
+
+## Dotfile naming conventions (destination mapping)
+
+chezmoi renders the source tree to the home directory by convention — the
+source name **is** the destination path. Know this mapping before creating
+anything:
+
+| Source prefix / tree | Destination | Example |
+|---|---|---|
+| `dot_<name>` | `~/.<name>` | `dot_bashrc` → `~/.bashrc` |
+| `dot_config/<app>` | `~/.config/<app>` | `dot_config/btop` → `~/.config/btop` |
+| `private_dot_<name>` | `~/.<name>` (private) | `private_dot_ssh` → `~/.ssh` |
+| `executable_<name>` | `~/.local/bin/<name>` | `executable_zattach.sh` → `~/.local/bin/zattach.sh` |
+| `etc/<path>` | `/etc/<path>` | `etc/fuse.conf` → `/etc/fuse.conf` |
+| `usr/<path>` | `/usr/<path>` | `usr/share/...` |
+| `commons/` | shared (no destination) | scripts used by run scripts |
+| `devices/<host>/` | host-specific notes | not rendered |
+
+Consequences:
+- `dot_local/bin/executable_<name>.sh` lands as `~/.local/bin/<name>.sh`;
+  `.fish` lands as `~/.local/bin/<name>.fish` — the extension is part of the
+  destination name, not a chezmoi convention.
+- A file that must not be committed (secrets, host-specific keys) goes under
+  `dot_pi/` or gets `cz add --encrypt` — see [Encryption](#encryption-age-encrypted--concealed-files).
+
+### Source code references
+
+These conventions are defined in chezmoi's source:
+
+- Prefixes/suffixes constants: [internal/chezmoi/chezmoi.go](https://github.com/twpayne/chezmoi/blob/master/internal/chezmoi/chezmoi.go)
+- Attribute parsing logic: [internal/chezmoi/attr.go](https://github.com/twpayne/chezmoi/blob/master/internal/chezmoi/attr.go)
+- Full reference: [Source state attributes](https://www.chezmoi.io/reference/source-state-attributes/)
+
+## `cz` command reference
+
+| Command | Use |
+|---|---|
+| `cz add <dest>` | track a new file at its destination |
+| `cz add --encrypt <dest>` | track + age-encrypt (public repo) |
+| `cz re-add <dest>` | refresh an already-tracked file |
+| `cz re-add --encrypt <dest>` | refresh + encrypt |
+| `cz apply` | render the dotfile set to the system |
+| `cz update` | pull upstream + apply |
+| `cz diff` | show pending changes vs. the rendered set |
+| `cz status` | list tracked-but-unrendered files |
+| `cz remove <dest>` | untrack a file (keeps the rendered copy) |
+| `cz encrypt <src>` / `cz decrypt <src>` | convert between `.age` and cleartext |
+| `cz init` | re-render the runtime config (`chezmoi.toml`) |
+
+Commands are documented at `chezmoi.io/reference/commands/<command>/` — e.g.
+`add`, `re-add`, `apply`, `update`, `diff`, `status`, `remove`, `encrypt`, `decrypt`,
+`init`.
+
+## Repo layout
+
+**Externals:** `xmonad` and `xmonad-contrib` under `.config/xmonad/` are
+git-repo externals managed by `.chezmoiexternal.toml` (refreshed every 168h).
+They are **not** source to edit — `cz apply` clones/refreshes them automatically.
+
+**Ignored trees:** `etc/` and `usr/` are in `.chezmoiignore` — they are
+rendered into the system by run scripts, not by chezmoi. `discoveries/`,
+`devices/`, and `uninstaller/` are also ignored; they are working notes and
+dev tools, never part of the rendered dotfile set.
+
+**Fleet:** `raspberrypi` (this box, apt; home-assistant + pacman-repo). `flowerpower` = `omarchy` = `chuwi_ubook_xpro` (pacman, camera-debug stack). `cyberkleiber` = `hp_z6_g4` (memory hub, ai-server). `jetson_nano_b210` is broken for now, planned restore. The `devices/` boxes (`rpi400`, `lincopta` = `xmg-core-15-amd-m20`, `foss_android`) are dev-only hosts with host-specific notes.
 
 ## pi-agent's sudo boundary (important)
 pi-agent MAY run `cz update` (chezmoi pull + apply). Privileged steps run under a
@@ -60,32 +151,28 @@ Rules:
   the user wanted it ready to fire, not fired. Confirm before applying.
 
 ## Sudoers files (repo-managed under `etc/`)
-Three drop-ins, split so each box gets only the rules it can use: a common
-drop-in (rules every box needs for `cz update`), plus one per package manager
-flavour:
+
+Three drop-ins, split so each box gets only the rules it can use, plus one
+manual install (camera-debug box only):
 
 | Drop-in | Box flavour | Install script |
 |---|---|---|
-| `etc/sudoers.d/chezmoi-pi-common` | **all** boxes | `run_onchange_sudo_sudoers_chezmoi_pi_common.sh.tmpl` |
-| `etc/sudoers.d/chezmoi-pi` | apt / nala / snap | `run_onchange_sudo_sudoers_chezmoi_pi.sh.tmpl` |
-| `etc/sudoers.d/chezmoi-pi-pacman` | pacman / yay | `run_onchange_sudo_sudoers_chezmoi_pi_pacman.sh.tmpl` |
+| `etc/sudoers.d/chezmoi-pi-common` | **all** boxes | `run_onchange_..._chezmoi_pi_common.sh.tmpl` |
+| `etc/sudoers.d/chezmoi-pi` | apt / nala / snap | `run_onchange_..._chezmoi_pi.sh.tmpl` |
+| `etc/sudoers.d/chezmoi-pi-pacman` | pacman / yay | `run_onchange_..._chezmoi_pi_pacman.sh.tmpl` |
 
-`etc/sudoers.d/chezmoi-pi-camera-debug` (camera debug stack) is installed
-manually, only on the Chuwi box.
+`etc/sudoers.d/chezmoi-pi-camera-debug` is installed manually, only on the
+Chuwi box.
 
-Source files are normal chezmoi files (but `etc/` is in `.chezmoiignore`, so
-none is auto-applied to `/etc`). Each is installed, with an interactive
-yes/no confirmation, by its `run_onchange` script as part of `cz update`. Each
-script embeds a SHA256 of its own source file, so chezmoi only runs it when that
-source file changes (skipped — no `sudo`, no prompt — on every other apply).
+Each drop-in is installed (with an interactive yes/no confirmation) by its
+`run_onchange` script as part of `cz update`. Each script embeds a SHA256 of its
+own source file, so chezmoi only runs it when that source file changes — on
+every other apply it skips silently, with no `sudo` and no prompt. All three
+scripts are safe to run on the whole fleet; each one also skips on the wrong
+box flavour (apt needs `apt`/`nala`, pacman needs `pacman`).
 
-Each install script also skips silently on the wrong box flavour: the apt
-script needs `apt` or `nala` (absent on omarchy), the pacman script needs
-`pacman` (absent on apt boxes), and the common script runs on every flavour.
-All three are safe to run on the whole fleet.
-
-Manual fallback + validation: the "pi-agent scoped sudo for `cz update`" section
-of the top-level README.md.
+Manual fallback + validation: the "pi-agent scoped sudo for `cz update`"
+section of the top-level README.md.
 
 The old `pi/` scaffold has been removed — the sudoers files now live in the
 natural `etc/` tree, so `pi/` is obsolete.
@@ -94,6 +181,10 @@ natural `etc/` tree, so `pi/` is obsolete.
 
 Some files are **age-encrypted** and stored in the source tree as `.age` with the
 `encrypted_` filename prefix. They never appear in the repo in cleartext.
+
+Encryption is documented in chezmoi's docs — [encryption](https://www.chezmoi.io/user-guide/encryption/) and
+the [age](https://github.com/FiloSottile/age) implementation it uses.
+
 **Current count: 44 `.age` files** (`find . -name '*.age' | grep -v .chezmoistate`),
 growing as more secrets are added — refresh this figure when it changes.
 
@@ -151,104 +242,16 @@ full retirement list: `discoveries/ai-server/little-brother-card2-swap.md`.
 The event log is kept at `~/.local/share/llama-cpp/handover/handover.log` as
 an audit trail. **Until the card-2 backend is deployed, stopping `llama-cuda`
 leaves no local text backend — plan around that.**
-## btop: dual GPU (Iiris Xe + NVIDIA) visibility
+## `dot_local/bin` scripts: the `.sh` suffix
 
-btop only shows the NVIDIA box for the Intel Iris Xe / DG1 (gpu1). This is a
-**btop bug fixed by patching + rebuilding btop**, not a config issue.
+Scripts under `dot_local/bin/` render to `~/.local/bin/` with the same
+extension the source keeps — the extension is part of the destination name
+(`executable_<name>.sh` → `~/.local/bin/<name>.sh`, `executable_<name>.fish`
+→ `~/.local/bin/<name>.fish`); for the full mapping see the [naming
+conventions](#dotfile-naming-conventions-destination-mapping) section.
 
-- **Root cause (btop 1.4.6):** `src/linux/intel_gpu_top/intel_gpu_top.c`
-  hardcodes `const char* device = "i915"`. Recent kernels instantiate the i915
-  perf PMU by PCI address (`/sys/devices/i915_0000_2f_00.0/events`), so
-  `discover_engines()` scans the missing `/sys/devices/i915/events` and
-  `pmu_init()` reads the missing `/sys/bus/event_source/devices/i915/type` → the
-  Iris Xe (gpu1) silently vanishes. V100 (gpu0, NVML) is unaffected.
-- **Fix (patched):** `discover_engines()` scans `/sys/devices` for an
-  `i915*` dir exposing `events/` and reassigns `engines->device` to the resolved
-  instance name (e.g. `i915_0000_2f_00.0`) so `pmu_init()` finds the perf
-  event source type. `free()` added on both the `err` path and `free_engines()`.
-  On DG1 / IGPUs (no RAPL energy-gpu PMU) power + temperature are read from the
-  i915 hwmon sensor (cumulative `energy1` microjoule counter + `temp1`) and
-  instantaneous power is derived from the perf-sampled energy delta in
-  `btop_collect` (see `src/linux/btop_collect.cpp`).
-- **`CAP_PERFMON` also required:** `perf_event_open()` on the i915 PMU needs
-  `cap_perfmon` on the binary (`kernel.perf_event_paranoid = 4` blocks it). The
-  patched binary lives at `~/.local/bin/btop` (user-owned), so the cap is
-  granted with `sudo setcap cap_perfmon+ep ~/.local/bin/btop` — this needs
-  jan's sudo **password**, since the scoped NOPASSWD setcap rule only ever named
-  `/usr/bin/btop` (now the restored vanilla package). Don't broaden the sudoers
-  to cover the local path (see the sudo boundary).
-- **Deployed:** `~/.local/bin/btop` = `1.4.7+2ad5308`, `cap_perfmon=ep`,
-  `jan:jan` — built from the committed fix in `~/projs/btop` (its current HEAD).
-  `/usr/bin/btop` is the restored vanilla `1.4.6-2` apt package (left untouched).
-- **Dev clone (MR dev):** `~/projs/btop` — a **full** clone on branch
-  `btop-intel-gpu-fix` with the fix committed; develop and inspect here, and
-  push the branch to `janesser` when the fix advances. It is **not** used to
-  build (the deploy uses a separate clean clone — see below). Full clone
-  preferred over the previous shallow one so an MR can be built locally.
-- **Deploy run script:**
-  `.chezmoiscripts/run_once_5_aitools_3btop_intel_gpu_cap.sh` (run_once,
-  **tracked in git**). **Policy: patched btop only where an Intel GPU exists;
-  every other host keeps the vanilla system btop untouched.** Two layers enforce
-  this — a top-level `has_intel_gpu` guard (log + exit 0), plus a defence-in-depth
-  assertion inside `ensure_btop()` that refuses to install if `has_intel_gpu` is
-  false. For reproducibility the build uses a **dedicated clean clone** at
-  `~/projs/btop-intel-gpu` of the fork's `btop-intel-gpu-fix` branch — never the
-  developer's working clone (which may be mid-rebase) and never upstream
-  aristocratos/btop (which has no fix). On a fresh box it clones the fork over
-  SSH (HTTPS fallback); it keeps the clone current with `git fetch` + checkout
-  and rebuilds only when the fork branch advances (stamp at
-  `~/.local/share/btop_deployed_commit`). Installs to `~/.local/bin/btop` (no
-  root). The `cap_perfmon` grant is the only sudo step and, targeting the
-  user-local path, needs jan's password (not the NOPASSWD drop-in). `cz update`
-  needs network only to fetch the fork (or the existing clone). (Dry-run both
-  branches by hiding/lspci to test the non-Intel path.)
-- **Config:** `~/.config/btop/btop.conf` (`shown_gpus = "nvidia amd intel"`,
-  `shown_boxes = "cpu mem net proc gpu0 gpu1"`) — tracked by chezmoi; both GPUs
-  render as separate boxes once the patched binary + cap are in place.
-- **Verification (headless, no live TUI):** run with `--debug` and confirm the
-  log has **no** `Failed to find Intel GPU engines` and **no**
-  `Failed to initialize PMU` (success is silent in btop). Sysfs proof: the
-  `i915_*` dir exposes `events/` and
-  `/sys/bus/event_source/devices/i915_0000_2f_00.0/type` exists.
-- **Sudo boundary:** the `setcap` line already lives at the `CHEZMOI_PKGS`
-  alias (AGENTS.md line 13: `/usr/sbin/setcap cap_perfmon+ep /usr/bin/btop`,
-  exact match — sudoers forbids intra-arg wildcards). `setcap` is in
-  `/usr/sbin`, not `/usr/bin`.
-
-## Auto poweroff at scheduled times
-
-Another root-run **system** systemd unit (timer + oneshot service) that powers
-the machine off at configured local times, installed to `/etc/systemd/system`
-(no login required, like the llama service).
-
-- Inputs (plain files — edit then `cz apply`):
-  `etc/systemd/system/auto-poweroff.times` (one `HH:MM` per line; midnight =
-  `00:00`) and `etc/systemd/system/auto-poweroff.delay` (grace seconds, 0 =
-  immediate). A non-zero delay schedules a *cancellable* shutdown,
-  cancelable with `sudo shutdown -c`.
-- Gated by the `auto_poweroff` toggle in the runtime config
-  (`~/.config/chezmoi/chezmoi.toml`, rendered from `.chezmoi.toml.tmpl`). It
-  defaults to `false` and is `true` only on this machine via
-  `.chezmoi.hostname`. Edit `.chezmoi.toml.tmpl`, then `cz init` (re-renders
-  the config) **then** `cz apply` (the run script reads the toggle). The
-  change-hash also includes `.chezmoi.toml.tmpl`, so flipping the toggle
-  re-runs the script.
-- Deployed + enabled by `.chezmoiscripts/run_onchange_9_1_auto_poweroff_timer.sh.tmpl`
-  (change-gated via an embedded inputs hash). Launcher is
-  `/usr/local/bin/auto-poweroff.sh`.
-- Uses only sudo commands in the scoped drop-in (`mkdir`, `cp`, `chmod`,
-  `chown`, `systemctl`).
-- Lifecycle: `systemctl --system enable --now auto-poweroff.timer`,
-  `systemctl list-timers auto-poweroff.timer --all`,
-  `journalctl -t auto-poweroff`.
-
-## `dot_local/bin` scripts: keep the `.sh` suffix
-
-Scripts under `dot_local/bin/` keep their `.sh` extension through chezmoi's
-render, so they land in `~/.local/bin/` as `zattach.sh`, `brightness.sh`,
-`checkip.sh`, etc. (not bare `zattach`). This is **intentional** — jan wants
-the `.sh` suffix so scripts are visually distinguishable from everything else
-in `~/.local/bin/` (e.g. in `dmenu`).
+The `.sh` suffix is **intentional** — jan wants scripts visually distinguishable
+from everything else in `~/.local/bin/` (e.g. in `dmenu`).
 
 Consequences:
 - The command is `zattach.sh`, not `zattach`. The script's own usage text
@@ -257,6 +260,8 @@ Consequences:
   explicitly asks — the suffix is the point.
 - When adding a new standalone script here, keep the `.sh` extension
   (`executable_<name>.sh`), matching this convention.
+- The same rule applies to `dot_local/bin` executables that are actually
+  symlinks (`symlink_<name>` → no destination extension).
 
 ## Discoveries (`discoveries/`)
 
@@ -300,17 +305,8 @@ be shared.
 ### Status buckets
 
 (The six words live in the shared vocabulary of pi-hermes-memory —
-`STATUS_WORDS` — and in the `memory_status` tool schema; this list is the
-human-facing meaning.)
-
-- **hardening** — works, but still needs hardening before it is fully done:
-  a concrete next step remains (cleanup, a reproducibility re-run, edge cases,
-  robustness). Introduced 2026-10-12, positioned between `active` and `done`.
-- **done** — implemented/verified, no pending work (may still be referenced as
-  handover).
-- **active** — actively worked on; has a concrete next step.
-- **held** — proposal or in-flight with no imminent next action; parked, not
-  abandoned.
-- **dormant** — research/reference note, superseded, or no planned follow-up.
-- **abandoned** — explicitly killed in favour of something else.
+`STATUS_WORDS` — and in the `memory_status` tool schema. Human-facing meaning:
+`active` → working on it; `hardening` → works, but a concrete next step remains;
+`done` → verified, no pending work; `held` → parked, no imminent action;
+`dormant` → research note, superseded; `abandoned` → explicitly killed.)
 

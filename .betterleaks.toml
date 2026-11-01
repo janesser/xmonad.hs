@@ -1,0 +1,10 @@
+# Exclude trees that are not part of the rendered dotfile set: `devices` is a
+# dev-only tree, `dot_config/xmonad` is a managed external, and `etc/sudoers.d`
+# holds sudoers alias names (false positives for secret scanning).
+prefilter = '''
+matchesAny(attributes["path"], [
+    `^devices/`,
+    `^dot_config/xmonad/`,
+    `^etc/sudoers.d/`
+])
+'''

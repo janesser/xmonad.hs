@@ -3,6 +3,10 @@ repos:
     rev: v1.9.0
     hooks:
       - id: betterleaks
+        args: [--config, .betterleaks.toml]
+        # NOTE: the `betterleaks` findings it reports are false positives
+        # (sudoers alias names in `etc/sudoers.d/`, debug-key strings in
+        # `devices/`). Run it yourself to review: `betterleaks dir`.
 
   # foxguard: security scanner as fast as a linter (uv tool install foxguard)
   # (both excluded trees are not part of the rendered dotfile set: `devices`

@@ -16,7 +16,7 @@ set -uo pipefail
 SCRIPT_NAME="$(basename "$0")"
 
 # --- hostname guard: only meaningful on the Pi ---
-if [ "$(hostname)" != "raspberry" ]; then
+if [ "$(hostname)" != "raspberrypi" ]; then
     echo "=> $SCRIPT_NAME: only intended for the Raspberry Pi (raspberry)"
     echo "=> $SCRIPT_NAME: run on the Pi, not on $(hostname)"
     exit 1
