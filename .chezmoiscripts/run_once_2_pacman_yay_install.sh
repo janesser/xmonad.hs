@@ -43,7 +43,7 @@ yay -S --noconfirm --needed \
     rencal-bin \
     rptui-bin
 
-echo "==> pacman: done"
+omarchy pkg add errands
 
 omarchy plugin add https://github.com/jesusarchive/omarchy-dynamic-menu.git --enable
 
