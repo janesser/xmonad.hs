@@ -1,5 +1,7 @@
 #!/bin/bash
-# restart-llama-cuda.sh — launch llama.cpp on NVIDIA CUDA (router mode, :8081).
+# restart-llama-cuda.sh — launch llama.cpp on NVIDIA CUDA (single model, :8081).
+# Mirrors the card-2 (8082) launcher: one model, parameters embedded as direct
+# CLI args. Once card2 is healthy, these flags are the copy for card1.
 #
 # This is the launcher for llama-cuda.service, which is now Type=exec: the
 # script reaps any stale :8081 orphan, then `exec`s `llama serve` in the
@@ -25,6 +27,12 @@ set -u
 PORT=8081
 MODE="${1:-live}"
 GGML_CUDA_P2P=1
+
+# Model: one line in ~/.config/card1/llama-cuda.model (HF repo id or local GGUF
+# path — the "varying second model"). Change the model = edit that file +
+# `systemctl restart llama-cuda`.
+MODEL_FILE="$HOME/.config/card1/llama-cuda.model"
+MODEL_DEFAULT="InternScience/Sage-A1.5-Q4_K_M-GGUF"
 
 if [ "$MODE" = dry ]; then
     echo "restart-llama-cuda: DRY-RUN would reap stale :$PORT orphans (none killed)"
@@ -55,6 +63,14 @@ done
 [ "$got" = 0 ] && echo "restart-llama-cuda: no stale :$PORT backend to reap"
 sleep 2
 
+# One-line model file (the "varying second model"); fall back to the default.
+MODEL="$MODEL_DEFAULT"
+if [ -f "$MODEL_FILE" ]; then
+    read -r MODEL < "$MODEL_FILE" || true
+    [ -n "$MODEL" ] || MODEL="$MODEL_DEFAULT"
+fi
+echo "restart-llama-cuda: serving $MODEL on :$PORT (card 1)"
+
 # Pre-mount the shared HF cache if it is not already a mountpoint. Under systemd
 # the bind mount is in /etc/fstab, so at boot this branch is skipped and the
 # script never needs sudo mount.
@@ -66,21 +82,31 @@ mkdir -p ~/.local/log
 chmod 700 ~/.local/log
 chown -R "$USER" ~/.local/log
 
-# Exec in the foreground so systemd tracks the server (Type=exec). Router mode:
-# one instance serves every llama-cuda model discovered from the bind-mounted
-# HF cache (~/.cache/huggingface/hub) by llama.cpp's cache loader -- no
-# --models-preset/--models-dir. The exposed portfolio is the cache contents,
-# and --models-max 1 keeps a single model in VRAM at a time (reloaded on
-# selection). Olla discovers them all via /v1/models (dynamic discovery).
+# Exec in the foreground so systemd tracks the server (Type=exec). Single model:
+# the model is the one pinned by the unit's CUDA_VISIBLE_DEVICES (card 1),
+# parameters are embedded as direct CLI args (see the card-2 launcher for the
+# same set). -cram 0 disables the prompt cache (decision-model default);
+# --cache-idle-slots is inert with cram 0 but kept default-on.
 # --device CUDA0 pins the GPU: fail fast (unit ExecStartPre) rather than
 # silently falling back to CPU when VRAM is unusable. Output flows to
 # journalctl (no --log-file).
 exec llama serve \
     --host :: \
     --port "$PORT" \
-    --models-max 1 \
-    --parallel 1 -cram 0 --cache-idle-slots \
+    --parallel 1 \
+    --cache-ram 0 \
+    --cache-idle-slots \
     -sps 0.0 \
+    --flash-attn on \
+    --ctx-size 262144 \
+    --n-gpu-layers 99 \
+    --hf-repo "$MODEL" \
+    --temp 1.0 \
+    --top-p 0.95 \
+    --top-k 20 \
+    --min-p 0.0 \
+    --presence-penalty 1.5 \
+    --repeat-penalty 1.0 \
     -dev CUDA0 \
     --metrics \
     --no-ui

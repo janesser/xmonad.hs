@@ -68,12 +68,36 @@ echo "start-little-brother: serving $MODEL on :$PORT (card 2, UUID-pinned by the
 # Sage-A1.5 Q4_K_M (21.7 GB, 35B MoE / 3B active) with -c 16384 --parallel 2
 # and q4_1 KV fits the 32 GB card exclusive (~24 GB) and alongside an sd.cpp
 # image batch via card2-swap.sh --keep-text (~30 GB) with headroom.
+#
+# Parameters are the recommended ones from the Sage-A1.5 HF repo
+# (temperature 1.0, top_p 0.95, top_k 20, min_p 0.0, presence_penalty 1.5,
+# repeat-penalty 1.0), embedded as direct CLI args. `-cram 0` disables the
+# prompt cache (decision-model default); `--cache-idle-slots` is inert with
+# `cram 0` but kept default-on for the card1 copy.
+#
+# To change the model: edit ~/.config/card2/little-brother.model +
+# `systemctl restart llama-little-brother`.
+#
+# To change the parameters: edit this file + `systemctl restart
+# llama-little-brother`. Once card2 is healthy, mirror these flags onto
+# restart-llama-cuda.sh for card1 (:8081).
 exec llama serve \
     --host :: \
     --port "$PORT" \
     --parallel 1 \
     -dev CUDA0 \
     --metrics -lv 4 \
-    --no-ui
-
-#    --hf-repo "$MODEL" \
+    --no-ui \
+    --hf-repo "$MODEL" \
+    --ctx-size 262144 \
+    --n-gpu-layers 99 \
+    --cache-ram 0 \
+    --cache-idle-slots \
+    -sps 0.0 \
+    --temp 1.0 \
+    --top-p 0.95 \
+    --top-k 20 \
+    --min-p 0.0 \
+    --presence-penalty 1.5 \
+    --repeat-penalty 1.0 \
+    --flash-attn on
