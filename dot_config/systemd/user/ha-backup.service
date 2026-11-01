@@ -1,0 +1,9 @@
+[Unit]
+Description=Backup Home Assistant config to Nextcloud (chezmoi)
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=HOME=/home/jan
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/home/jan/.local/bin/ha-backup.sh

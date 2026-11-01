@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Home Assistant config backup trigger (chezmoi)
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+Unit=ha-backup.service
+
+[Install]
+WantedBy=timers.target

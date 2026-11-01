@@ -1,0 +1,50 @@
+#!/bin/bash
+# run_onchange_hass_backup.sh.tmpl
+#
+# Enable the chezmoi Home Assistant config backup timer. The timer + service
+# are user-space (the HA config is user-owned, so the backup runs as `jan`),
+# deployed by chezmoi:
+#   dot_local/bin/executable_ha-backup.sh   -> ~/.local/bin/ha-backup.sh
+#   dot_config/systemd/user/ha-backup.service  -> ~/.config/systemd/user/ha-backup.service
+#   dot_config/systemd/user/ha-backup.timer    -> ~/.config/systemd/user/ha-backup.timer
+#
+# The timer runs the backup daily at 03:00 (Persistent=true, so it catches up
+# after reboots).
+#
+# Host-gated: only active on raspberrypi; renders to a no-op elsewhere.
+#
+# --- chezmoi change filter (re-run when any input changes) --------------------
+# The SHA256 of the inputs is embedded below as a comment, so the *rendered*
+# script changes whenever an input changes and chezmoi re-runs it. On
+# unchanged applies the script is skipped entirely — no `sudo`, no prompt.
+#
+#   inputs hash: {{ print (include "dot_local/bin/executable_ha-backup.sh") (include "dot_config/systemd/user/ha-backup.service") (include "dot_config/systemd/user/ha-backup.timer") | sha256sum }}
+# ------------------------------------------------------------------------------
+
+{{ if eq .chezmoi.hostname "raspberrypi" }}
+set -euo pipefail
+
+SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
+SVC_SRC="${SRC_DIR}/dot_config/systemd/user"
+
+for f in "ha-backup.service" "ha-backup.timer"; do
+    [ -f "${SVC_SRC}/${f}" ] || { echo "⚠️  missing source: ${SVC_SRC}/${f}"; exit 1; }
+done
+[ -f "${SRC_DIR}/dot_local/bin/executable_ha-backup.sh" ] || {
+    echo "⚠️  missing source: ${SRC_DIR}/dot_local/bin/executable_ha-backup.sh"
+    exit 1
+}
+
+echo "Deploying ha-backup timer (daily 03:00, keeps 7 backups, userspace)."
+
+# The timer + service are user-space (no sudo needed); chezmoi renders the
+# sources to ~/.config/systemd/user/ and ~/.local/bin/ automatically.
+systemctl --user daemon-reload
+systemctl --user enable --now ha-backup.timer
+
+echo "✅ ha-backup timer enabled (userspace)."
+echo "Check with: systemctl --user list-timers ha-backup.timer --all"
+{{ else }}
+# not the Home Assistant host — nothing to do.
+exit 0
+{{ end }}

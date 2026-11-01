@@ -56,14 +56,19 @@ the script refuses and asks for manual handling.
 ## Mid-term roadmap (separate increments — not built)
 
 1. **SmartLife/Tuya** (HA cloud integration) → unblocks `ha-bath-humidity.md`
-   (Tado humidity → Smart Life dryer automation).
+   (Tado humidity → Smart Life dryer automation). **Activation prepared** —
+   see `ha-activate-tado-tuya.md`; needs your Tuya app account + User Code.
 2. **Tado** (cloud, OAuth) → humidity/temperature sensors + heating control.
+   **Activation prepared** — same file; needs your my.tado.com account.
 3. **Voice** — HA Voice/Assist: local STT (faster-whisper) + Piper TTS on this
    box (4 GB Cortex-A72 is fine for STT/TTS); LLM conversation via the llama
    backend (cyberkleiber V100, OpenAI-compatible API over LAN).
 
 ## Follow-ups / hardening
 
+- **Backup:** daily HA config backup to `~/Nextcloud/ha-backup/` is deployed
+  (userspace systemd timer, 03:00, 7-day retention) — see
+  `ha-activate-tado-tuya.md`.
 - Drop `--privileged` once all integrations work without it (Tuya/Tado/voice
   are cloud/in-process — expected to work unprivileged).
 - Optional: HA's built-in `backup` integration is already enabled — pick a
