@@ -8,7 +8,7 @@ Type=simple
 Environment=HOME=/home/jan
 Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart=/usr/bin/python3 -m http.server 8080 --bind 0.0.0.0
-WorkingDirectory=/srv/repo
+WorkingDirectory=/home/jan/.local/arch-repo
 Restart=on-failure
 RestartSec=5
 

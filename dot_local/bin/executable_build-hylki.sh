@@ -12,8 +12,9 @@
 #   --repo-only Skip the build if the package already exists; only do repo-add
 #                and rsync to the Pi.
 #
-# Flow: clone the PKGBUILD -> makepkg in an Arch container (memory capped) ->
-# repo-add -> rsync to the Pi -> omarchy installs from http://<pi>:8080/
+# Flow: clone the PKGBUILD -> set pkgname to hylki-bin -> makepkg in an Arch
+# container (memory capped) -> repo-add -> rsync to the Pi -> omarchy installs
+# from http://<pi>:8080/ (the repo lives in $HOME/.local/arch-repo on the Pi).
 #
 # Sudo is used only for the memory-capped container (needed on the build host)
 # and the run is scoped to the build host via the hostname guard below.
@@ -32,11 +33,12 @@ fi
 BUILD_DIR="${BUILD_DIR:-/home/jan/builds}"
 REPO_DIR="$BUILD_DIR/repo"
 AUR_PKG="hylki"
+PKG_NAME="hylki-bin"          # the published package name
 CONTAINER_ENGINE="${CONTAINER_ENGINE:-docker}"
 BUILD_HOST="${BUILD_HOST:-cyberkleiber}"
 PI_HOST="${PI_HOST:-f3nt0t9dnh9t8l0v.myfritz.net}"
 PI_USER="jan"
-PI_DIR="/srv/repo"
+PI_DIR="$HOME/.local/arch-repo"
 
 KEEP_SRC=0
 REPO_ONLY=0
@@ -75,6 +77,14 @@ if [ ! -d "$BUILD_DIR/hylki" ]; then
     git clone --depth 1 https://aur.archlinux.org/hylki.git "$BUILD_DIR/hylki"
 fi
 
+# --- the published package must be named $PKG_NAME ---
+# The AUR hylki PKGBUILD ships pkgname=(hylki); set it to $PKG_NAME so the
+# published artifact is hylki-bin-<ver>.pkg.tar.zst.
+if ! grep -q "^pkgname=(\$PKG_NAME)" "$BUILD_DIR/hylki/PKGBUILD"; then
+    echo "=> $SCRIPT_NAME: setting pkgname to $PKG_NAME in the PKGBUILD"
+    sed -i "s/^pkgname=(.*/pkgname=($PKG_NAME)/" "$BUILD_DIR/hylki/PKGBUILD"
+fi
+
 # --- build in Arch container (memory capped so the build host stays alive) ---
 # makepkg's parallelism is controlled by MAKEFLAGS (no -j option in modern
 # makepkg) — -j1 keeps the build from thrashing the build host's RAM.
@@ -100,7 +110,7 @@ fi
 
 # --- collect the package (makepkg lands it in the build dir, the repo is
 #     a separate dir) ---
-PKG=$(ls "$BUILD_DIR"/hylki/hylki-*.pkg.tar.zst 2>/dev/null || true)
+PKG=$(ls "$BUILD_DIR"/hylki/${PKG_NAME}-*.pkg.tar.zst 2>/dev/null || true)
 if [ -z "$PKG" ]; then
     echo "=> $SCRIPT_NAME: no package produced in $BUILD_DIR/hylki/"
     exit 1

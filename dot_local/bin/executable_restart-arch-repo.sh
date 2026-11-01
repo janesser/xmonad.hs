@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
-# executable_setup-repo-server.sh — userspace pacman repo server on the
+# executable_restart-arch-repo.sh — userspace pacman repo server on the
 # Raspberry Pi.
 #
-#   executable_setup-repo-server.sh
+#   executable_restart-arch-repo.sh
 #
 # Serves the pacman repo (built by executable_build-hylki.sh and rsynced to
-# /srv/repo) over HTTP in userspace: python3 -m http.server on port 8080,
-# started as a systemd user unit (dot_config/systemd/user/repo-server.service).
+# $HOME/.local/arch-repo) over HTTP in userspace: python3 -m http.server on
+# port 8080, started as a systemd user unit
+# (dot_config/systemd/user/repo-server.service).
 # No nginx, no system packages, no port 80, no root.
 #
-# The repo must already exist at /srv/repo (rsynced from the build host) — this
-# script only creates it if needed, installs the unit and starts the server.
+# The repo must already exist at $HOME/.local/arch-repo (rsynced from the build
+# host) — this script only creates it if needed and starts the server.
 #
-# sudo is used (scoped NOPASSWD drop-in) only for the /srv/repo creation.
+# Everything is userspace: no sudo, no system packages, no port 80.
 
 set -uo pipefail
 
@@ -25,17 +26,17 @@ if [ "$(hostname)" != "raspberrypi" ]; then
     exit 1
 fi
 
-REPO_DIR="${REPO_DIR:-/srv/repo}"
+REPO_DIR="${REPO_DIR:-$HOME/.local/arch-repo}"
 REPO_PORT=8080
 UNIT="repo-server.service"
 UNIT_DEST="${HOME}/.config/systemd/user/${UNIT}"
 
 echo "=> $SCRIPT_NAME: serving $REPO_DIR on the Pi (port $REPO_PORT)"
 
-# --- 1. the repo dir (needs root to create under /srv) -------------------------
+# --- 1. the repo dir (userspace, jan-owned) ------------------------------------
 if [ ! -d "$REPO_DIR" ]; then
     echo "=> $SCRIPT_NAME: creating $REPO_DIR (jan-owned)"
-    sudo mkdir -p "$REPO_DIR" && sudo chown jan:jan "$REPO_DIR" || {
+    mkdir -p "$REPO_DIR" || {
         echo "=> $SCRIPT_NAME: ERROR: could not create $REPO_DIR"
         exit 1
     }

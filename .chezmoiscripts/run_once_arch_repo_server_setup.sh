@@ -1,30 +1,30 @@
 #!/bin/bash
-# run_once_5_aitools_9repo_server.sh
+# run_once_arch_repo_server_setup.sh
 #
 # Bring the pacman repo server on the Raspberry Pi up and keep it running:
 #
-#   /srv/repo                    -> the repo dir (created, jan-owned)
+#   $HOME/.local/arch-repo     -> the repo dir (created, jan-owned)
 #   ~/.config/systemd/user/repo-server.service -> the userspace unit (from the
 #                                                 repo source, rendered by
 #                                                 chezmoi)
 #   http://<pi>:8080/            -> the repo, served by python3 http.server
 #
-# PI ONLY: on any other host this logs and exits 0. The repo dir needs root to
-# create (it sits under /srv), everything else is userspace: no nginx, no
-# system packages, no port 80.
+# PI ONLY: on any other host this logs and exits 0. The repo dir is userspace
+# (under $HOME), everything else is userspace: no nginx, no system packages,
+# no port 80, no root.
 #
 # The unit is a chezmoi target, so it is rendered into
 # ~/.config/systemd/user/ and only enabled here. `cz apply` runs this script
 # once, then the unit keeps the server alive across reboots.
 #
-# Sudo is used only for the /srv/repo creation (scoped NOPASSWD drop-in).
+# No sudo needed at all: the repo dir is created in userspace.
 
 set -uo pipefail
 
 SCRIPT_NAME="$(basename "$0")"
 SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
 
-REPO_DIR="/srv/repo"
+REPO_DIR="$HOME/.local/arch-repo"
 REPO_PORT=8080
 UNIT="repo-server.service"
 UNIT_SRC="${SRC_DIR}/dot_config/systemd/user/${UNIT}"
@@ -38,20 +38,15 @@ fi
 
 echo "=> $SCRIPT_NAME: setting up the repo server on $(hostname)"
 
-# --- 2. the repo dir (needs root to create under /srv) -------------------------
+# --- 2. the repo dir (userspace, jan-owned) ------------------------------------
 # The build host rsyncs into this dir as jan@<pi>, so it must exist and be
 # owned by jan.
 if [ ! -d "$REPO_DIR" ]; then
     echo "=> $SCRIPT_NAME: creating $REPO_DIR (jan-owned)"
-    if ! sudo mkdir -p "$REPO_DIR"; then
+    if ! mkdir -p "$REPO_DIR"; then
         echo "=> $SCRIPT_NAME: ERROR: could not create $REPO_DIR"
         exit 1
     fi
-    if ! sudo chown jan:jan "$REPO_DIR"; then
-        echo "=> $SCRIPT_NAME: ERROR: could not own $REPO_DIR to jan"
-        exit 1
-    fi
-    echo "=> $SCRIPT_NAME: $REPO_DIR ready"
 else
     echo "=> $SCRIPT_NAME: $REPO_DIR exists"
 fi

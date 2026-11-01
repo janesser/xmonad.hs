@@ -16,7 +16,7 @@
 #
 # NOTE: hylki comes from the Raspberry Pi repo server now ([repo] in
 # /etc/pacman.conf, Server = http://raspberrypi:8080/) — see
-# run_once_5_aitools_9pacman_repo_conf.sh. Only set up the repo server first,
+# run_once_arch_repo_pacman_conf.sh. Only set up the repo server first,
 # then the next cz update will install hylki from there.
 #
 # SAFEGUARD: `pacman` and `yay` do not exist on apt boxes, so skip silently

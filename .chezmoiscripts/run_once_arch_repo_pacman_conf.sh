@@ -1,5 +1,5 @@
 #!/bin/bash
-# run_once_5_aitools_9pacman_repo_conf.sh
+# run_once_arch_repo_pacman_conf.sh
 #
 # Point flowerpower's pacman at the Raspberry Pi repo server so
 # `pacman -S hylki` installs the repo artifact instead of the AUR (yay).
