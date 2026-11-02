@@ -35,6 +35,7 @@ Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/
 # Pin card 2 by UUID (never global index): in the remapped space it becomes
 # CUDA0. See the file header — this line is the single source of truth.
 Environment=CUDA_VISIBLE_DEVICES=GPU-fb929bd0-1296-491c-ed72-8f8494addcb8
+Environment=PORT=8082
 # Fail fast: refuse to start (and let systemd abort the unit) unless the
 # UUID-pinned card exposes CUDA. This probe runs UNDER the remapped env above,
 # so it sees exactly card 2. Without it, llama.cpp silently falls back to CPU
@@ -50,7 +51,7 @@ ExecStartPre=/usr/bin/bash -c 'for i in $(seq 1 8); do if llama serve --list-dev
 # main process, so `systemctl stop` (default KillMode=control-group) actually
 # kills the backend — the unit is genuinely stoppable, which card2-swap.sh
 # depends on.
-ExecStart=/usr/bin/bash /home/jan/.local/bin/start-little-brother.sh
+ExecStart=/usr/bin/bash /home/jan/.local/bin/restart-llama-cuda.sh
 Type=exec
 KillSignal=SIGTERM
 TimeoutStartSec=120s

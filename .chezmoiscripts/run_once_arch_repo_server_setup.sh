@@ -71,4 +71,4 @@ else
     exit 1
 fi
 
-echo "=> $SCRIPT_NAME: done. next: build-hylki.sh on cyberkleiber"
+echo "=> $SCRIPT_NAME: done. next: executable_build-lan-repo.sh --package vscodium-bin pwvucontrol rencal-bin rptui-bin on cyberkleiber"
