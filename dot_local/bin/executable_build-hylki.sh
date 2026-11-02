@@ -6,8 +6,8 @@
 #                             [--keep-src] [--repo-only]
 #
 #   --host     Build host (default: cyberkleiber). Needs docker/podman and
-#              SSH access to the Pi.
-#   --pi       The Pi's host name or IP (default: raspberry).
+#              SSH access to the Pi. (currently unused — the build runs here)
+#   --pi       The Pi's host name or IP (default: f3nt0t9dnh9t8l0v.myfritz.net).
 #   --keep-src Keep the AUR clone in $BUILD_DIR instead of removing it.
 #   --repo-only Skip the build if the package already exists; only do repo-add
 #                and rsync to the Pi.
@@ -71,6 +71,18 @@ echo "=> $SCRIPT_NAME: building on $BUILD_HOST, publishing to pi@$PI_HOST"
 mkdir -p "$REPO_DIR"
 mkdir -p "$BUILD_DIR/src"
 
+# --- the build dir must be owned by us: a previous container run hands the
+#     ownership of $BUILD_DIR over to a container-internal UID (podman rootless
+#     maps container UIDs onto another host range), which silently kills the
+#     script — sed -i and the package lookup both fail on an unreadable tree. ---
+if ! [ -w "$BUILD_DIR" ]; then
+    echo "=> $SCRIPT_NAME: $BUILD_DIR is not writable by $(whoami) — fixing ownership"
+    sudo chown -R "$(whoami):$(id -gn)" "$BUILD_DIR" || {
+        echo "=> $SCRIPT_NAME: ERROR: could not fix ownership of $BUILD_DIR"
+        exit 1
+    }
+fi
+
 # --- get the PKGBUILD ---
 if [ ! -d "$BUILD_DIR/hylki" ]; then
     echo "=> $SCRIPT_NAME: cloning the hylki PKGBUILD"
@@ -80,17 +92,22 @@ fi
 # --- the published package must be named $PKG_NAME ---
 # The AUR hylki PKGBUILD ships pkgname=(hylki); set it to $PKG_NAME so the
 # published artifact is hylki-bin-<ver>.pkg.tar.zst.
+# The source tarball and prepare() still use the AUR name (hylki-<ver>), so
+# they must be adjusted in parallel.
 if ! grep -q "^pkgname=(\$PKG_NAME)" "$BUILD_DIR/hylki/PKGBUILD"; then
     echo "=> $SCRIPT_NAME: setting pkgname to $PKG_NAME in the PKGBUILD"
-    sed -i "s/^pkgname=(.*/pkgname=($PKG_NAME)/" "$BUILD_DIR/hylki/PKGBUILD"
+    sed -i "s/^pkgname=.*/pkgname=($PKG_NAME)/" "$BUILD_DIR/hylki/PKGBUILD"
+    sed -i 's|"\$pkgname-\$pkgver.tar.gz::"|"hylki-\$pkgver.tar.gz::"|' "$BUILD_DIR/hylki/PKGBUILD"
+    sed -i 's|cd "\$pkgname-\$pkgver"|cd hylki-\$pkgver|' "$BUILD_DIR/hylki/PKGBUILD"
 fi
 
 # --- build in Arch container (memory capped so the build host stays alive) ---
-# makepkg's parallelism is controlled by MAKEFLAGS (no -j option in modern
-# makepkg) — -j1 keeps the build from thrashing the build host's RAM.
-# makepkg refuses to run as root, and the volume mount lands root-owned in the
-# container, so the container starts as root, makes the mount usable and then
-# hands over to a non-root 'builder' user.
+# makepkg refuses to run as root, so the container starts as root, creates a
+# non-root 'builder' user and hands over the build to it.
+# The build dir must stay owned by us: the container must not chown it to a
+# container-internal UID (podman rootless maps container UIDs onto another host
+# range), so we make it writable instead of chowning it, and restore the
+# ownership after the build.
 # archlinux:base-devel has makepkg + fakeroot + debugedit (the minimal
 # archlinux image does not).
 # --repo-only skips the build if the package already exists (repo-add + rsync
@@ -103,33 +120,72 @@ if [ "$REPO_ONLY" != "1" ]; then
         -v "$BUILD_DIR:/builds" \
         -e MAKEFLAGS="-j1" \
         archlinux:base-devel \
-        bash -c "useradd -m -s /bin/bash builder && echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder && chmod 440 /etc/sudoers.d/builder && chown -R builder:builder /builds && su builder -c 'cd /builds/hylki && sudo pacman -Sy --noconfirm && makepkg --syncdeps --noconfirm --nocheck'"
+        bash -c "useradd -m -s /bin/bash builder && echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder && chmod 440 /etc/sudoers.d/builder && chmod 777 /builds && [ -d /builds/hylki ] && chmod 777 /builds/hylki && su builder -c 'cd /builds/hylki && sudo pacman -Sy --noconfirm && makepkg --syncdeps --noconfirm --nocheck'" || {
+        echo "=> $SCRIPT_NAME: container build failed"
+        exit 1
+    }
+    sudo chown -R "$(whoami):$(id -gn)" "$BUILD_DIR" || {
+        echo "=> $SCRIPT_NAME: ERROR: could not restore ownership of $BUILD_DIR"
+        exit 1
+    }
+    chmod 755 "$BUILD_DIR"
 else
     echo "=> $SCRIPT_NAME: package already built, skipping build (--repo-only)"
 fi
 
 # --- collect the package (makepkg lands it in the build dir, the repo is
 #     a separate dir) ---
-PKG=$(ls "$BUILD_DIR"/hylki/${PKG_NAME}-*.pkg.tar.zst 2>/dev/null || true)
-if [ -z "$PKG" ]; then
-    echo "=> $SCRIPT_NAME: no package produced in $BUILD_DIR/hylki/"
-    exit 1
+# the artifact is named $PKG_NAME-<ver>-<rel>-<arch>.pkg.tar.zst; a previous run
+# of this script (before the rename to hylki-bin) left hylki-<ver>-<rel>-<arch>
+# behind, so fall back to the AUR name there. `head -1` keeps this single-valued
+# even when the glob matches more than one artifact. `--repo-only` finds the
+# package in the repo dir (rsynced from a previous run).
+find_package() {
+    local p d
+    # the $PKG_NAME artifact first (hylki-bin-<ver>-<rel>-<arch>), then the AUR
+    # name left behind by an older run of this script (hylki-<ver>-<rel>-<arch>)
+    for d in "$REPO_DIR" "$BUILD_DIR/hylki"; do
+        p="$(ls "$d"/${PKG_NAME}-*.pkg.tar.zst 2>/dev/null | head -1)"
+        if [ -n "$p" ]; then printf '%s\n' "$p"; return 0; fi
+    done
+    for d in "$REPO_DIR" "$BUILD_DIR/hylki"; do
+        p="$(ls "$d"/hylki-*.pkg.tar.zst 2>/dev/null | head -1)"
+        if [ -n "$p" ]; then printf '%s\n' "$p"; return 0; fi
+    done
+    return 1
+}
+if [ "$REPO_ONLY" = "1" ]; then
+    # --repo-only: only the published $PKG_NAME artifact counts
+    PKG="$(ls "$REPO_DIR"/${PKG_NAME}-*.pkg.tar.zst 2>/dev/null | head -1 || true)"
+    if [ -z "$PKG" ]; then
+        echo "=> $SCRIPT_NAME: no $PKG_NAME package in $REPO_DIR"
+        exit 1
+    fi
+else
+    PKG="$(find_package)"
+    if [ -z "$PKG" ]; then
+        echo "=> $SCRIPT_NAME: no package produced in $BUILD_DIR/hylki/"
+        exit 1
+    fi
 fi
-for p in $PKG; do cp "$p" "$REPO_DIR/"; done
-echo "=> $SCRIPT_NAME: packages: $(basename $PKG | tr '\n' ' ')"
+# --- clean stale artifacts out of $REPO_DIR (leftovers from earlier runs) ---
+for f in "$REPO_DIR"/*.pkg.tar.zst; do
+    [ "$(basename "$f")" = "$(basename "$PKG")" ] && continue
+    rm -f "$f"
+done
+if ! [ -f "$REPO_DIR/$(basename "$PKG")" ]; then
+    cp "$PKG" "$REPO_DIR/"
+fi
+echo "=> $SCRIPT_NAME: packages: $(basename "$PKG")"
 
-PKG_FILE=$(ls "$REPO_DIR"/hylki-*.pkg.tar.zst 2>/dev/null | head -1 || true)
-if [ -z "$PKG_FILE" ]; then
-    echo "=> $SCRIPT_NAME: no package produced in $REPO_DIR"
-    exit 1
-fi
-echo "=> $SCRIPT_NAME: package: $(basename "$PKG_FILE")"
+PKG_FILE="$(basename "$PKG")"
+echo "=> $SCRIPT_NAME: package: $PKG_FILE"
 
 # --- generate repo db (repo-add is an Arch tool — run it in the container) ---
 $CONTAINER_ENGINE run --rm \
     -v "$REPO_DIR:/repo" \
     archlinux:base-devel \
-    bash -c "repo-add /repo/repo.db.tar.gz /repo/$(basename "$PKG_FILE")" 2>&1 | tail -5 || {
+    bash -c "repo-add /repo/repo.db.tar.gz /repo/$PKG_FILE" 2>&1 | tail -5 || {
         echo "=> $SCRIPT_NAME: repo-add failed (unsigned package? check SIGNKEY in makepkg.conf)"
         exit 1
     }
@@ -137,7 +193,6 @@ if [ ! -f "$REPO_DIR/repo.db.tar.gz" ]; then
     echo "=> $SCRIPT_NAME: repo-add failed (unsigned package? check SIGNKEY in makepkg.conf)"
     exit 1
 fi
-echo "=> $SCRIPT_NAME: repo.db generated"
 echo "=> $SCRIPT_NAME: repo.db generated"
 
 # --- sync to the Pi ---

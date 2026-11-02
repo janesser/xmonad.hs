@@ -13,16 +13,27 @@ DELAY="${1:-0}"
 log() { logger -t auto-poweroff "$@"; }
 
 # --- pre-warning to every logged-in session (incl. SSH) -----------------------
-# Broadcast via `wall` so the owner sees an on-screen countdown in their SSH
-# session / TTY before the cancelable shutdown fires. Guarded: `wall` exits non-
-# zero when nobody is logged in (no loginctl entry) or a tty is busy, so it must
-# never abort the launcher under `set -e`.
+# 1. `wall` at best — broadcasts to every entry in /run/utmp (SSH + TTY).
+# 2. Direct write to /dev/pts/* if `wall` has no targets: this box ships
+#    systemd built without -UTMP, so /run/utmp is absent and `wall` always
+#    delivers to nobody. Root can still write straight onto the ptys.
 warn_users() {
     local body="$1"
-    if command -v wall >/dev/null 2>&1 && who >/dev/null 2>&1; then
-        log "broadcasting pre-warning to $(who | wc -l) session(s)"
+
+    if command -v wall >/dev/null 2>&1; then
+        log "broadcasting pre-warning via wall"
         wall "${body}" || true
     fi
+
+    # `wall` is silent when /run/utmp has no entries (this release). Write the
+    # warning straight onto every live pty so it always lands.
+    local n=0
+    for pty in /dev/pts/[0-9]*; do
+        [ -w "$pty" ] || continue
+        printf '%s\n' "${body}" >"$pty" 2>/dev/null || continue
+        n=$((n + 1))
+    done
+    log "pre-warning written to ${n} pty(s)"
 }
 
 if [ "${DELAY}" -gt 0 ] 2>/dev/null; then
