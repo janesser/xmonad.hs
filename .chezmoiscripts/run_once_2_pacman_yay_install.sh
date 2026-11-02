@@ -15,7 +15,7 @@
 #                  libgnome-keyring-debug pwvucontrol rencal-bin rptui-bin
 #
 # NOTE: hylki comes from the Raspberry Pi repo server now ([repo] in
-# /etc/pacman.conf, Server = http://raspberrypi:8080/) — see
+# /etc/pacman.d/conf.d/lan_repo.conf, Server = http://raspberrypi:8080/) — see
 # run_once_arch_repo_pacman_conf.sh. Only set up the repo server first,
 # then the next cz update will install hylki from there.
 #
