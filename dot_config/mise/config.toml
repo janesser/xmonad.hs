@@ -3,6 +3,7 @@ node = "latest"
 pi = "latest"
 uv = "latest"
 ghcup = "latest"
+gh = "latest"
 
 [settings.upgrade]
 auto_prune = false

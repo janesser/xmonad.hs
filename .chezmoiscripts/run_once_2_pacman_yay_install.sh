@@ -34,13 +34,20 @@ set -uo pipefail
 command -v pacman >/dev/null || exit 0
 command -v yay >/dev/null || exit 0
 
+if ! grep raspberrypi /etc/pacman.conf; then
+    sudo install etc/pacman.conf /etc/pacman.conf
+else
+    echo lan repo already configured.
+fi
+
 echo "==> pacman: installing official repo packages"
 sudo pacman -S --noconfirm --needed \
     signal-desktop \
     nextcloud-client \
     keepassxc \
     helix \
-    rustdesk
+    rustdesk \
+    wakeonlan
 
 echo "==> yay: installing AUR packages"
 yay -S --noconfirm --needed \
@@ -49,8 +56,13 @@ yay -S --noconfirm --needed \
     rencal-bin \
     rptui-bin
 
-omarchy pkg add errands
+# `omarchy plugin add` refuses to continue without a confirmation — `--yes`
+# makes this run silently inside `cz apply` (no TTY).
+omarchy plugin add https://github.com/jesusarchive/omarchy-dynamic-menu.git --enable --yes
+omarchy plugin add https://github.com/TheMogli/ToDoma.git --enable --yes
 
-omarchy plugin add https://github.com/jesusarchive/omarchy-dynamic-menu.git --enable
+# `pacman -S` prompts on reinstalls from another repo, so `--noconfirm` is
+# required: these scripts run without a TTY and never get an answer.
+sudo pacman -S --noconfirm hylki-bin
 
 exit 0

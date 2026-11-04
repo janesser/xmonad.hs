@@ -5,7 +5,6 @@ o.launch_on_start("foot.btop")
 o.launch_on_start("nextcloud")
 
 o.launch_on_start("rencal")
-o.launch_on_start("errands")
 o.launch_on_start("hylki")
 o.launch_on_start("signal-desktop")
 o.launch_on_start("omarchy-launch-webapp https://web.whatsapp.com/")
