@@ -1,3 +1,5 @@
 #!/bin/bash
 
-omarchy update -y
+if command -v omarchy; then
+    omarchy update -y
+fi
