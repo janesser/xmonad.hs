@@ -22,3 +22,8 @@ _bmad*
 # ignore crossbar.json (might vary a lot)
 **/crossbar.json
 {{- end }}
+
+# ignore poweroff-timer and lan-repo-rebuild
+{{- if ne .chezmoi.hostname "cyberkleiber" }}
+.chezmoiscripts/8_*
+{{- end }}
