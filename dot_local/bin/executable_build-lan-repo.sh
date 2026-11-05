@@ -349,9 +349,13 @@ if [ ${#PUBLISHED[@]} -gt 0 ]; then
             log "WARNING: could not determine pkgver for $aur (marker untouched)"
             continue
         fi
+        # the primary marker is $BUILD_DIR/<pkg>/.last-built-pkgver; the copy in
+        # $MARKER_DIR ($MARKER_DIR/$aur) is the stash that survives removing the
+        # package dir with --keep-src (the trigger reads the primary first, falls
+        # back to this one)
         mkdir -p "$(pkbuild_dir "$aur")" 2>/dev/null || true
-        echo "$ver" > "$(pkbuild_path "$aur")/.last-built-pkgver"
-        cp "$(pkbuild_path "$aur")/.last-built-pkgver" "$MARKER_DIR/$aur" 2>/dev/null || true
+        echo "$ver" > "$(pkbuild_dir "$aur")/.last-built-pkgver"
+        cp "$(pkbuild_dir "$aur")/.last-built-pkgver" "$MARKER_DIR/$aur" 2>/dev/null || true
         log "marked $aur built: $ver ($MARKER_DIR/$aur)"
     done
 fi
