@@ -23,6 +23,13 @@
 # -> rsync to the Pi -> mark last-built versions. The lan-repo serves exactly
 # packages.list + latest versions after every run.
 #
+# Build performance on the workstation host: makepkg uses MAKEFLAGS (parallel),
+# cargo/rustc read CARGO_BUILD_JOBS (crates in parallel) and RUSTFLAGS
+# (-C target-cpu=native picks Skylake SP, -C parallel-compiler splits one crate's
+# codegen across threads; rustc >= 1.78). These env vars are inert for non-rust
+# package builds (gcc/clang never read them), so they can sit on the container
+# run line alongside the shared flags.
+#
 # Sudo is used only for the memory-capped container (needed on the build host)
 # and the run is scoped to the build host via the hostname guard below.
 
@@ -46,6 +53,7 @@ PI_HOST="${PI_HOST:-f3nt0t9dnh9t8l0v.myfritz.net}"
 PI_USER="jan"
 PI_DIR="$HOME/.local/arch-repo"
 MARKER_DIR="$BUILD_DIR/.last-built"
+NPROC=$(nproc 2>/dev/null || echo 1)
 
 KEEP_SRC=0
 REPO_ONLY=0
@@ -133,6 +141,21 @@ get_pkbuild() {
     printf '%s\n' "$(pkbuild_path "$aur")"
 }
 
+# --- already built with the current version? -------------------------------------
+# A package is up to date (no rebuild needed) when an artifact for it sits in $REPO_DIR
+# and its file name contains the PKGBUILD's pkgver — i.e. the published artifact was
+# produced by this exact PKGBUILD. Packages that are stale or not on disk need building.
+is_current() {
+    local aur="$1" pub p ver
+    [ -f "$(pkbuild_path "$aur")" ] || return 1
+    pub="$(published_name "$aur")"
+    ver="$(grep -m1 '^pkgver=' "$(pkbuild_path "$aur")" 2>/dev/null | cut -d= -f2 || true)"
+    [ -z "$ver" ] && return 1
+    # the artifact on disk must carry exactly this pkgver: <pub>-<pkgver>-<release>-
+    p="$(ls "$REPO_DIR"/${pub}-${ver}-* 2>/dev/null | tail -1)"
+    [ -n "$p" ]
+}
+
 # --- setup -----------------------------------------------------------------------
 mkdir -p "$REPO_DIR"
 mkdir -p "$BUILD_DIR/src"
@@ -160,9 +183,31 @@ for aur in "${BUILD_SET[@]}"; do
     BUILD_DIRS+=("$(pkbuild_dir "$aur")/pkg")
 done
 
+# --- omit already-built packages (no rebuild needed) ------------------------------
+# A package that was published with this exact PKGBUILD is up to date: its artifact
+# for pkgver=<pkgver> sits in $REPO_DIR, so it stays on disk and in the db while
+# nothing is rebuilt in the container. Only when a package moves (stale or missing
+# artifact) does it get built.
+ORIG_SET=("${BUILD_SET[@]+"${BUILD_SET[@]}"}")
+REBUILD_SET=()
+SKIPPED=()
+for aur in "${BUILD_SET[@]}"; do
+    if is_current "$aur" 2>/dev/null; then
+        artifact="$(ls "$REPO_DIR"/$(published_name "$aur")-* 2>/dev/null | tail -1)"
+        log "omitting $aur (already built: $(basename "$artifact"))"
+        SKIPPED+=("$aur")
+    else
+        REBUILD_SET+=("$aur")
+    fi
+done
+if [ ${#REBUILD_SET[@]} -eq 0 ]; then
+    log "no package needs rebuilding (all up to date) — only reconciling the repo"
+fi
+
 # --- build all packages in one container -----------------------------------------
-if [ "$RECONCILE_ONLY" != "1" ] && [ "$REPO_ONLY" != "1" ]; then
-    echo "=> $SCRIPT_NAME: building ${BUILD_SET[*]} in $CONTAINER_ENGINE (archlinux:base-devel)"
+if [ "$RECONCILE_ONLY" != "1" ] && [ "$REPO_ONLY" != "1" ] && [ ${#REBUILD_SET[@]} -gt 0 ]; then
+    echo "=> $SCRIPT_NAME: building ${REBUILD_SET[*]} in $CONTAINER_ENGINE (archlinux:base-devel)"
+    echo "   (skipped ${#SKIPPED[@]} already-built of the original ${#ORIG_SET[@]})"
     # Each package is built in its own work dir, so write one build script for the
     # container (avoids all quoting layers of `bash -c` inside `bash -c`). The
     # build dirs must be writable for the container's non-root builder user, because
@@ -181,9 +226,11 @@ EOF
         --memory=24g --memory-swap=24g \
         --network host \
         -v "$BUILD_DIR:/builds" \
-        -e MAKEFLAGS="-j1" \
+        -e MAKEFLAGS="-j$NPROC" \
+        -e CARGO_BUILD_JOBS="$NPROC" \
+        -e RUSTFLAGS="-C target-cpu=native -C parallel-compiler" \
         archlinux:base-devel \
-        bash /builds/.build.sh "${BUILD_SET[@]}" || {
+        bash /builds/.build.sh "${REBUILD_SET[@]}" || {
         echo "=> $SCRIPT_NAME: container build failed"
         exit 1
     }
