@@ -28,7 +28,7 @@
 # script changes whenever an input changes and chezmoi re-runs it. On unchanged
 # applies the script is skipped entirely — no `sudo`, no prompt.
 #
-#   inputs hash: {{ print (include "etc/systemd/system/lan-repo-rebuild.timer") (include "etc/systemd/system/lan-repo-rebuild.service") | sha256sum }}
+#   inputs hash: {{ print (include "etc/systemd/system/lan-repo-rebuild.timer") (include "etc/systemd/system/lan-repo-rebuild.service") (include ".chezmoi.toml.tmpl") | sha256sum }}
 # -----------------------------------------------------------------------------
 
 set -euo pipefail

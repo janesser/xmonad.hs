@@ -6,6 +6,11 @@ encryption = "age"
 # to activate. Re-render with `cz init` after changing it, then `cz apply`.
 auto_poweroff = {{ if eq .chezmoi.hostname "cyberkleiber" }}true{{ else }}false{{ end }}
 
+# Feature toggle: lan-repo rebuild trigger. Defaults to false everywhere; enabled on
+# this machine via .chezmoi.hostname in .chezmoiscripts. Runtime scripts read this key
+# from the rendered config to decide whether to activate. Re-render with `cz init` after changing it, then `cz apply`.
+lan_repo_rebuild_trigger = {{ if eq .chezmoi.hostname "cyberkleiber" }}true{{ else }}false{{ end }}
+
 [diff]
     # only `cz diff` ignores LastNotified, `cz apply` will still edge on it
     command = "diff"
