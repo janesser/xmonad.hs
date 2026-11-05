@@ -127,17 +127,18 @@ pkbuild_dir() { printf '%s\n' "$BUILD_DIR/$1"; }
 pkbuild_path() { printf '%s\n' "$BUILD_DIR/$1/PKGBUILD"; }
 
 # --- get the PKGBUILD for one package -------------------------------------------
-# (the dir can exist and be empty from a previous failed run, so verify it)
+# Always clone the current AUR PKGBUILD: a stale local one (left from an earlier,
+# possibly incomplete run) would otherwise decide the version that gets built instead
+# of the one upstream published. Removing $BUILD_DIR/<pkg> first also wipes leftover
+# state so makepkg does not refuse to rebuild over it.
 get_pkbuild() {
     local aur="$1"
-    if [ ! -f "$(pkbuild_path "$aur")" ]; then
-        echo "=> $SCRIPT_NAME: cloning the $aur PKGBUILD" >&2
-        sudo rm -rf "$(pkbuild_dir "$aur")"
-        git clone --depth 1 "https://aur.archlinux.org/$aur.git" "$(pkbuild_dir "$aur")" || {
-            echo "=> $SCRIPT_NAME: ERROR: could not clone https://aur.archlinux.org/$aur.git" >&2
-            return 1
-        }
-    fi
+    sudo rm -rf "$(pkbuild_dir "$aur")"
+    echo "=> $SCRIPT_NAME: cloning the $aur PKGBUILD" >&2
+    git clone --depth 1 "https://aur.archlinux.org/$aur.git" "$(pkbuild_dir "$aur")" || {
+        echo "=> $SCRIPT_NAME: ERROR: could not clone https://aur.archlinux.org/$aur.git" >&2
+        return 1
+    }
     printf '%s\n' "$(pkbuild_path "$aur")"
 }
 
@@ -180,7 +181,10 @@ for aur in "${BUILD_SET[@]}"; do
         log "ERROR: could not get the PKGBUILD for $aur"
         exit 1
     fi
-    BUILD_DIRS+=("$(pkbuild_dir "$aur")/pkg")
+    # makepkg writes the artifact into the build dir root (next to PKGBUILD, e.g.
+# vscodium-bin-1.143.17232-1-x86_64.pkg.tar.zst); $BUILD_DIR/<pkg>/pkg is only
+# the fakeroot install tree. Search the build dir for artifacts.
+    BUILD_DIRS+=("$(pkbuild_dir "$aur")")
 done
 
 # --- omit already-built packages (no rebuild needed) ------------------------------
@@ -219,7 +223,8 @@ chmod 440 /etc/sudoers.d/builder
 chmod 777 /builds
 for pkg in "$@"; do
     chmod 777 "/builds/$pkg"
-    su builder -c "cd /builds/$pkg && sudo pacman -Sy --noconfirm && makepkg --syncdeps --noconfirm --nocheck"
+    # -f overwrites leftover state from a previous, possibly incomplete run
+    su builder -c "cd /builds/$pkg && sudo pacman -Sy --noconfirm && makepkg --syncdeps --noconfirm --nocheck --force"
 done
 EOF
     $CONTAINER_ENGINE run --rm \
@@ -269,7 +274,9 @@ for aur in "${BUILD_SET[@]}"; do
         log "ERROR: no $pub package found for $aur (build dir or repo)"
         exit 1
     fi
-    cp "$PKG" "$REPO_DIR/"
+    # the artifact may already live in $REPO_DIR (an earlier run); copying it onto
+    # itself is a no-op with an error exit, so skip when it's already there.
+    [ "$(dirname "$PKG")" != "$REPO_DIR" ] && cp "$PKG" "$REPO_DIR/"
     PUBLISHED+=("$aur")
     echo "=> $SCRIPT_NAME: $aur -> $pub ($(basename "$PKG"))"
 done

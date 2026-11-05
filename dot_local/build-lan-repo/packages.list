@@ -13,4 +13,5 @@
 # stable AUR version. No version pins — latest-stable at build time, every
 # time.
 hylki
-rencal
+rencal-bin
+vscodium-bin

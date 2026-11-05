@@ -36,7 +36,11 @@ REBUILD=${REBUILD:-/home/jan/.local/bin/build-lan-repo.sh}
 # build host's repo dir (source of the rsync --delete into the Pi)
 REPO_DIR="$BUILD_DIR/repo"
 PI_USER="jan"
-PI_HOST=${PI_HOST:-f3nt0t9dnh9t8l0v.myfritz.net}
+PI_HOST=${PI_HOST:-f3nt0t9dnh9t8l0v.myfritz.net}   # build host → Pi (port 6622)
+# ssh verification address: from the build host the Pi is reachable locally by
+# name on port 22, so `ssh` (not `-e "ssh -p 6622"`) works. Only needed for the
+# md5 cross-check below.
+PI_SSH_HOST=${PI_SSH_HOST:-raspberrypi}
 PI_DIR="$HOME/.local/arch-repo"
 SKIP_PATTERN='beta|rc|dev'   # policy: no pre-releases
 EXIT=0
@@ -164,7 +168,7 @@ verify_repo() {
     }
 
     # the two repo copies must stay in sync (build host + Pi)
-    pi_md5="$(ssh -o ConnectTimeout=20 "$PI_USER@$PI_HOST" "md5sum $PI_DIR/repo.db.tar.gz" 2>/dev/null | cut -d' ' -f1)"
+    pi_md5="$(ssh -o ConnectTimeout=20 "$PI_USER@$PI_SSH_HOST" "md5sum $PI_DIR/repo.db.tar.gz" 2>/dev/null | cut -d' ' -f1)"
     if [ -z "$pi_md5" ]; then
         log "WARNING: could not verify the Pi's repo (ssh failed); assuming in sync"
     elif [ "$(md5sum "$REPO_DIR/repo.db.tar.gz" | cut -d' ' -f1)" != "$pi_md5" ]; then
