@@ -1,5 +1,9 @@
 # Jetson Nano (B210) — install guide
 
+> ⚠️ **Status: abandoned (2026-11-05).** Read `README.md` first — the security story
+> ended with NVIDIA's last Tegra X1 release, and the hardware is being retired.
+> This guide is a record of how it was configured, not guidance for deployment.
+>
 Tegra **X1** (`tegra210`). This box is set up for **CUDA / TensorRT** so we can run
 small LLMs with `llama.cpp`. That choice fixes everything below, so read the one
 constraint first — it kills two of the things you originally asked for.
