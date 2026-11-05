@@ -1,0 +1,86 @@
+#!/bin/bash
+# run_onchange_9_2_lan_repo_rebuild_trigger.sh.tmpl
+#
+# Install the lan-repo rebuild systemd timer + service on cyberkleiber (the
+# build host) only and enable the timer: every day at 16:00 it polls every
+# element of `packages.list` against its AUR cgit feed, rebuilds anything whose
+# version moved, and reconciles the repo so it serves exactly `packages.list` +
+# latest versions.
+#
+# Inputs (plain files in the ignored source tree, deployed by this script):
+#   etc/systemd/system/lan-repo-rebuild.timer     (0644 root:root)
+#   etc/systemd/system/lan-repo-rebuild.service   (0644 root:root)
+#
+# Deploys to:
+#   /etc/systemd/system/lan-repo-rebuild.timer    (timer, daily 16:00)
+#   /etc/systemd/system/lan-repo-rebuild.service  (oneshot, runs the trigger)
+#
+# Sudo is used only for commands allowed by the scoped NOPASSWD sudoers drop-in
+# (AGENTS.md): mkdir, cp, chmod, chown, systemctl.
+#
+# Toggled by the `lan_repo_rebuild_trigger` key in the runtime config
+# ($CHEZMOI_CONFIG_FILE, rendered from .chezmoi.toml.tmpl). It defaults to false
+# and is true on cyberkleiber only (a timer on every box would try to build
+# there — this script skips silently on all other boxes).
+#
+# --- chezmoi change filter (re-run when any input changes) --------------------
+# The SHA256 of the inputs is embedded below as a comment, so the *rendered*
+# script changes whenever an input changes and chezmoi re-runs it. On unchanged
+# applies the script is skipped entirely — no `sudo`, no prompt.
+#
+#   inputs hash: {{ print (include "etc/systemd/system/lan-repo-rebuild.timer") (include "etc/systemd/system/lan-repo-rebuild.service") | sha256sum }}
+# -----------------------------------------------------------------------------
+
+set -euo pipefail
+
+SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
+SRC="${SRC_DIR}/etc/systemd/system"
+UNIT_DIR=/etc/systemd/system
+TIMER_NAME=lan-repo-rebuild.timer
+SVC_NAME=lan-repo-rebuild.service
+
+for f in "${TIMER_NAME}" "${SVC_NAME}"; do
+    [ -f "${SRC}/${f}" ] || { echo "⚠️  missing source: ${SRC}/${f}"; exit 1; }
+done
+
+# --- feature toggle (runtime config) -----------------------------------------
+# Only enable the timer on cyberkleiber, where it is actually useful. A timer
+# on every box would make them all build — and only cyberkleiber can build.
+ENABLE=0
+CONFIG_FILE="${CHEZMOI_CONFIG_FILE:-$HOME/.config/chezmoi/chezmoi.toml}"
+if [ -f "${CONFIG_FILE}" ]; then
+    if grep -qE '^[[:space:]]*lan_repo_rebuild_trigger[[:space:]]*=[[:space:]]*true' "${CONFIG_FILE}"; then
+        ENABLE=1
+    fi
+else
+    {{ if eq .chezmoi.hostname "cyberkleiber" }}ENABLE=1{{ else }}ENABLE=0{{ end }}
+fi
+
+if [ "${ENABLE}" -ne 1 ]; then
+    # undo a previously-enabled timer so the toggle genuinely disables the feature
+    sudo systemctl --system disable --now "${TIMER_NAME}" 2>/dev/null || true
+    echo "⏭️  lan_repo_rebuild_trigger is not enabled (config: ${CONFIG_FILE}); not enabling the timer."
+    exit 0
+fi
+
+echo "Deploying the lan-repo rebuild timer on $(hostname) — enabled by toggle in ${CONFIG_FILE}."
+
+# --- install (the timer+service only change when the sources change) ---------
+for f in "${TIMER_NAME}" "${SVC_NAME}"; do
+    if [ -f "${UNIT_DIR}/${f}" ] && cmp -s "${SRC}/${f}" "${UNIT_DIR}/${f}"; then
+        echo "✅ ${UNIT_DIR}/${f} already installed and up to date."
+    else
+        [ -f "${UNIT_DIR}/${f}" ] && sudo rm -f "${UNIT_DIR}/${f}"
+        sudo install -o root -g root -m 0644 "${SRC}/${f}" "${UNIT_DIR}/${f}"
+        echo "✅ Installed ${UNIT_DIR}/${f}"
+    fi
+done
+
+sudo systemctl --system daemon-reload
+sudo systemctl --system enable --now "${TIMER_NAME}" || {
+    echo "⚠️  could not enable ${TIMER_NAME} — check the timer is valid"
+    exit 1
+}
+
+echo "✅ lan-repo rebuild timer enabled (daily 16:00)."
+echo "Check with: systemctl list-timers lan-repo-rebuild.timer --all"

@@ -1,0 +1,19 @@
+# Trigger the daily lan-repo rebuild (chezmoi): the rebuild service polls every
+# element of `packages.list` against its AUR cgit feed and builds what moved.
+#
+# Source of truth: this repo (`etc/systemd/system/lan-repo-rebuild.timer`),
+# installed to /etc/systemd/system by
+# `.chezmoiscripts/run_onchange_9_2_lan_repo_rebuild_trigger.sh.tmpl` on
+# cyberkleiber only (the build host — the timer is useless on every other box).
+
+[Unit]
+Description=Trigger the lan-repo rebuild daily at 16:00 (chezmoi)
+Documentation=https://aur.archlinux.org/cgit/aur.git/atom/?h=
+
+[Timer]
+OnCalendar=*-*-* 16:00
+Persistent=false
+Unit=lan-repo-rebuild.service
+
+[Install]
+WantedBy=timers.target

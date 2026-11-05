@@ -1,0 +1,25 @@
+# Rebuild the lan-repo: poll every element of `packages.list` against its AUR
+# cgit feed and rebuild any package whose version moved, then reconcile the repo
+# so it serves exactly `packages.list` + latest versions (the trigger runs the
+# whole loop itself).
+#
+# Source of truth: this repo (`etc/systemd/system/lan-repo-rebuild.service`),
+# installed to /etc/systemd/system by
+# `.chezmoiscripts/run_onchange_9_2_lan_repo_rebuild_trigger.sh.tmpl`.
+
+[Unit]
+Description=Rebuild the lan-repo (packages.list + AUR, daily 16:00)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=jan
+Group=jan
+Environment=HOME=/home/jan
+Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/home/jan/.local/bin/rebuild-lan-repo.sh
+
+[Install]
+WantedBy=multi-user.target
