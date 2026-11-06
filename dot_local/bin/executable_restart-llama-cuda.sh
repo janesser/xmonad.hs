@@ -39,8 +39,8 @@ exec llama serve \
     --presence-penalty 1.5 \
     --repeat-penalty 1.0 \
     --parallel 1 \
-    -kvu -cram 16384 --cache-idle-slots --cache-prompt \
+    -kvu -cram 12288 --cache-idle-slots --cache-prompt \
     --flash-attn on \
-        --ctx-checkpoints 256 \
-        --checkpoint-min-step 1024 \
-        -lv 4
+    --ctx-checkpoints 256 \
+    --checkpoint-min-step 1024 \
+    -lv 4
