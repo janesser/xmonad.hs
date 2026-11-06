@@ -130,6 +130,9 @@ for entry in "${BACKENDS[@]}"; do
     # it and reap the live instance. `enable --now` semantics are available via
     # `sudo systemctl enable --now ${UNIT}` when a restart is actually wanted.
     sudo systemctl enable "${UNIT}"
+    # foxguard: ignore[bash/taint-ssrf] PORT is read from this file's own
+    # config table (line 85), not untrusted input, and the URL host is fixed to
+    # 127.0.0.1 for the local liveness probe only.
     if [ "${START}" = "yes" ] && ! curl -fsS "http://127.0.0.1:${PORT}/v1/models" >/dev/null 2>&1; then
         sudo systemctl start "${UNIT}"
         echo "✅ ${UNIT} started (:${PORT} was not serving)."
