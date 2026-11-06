@@ -17,8 +17,8 @@ Determine your fleet member first: `hostname` → `flowerpower`, `raspberrypi`, 
 ## Policy
 
 - This file is rendered by chezmoi from `dot_pi/agent/AGENTS.md` — edit the source, never the render; every machine gets a different copy of the same template.
-- Privileged steps for `cz update` must run through `/etc/sudoers.d/chezmoi-pi`; do not sudo outside a chezmoi run script; if a needed command is missing, stop and ask.
-- Never edit `/etc/sudoers.d/chezmoi-pi`.
+- Privileged steps for `cz update` must run through `/etc/sudoers.d/base`; do not sudo outside a chezmoi run script; if a needed command is missing, stop and ask.
+- Never edit `/etc/sudoers.d/base`.
 - Workflows must run through BMAD skills where they exist (see Skill direction) — don't reinvent them in-chat.
 - Editing this file: change `~/.local/share/chezmoi/dot_pi/agent/AGENTS.md` first, then `cz re-add` or `cz add`, then `cz apply` to verify — never edit the render directly.
 
@@ -34,6 +34,7 @@ All machines: skills load path `~/.agents/skills/` — symlinks to `/usr/share/o
 - Every claim below is unverified until you path-check it for this machine; if you cannot, treat it as false and ask before acting.
 - Verify every command or unit claim by running it — never by reading the block that describes it: `systemctl --system is-enabled <unit>` on this box, SSH into cyberkleiber or raspberrypi otherwise.
 - bmad skills publish to `~/.pi/agent/skills/bmad-*` via `.chezmoiscripts/run_onchange_pi_bmad.sh.tmpl`; project-local `_bmad/` installs are obsolete.
+- New files: create at the target location first, then `chezmoi add <target>` to register — registration moves it into the source tree and makes it managed. Never create in the source tree and rely on `cz apply`; a file registered only in git is not managed by chezmoi.
 
 ## Skill direction
 

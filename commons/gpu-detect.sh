@@ -75,7 +75,7 @@ grant_render_video_groups() {
 #   * Idempotent: only (re)applies when the capability is not already set, so
 #     repeated cz updates don't churn. getcap only *reads* (no sudo).
 #   * setcap needs sudo and a scoped NOPASSWD rule for /usr/bin/setcap in the
-#     chezmoi-pi drop-in (add it there before relying on this on a fresh box).
+#     `apt` drop-in (add it there before relying on this on a fresh box).
 #     If that rule is not yet installed the sudo call is denied; we warn and
 #     continue rather than aborting cz update — the next update applies it once
 #     the drop-in has been refreshed.

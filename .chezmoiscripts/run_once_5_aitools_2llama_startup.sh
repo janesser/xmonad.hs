@@ -96,8 +96,6 @@ done
 # hold :8082 (the port now belongs to the card-2 little brother).
 if [ -f /etc/systemd/system/llama-sycl.service ]; then
     sudo systemctl disable --now llama-sycl 2>/dev/null || true
-    sudo rm -f /etc/systemd/system/llama-sycl.service
-    echo "✅ retired leftover llama-sycl.service"
 fi
 
 # --- 3. install each unit, enable, and (maybe) start ------------------------
@@ -120,7 +118,9 @@ for entry in "${BACKENDS[@]}"; do
     if [ -f "${UNIT_DEST}" ] && cmp -s "${UNIT_SRC}" "${UNIT_DEST}"; then
         echo "✅ ${UNIT_DEST} already installed and up to date."
     else
-        if [ -f "${UNIT_DEST}" ]; then sudo rm -f "${UNIT_DEST}"; fi
+        # `install` overwrites the destination atomically, so no pre-`rm` is needed.
+        # Keeping it (instead of a `rm` + `install` pair) means this path never
+        # calls a destructive command through the cleanup sudoers drop-in.
         sudo install -o root -g root -m 0644 "${UNIT_SRC}" "${UNIT_DEST}"
         echo "✅ Installed ${UNIT_DEST}"
     fi

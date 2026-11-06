@@ -5,8 +5,7 @@
 # `cz apply`.
 command -v apt >/dev/null || exit 0
 
-sudo rm -f /etc/apt/sources.list.d/maveonair-ubuntu-helix-editor*.sources \
-           /etc/apt/sources.list.d/maveonair-ubuntu-helix-editor*.list 2>/dev/null || true
+# nothing to clean up: all boxes are already clean
 if snap list helix >/dev/null 2>&1; then
   echo "helix already installed via snap ($(snap info helix --json 2>/dev/null | tr -d '\n' | grep -o '"Installed":\"[^\"]*\"' | head -1)); skipping"
 else

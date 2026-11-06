@@ -4,13 +4,7 @@
 
 # uv is now managed by mise (replaces asdf-uv); pinned in config.toml.
 
-rm -fR ~/.pyenv
-rm -fR ~/.local/pipx/venvs
-rm -f ~/.config/fish/completions/pipx.fish
-rm -f ~/.local/bin/uv ~/.local/bin/uvx # remove installer binaries, not mise managed anymore
-
 export PATH="$HOME/.local/bin:$PATH"
-
 source "$CHEZMOI_SOURCE_DIR/commons/mise_assert-uv.sh"
 
 uv python install 3 --default

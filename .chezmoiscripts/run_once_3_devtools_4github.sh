@@ -12,13 +12,18 @@ export PATH=~/go/bin:$PATH
 act --version
 
 ## Github CLI
-
+# Install the githubcli GPG keyring as root:root 0644 — `install` replaces the old
+# `chmod go+r`, so ownership and mode are set atomically, not by a chmod that would
+# run through the cleanup sudoers drop-in.
+#
+# NOTE: comments can't live inside a `\`-continued command line, so they sit
+# above this chain, not between `&&` continuations.
 (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
-	&& sudo mkdir -p -m 755 /etc/apt/keyrings \
+	&& sudo install -d -o root -g root -m 0755 /etc/apt/keyrings \
 	&& out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
 	&& cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-	&& sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-	&& sudo mkdir -p -m 755 /etc/apt/sources.list.d \
+	&& sudo install -o root -g root -m 0644 $out /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+	&& sudo install -d -o root -g root -m 0755 /etc/apt/sources.list.d \
 	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
 	&& sudo apt update \
 	&& sudo apt install gh -y

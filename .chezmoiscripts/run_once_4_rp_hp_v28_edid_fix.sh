@@ -9,7 +9,8 @@ if [ "$CHEZMOI_ARCH" = "arm64" ]; then
             echo on $HDMI: forcing hp-v28 edid into kernel parameters
             cd {{ .chezmoi.sourceDir }}
             cd $CHEZMOI_SOURCE_DIR
-            sudo cp raspberry/hpv28.bin /usr/lib/firmware/
+            # `install -o/-g/-m` replaces the old `cp`: one atomic call, no chmod/chown.
+            sudo install -o root -g root -m 0644 raspberry/hpv28.bin /usr/lib/firmware/hpv28.bin
             if [ -f /boot/firmware/cmdline.txt ] && ! grep drm.edid_firmware /boot/firmware/cmdline.txt
             then
                 # TODO use specific $HMDI substring here

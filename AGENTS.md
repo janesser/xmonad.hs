@@ -106,17 +106,22 @@ dev tools, never part of the rendered dotfile set.
 pi-agent MAY run `cz update` (chezmoi pull + apply). Privileged steps run under a
 scoped NOPASSWD sudoers drop-ins under `/etc/sudoers.d/`, each granting root
 **only** for the exact command families chezmoi run scripts use. Every box
-gets `chezmoi-pi-common` (journalctl, systemctl, the file-write commands);
-apt/nala/snap boxes additionally get `chezmoi-pi`, pacman/yay boxes get
-`chezmoi-pi-pacman`; the camera-debug box gets `chezmoi-pi-camera-debug`.
+gets one common drop-in and one per host family:
 
-The per-box drop-in grants the package-manager family plus what that box
-needs (e.g. `setcap cap_perfmon+ep /usr/bin/btop` on the apt box with an
-Intel GPU). Cleanup scripts only ever use `apt`/`rm`/`install`, so they run
-under the package-manager family **without a new sudoers entry** — don't add
-one just because a cleanup script calls `sudo apt`/`sudo rm`. The TeamViewer
-uninstaller at `uninstaller/teamviewer_uninstall.sh` is an example: it uses
-only those.
+- `base` — every box: the constructive commands (`install`, `mkdir`, `cp`, `tee`),
+  the maintenance tools (`journalctl`, `systemctl`, `gpg`, `curl`, `cmp`, `visudo`)
+  and the one cleanup wrapper (`podman_socket_setup.sh`),
+  which require a password on every invocation. The base is what runs unattended.
+- `apt` — the ubuntu-rooted boxes (lincopta, raspberrypi, cyberkleiber): the
+  package families plus rootful podman.
+- `flowerpower` — this box (`omarchy`, pacman): `pacman` + the camera-debug tools.
+- `cyberkleiber` — the ai-server: `systemd-run` for card2-swap's transient units.
+
+No host-specific drop-in means the box carries only `base`. A needed command that
+is not in a granted drop-in must STOP and ask the user — do not try to work around
+the boundary.
+
+Cleanup scripts should use `sudo install -o root -g root -m <mode>` to deploy files under `/etc`: it overwrites destinations atomically, sets ownership and mode in one call, and never deletes. `rm`, `mv`, `chmod`, `chown` do not run through the agent itself at all: the only commands that may modify existing state are the two cleanup wrappers, and each one enforces its own constraint.
 
 **Don't be explicit about sudoers in repo files.** Point to this AGENTS.md
 section instead of documenting sudo **authorization** specifics inline. In
@@ -127,14 +132,13 @@ note the *functional* reason `sudo` is used (e.g. why `install` over `cp`)
 and may briefly say sudo is scoped to the drop-in documented here; it must
 not audit the sudoers authorization or enumerate authorized commands. This
 applies repo-wide. Exceptions: the sudoers source files under `etc/sudoers.d/`
-and the install script `run_onchange_sudo_sudoers_chezmoi_pi.sh.tmpl`, whose
-path comments describe the file they manage.
+and each `etc/sudoers.d/*.sh` source, plus its install script (`run_onchange_0_sudo_base.sh.tmpl` and friends), whose path comments describe the file they manage.
 
 Rules:
 - Do **not** use `sudo` for anything outside a chezmoi run script.
 - If a needed command is **not** in the sudoers alias, STOP and ask the user —
   do not try to work around the boundary.
-- Never edit `/etc/sudoers.d/chezmoi-pi` or broaden any NOPASSWD rule without
+- Never edit `/etc/sudoers.d/base` or broaden any NOPASSWD rule without
   explicit user approval.
 - Prefer `cz apply` for config edits; reserve `cz update` for pulling fresh
   upstream changes.
@@ -152,22 +156,22 @@ Rules:
 
 ## Sudoers files (repo-managed under `etc/`)
 
-Three drop-ins, split so each box gets only the rules it can use, plus one
-manual install (camera-debug box only):
+One common drop-in (`base`) plus one per host family:
 
 | Drop-in | Box flavour | Install script |
 |---|---|---|
-| `etc/sudoers.d/chezmoi-pi-common` | **all** boxes | `run_onchange_..._chezmoi_pi_common.sh.tmpl` |
-| `etc/sudoers.d/chezmoi-pi` | apt / nala / snap | `run_onchange_..._chezmoi_pi.sh.tmpl` |
-| `etc/sudoers.d/chezmoi-pi-pacman` | pacman / yay | `run_onchange_..._chezmoi_pi_pacman.sh.tmpl` |
+| `etc/sudoers.d/base` | **all** boxes | `run_onchange_0_sudo_base.sh.tmpl` |
+| `etc/sudoers.d/apt` | ubuntu-rooted | `run_onchange_1_sudo_apt.sh.tmpl` |
+| `etc/sudoers.d/flowerpower` | this box | `run_onchange_2_sudo_flowerpower.sh.tmpl` |
+| `etc/sudoers.d/cyberkleiber` | ai-server | `run_onchange_3_sudo_cyberkleiber.sh.tmpl` |
 
-`etc/sudoers.d/chezmoi-pi-camera-debug` is installed manually, only on the
-Chuwi box.
+`etc/sudoers.d/flowerpower` also carries the camera-debug tools for the Chuwi
+UBook XPro; its script installs them when they are present in the repo.
 
 Each drop-in is installed (with an interactive yes/no confirmation) by its
 `run_onchange` script as part of `cz update`. Each script embeds a SHA256 of its
 own source file, so chezmoi only runs it when that source file changes — on
-every other apply it skips silently, with no `sudo` and no prompt. All three
+every other apply it skips silently, with no `sudo` and no prompt. All four
 scripts are safe to run on the whole fleet; each one also skips on the wrong
 box flavour (apt needs `apt`/`nala`, pacman needs `pacman`).
 
@@ -189,7 +193,7 @@ the [age](https://github.com/FiloSottile/age) implementation it uses.
 growing as more secrets are added — refresh this figure when it changes.
 
 - **Method:** `encryption = "age"` in `~/.config/chezmoi/chezmai.toml`. Recipients
-  are listed there (labels: `peacewagon`, `lincopta`, `no5`, `cyberkleiber`).
+  are listed there (labels: `peacewagon`, `lincopta`, `cyberkleiber`).
 - **Identity = the only decryption key:** `~/.config/chezmoi/age-id.txt`. It is
   **local-only** (not chezmai-managed, not in the repo). **Back it up separately**
   — without it all 44 `.age` files are unrecoverable even if you have the

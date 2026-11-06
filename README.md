@@ -40,33 +40,33 @@ The drop-in is installed automatically as part of the normal `chezmoi apply`
 (`cz update`) cycle by a **`run_onchange`** script:
 
 ```
-.chezmoiscripts/run_onchange_9_0_sudoers_chezmoi_pi.sh.tmpl
+.chezmoiscripts/run_onchange_0_sudo_base.sh.tmpl
 ```
 
 It is a chezmoi template whose rendered content embeds a SHA256 of the sudoers
-**source** file (`etc/sudoers.d/chezmoi-pi`). That makes the script only run
+**source** file (`etc/sudoers.d/base`). That makes the script only run
 when the source file actually changes — on every other `chezmoi apply` chezmoi
 skips it entirely (no `sudo`, no prompt). It is also **idempotent**: if the
 installed file is already correct it exits immediately. It asks for an explicit
 **yes/no confirmation** before writing anything under `/etc`, and when `cz
 update` runs without a TTY it aborts and prints the manual install commands.
 
-The repo has a second drop-in for pacman boxes, installed by
-`.chezmoiscripts/run_onchange_sudo_sudoers_chezmoi_pi_pacman.sh.tmpl` from
-`etc/sudoers.d/chezmoi-pi-pacman` — each box flavour gets only its own rules,
-and each script skips silently on the wrong flavour.
+The repo has host-specific drop-ins (one for the ubuntu-rooted boxes, one for
+this box, one for the ai-server), installed by their `run_onchange_1_sudo_apt.sh.tmpl`,
+`run_onchange_2_sudo_flowerpower.sh.tmpl` and `run_onchange_3_sudo_cyberkleiber.sh.tmpl`
+— each box gets only its own rules, and each script skips silently on the wrong flavour.
 
 Manual install / validate (fallback, e.g. before the run script has ever run):
 
 ```
 # 1. Install the drop-in
-sudo install -o root -g root -m 0440 etc/sudoers.d/chezmoi-pi \
-        /etc/sudoers.d/chezmoi-pi
+sudo install -o root -g root -m 0440 etc/sudoers.d/base \
+        /etc/sudoers.d/base
 
 # 2. Validate syntax (must print "OK")
-sudo visudo -cf /etc/sudoers.d/chezmoi-pi
+sudo visudo -cf /etc/sudoers.d/base
 
-# 3. Confirm what jan is allowed (should list the CHEZMOI_* aliases)
+# 3. Confirm what jan is allowed (should list the BASE alias)
 sudo -l
 
 # 4. Test passwordless: this should NOT ask for a password
@@ -88,7 +88,7 @@ On pacman boxes the second drop-in additionally allows `pacman` and
   `sed -i 's#/usr/bin/curl$#/usr/bin/curl -f*S*o /usr/share/keyrings/*#' …`
 - `mkdir *` could be limited to the two known system dirs:
   `/usr/bin/mkdir -p /etc/pipewire, /usr/bin/mkdir -p /var/run/cdi`
-- To remove: `sudo rm /etc/sudoers.d/chezmoi-pi`
+- To remove: `sudo rm /etc/sudoers.d/base`
 
 ### Notes
 - `etc/` is excluded from chezmoi (see `.chezmoiignore`) so this file is never

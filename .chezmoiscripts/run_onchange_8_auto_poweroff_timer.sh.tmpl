@@ -110,14 +110,15 @@ TIMER_TMP="$(mktemp)"
 
 # --- install (inputs only change when the schedule/config changes) -----------
 echo "Deploying auto-poweroff (grace delay=${DELAY}s) — enabled by toggle in ${CONFIG_FILE}."
-sudo mkdir -p "${UNIT_DIR}"
-sudo mkdir -p "${BIN_DIR}"
-sudo cp "${SVC_TMP}"  "${UNIT_DIR}/${SVC_NAME}"
-sudo cp "${TIMER_TMP}" "${UNIT_DIR}/${TIMER_NAME}"
-sudo cp "${SRC}/${SCRIPT_NAME}" "${BIN_DIR}/${SCRIPT_NAME}"
-sudo chmod 0644 "${UNIT_DIR}/${SVC_NAME}" "${UNIT_DIR}/${TIMER_NAME}"
-sudo chmod 0755 "${BIN_DIR}/${SCRIPT_NAME}"
-sudo chown root:root "${UNIT_DIR}/${SVC_NAME}" "${UNIT_DIR}/${TIMER_NAME}" "${BIN_DIR}/${SCRIPT_NAME}"
+# `install -d -o/-g/-m` replaces the old `mkdir -p`: atomic creation with
+# ownership + mode set, not a chmod that would run through sudoers.
+sudo install -d -o root -g root -m 0755 "${UNIT_DIR}"
+sudo install -d -o root -g root -m 0755 "${BIN_DIR}"
+# `install -o/-g/-m` replaces the `cp` + `chmod` + `chown` trio: one atomic call
+# sets ownership and mode for each file, instead of leaving them between states.
+sudo install -o root -g root -m 0644 "${SVC_TMP}" "${UNIT_DIR}/${SVC_NAME}"
+sudo install -o root -g root -m 0644 "${TIMER_TMP}" "${UNIT_DIR}/${TIMER_NAME}"
+sudo install -o root -g root -m 0755 "${SRC}/${SCRIPT_NAME}" "${BIN_DIR}/${SCRIPT_NAME}"
 
 sudo systemctl --system daemon-reload
 sudo systemctl --system enable --now "${TIMER_NAME}"

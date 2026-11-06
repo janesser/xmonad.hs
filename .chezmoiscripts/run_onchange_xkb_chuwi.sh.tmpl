@@ -40,10 +40,12 @@ DEST_DIR=/etc/xkb/symbols
 [ -f "${SRC}/de" ] || { echo "⚠️  missing source: ${SRC}/de"; exit 1; }
 
 echo "Deploying Chuwi xkb extension to ${DEST_DIR}/de."
-sudo mkdir -p "${DEST_DIR}"
-sudo cp "${SRC}/de" "${DEST_DIR}/de"
-sudo chmod 0644 "${DEST_DIR}/de"
-sudo chown root:root "${DEST_DIR}/de"
+# `install -d` replaces the old `mkdir`: creates with ownership + mode set
+# atomically (it stays root:root 0755 either way).
+sudo install -d -o root -g root -m 0755 "${DEST_DIR}"
+# `install -o/-g/-m` replaces the old `cp` + `chmod` + `chown` trio: one atomic call
+# sets ownership and mode instead of leaving the file between states.
+sudo install -o root -g root -m 0644 "${SRC}/de" "${DEST_DIR}/de"
 
 echo "✅ /etc/xkb/symbols/de installed."
 if ! grep -qE '^XKBVARIANT=chuwi_ubook_xpro$' /etc/vconsole.conf 2>/dev/null; then

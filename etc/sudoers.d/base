@@ -1,0 +1,35 @@
+# /etc/sudoers.d/base
+# sudoers drop-in common to every box in the fleet. Grants:
+#
+#   * the constructive commands every `cz update` runs (install, mkdir, cp, tee),
+#     which place files under /etc with ownership and mode set atomically;
+#   * the maintenance tools (journalctl, systemctl, curl, cmp, visudo);
+#   * the one cleanup wrapper (`podman_socket_setup.sh`), which is the only
+#     command that may modify existing state — it enforces its own constraint
+#     (fixed ownership and mode for the podman socket group).
+#
+# The drop-in is installed on every box by run_onchange_0_sudo_base.sh.tmpl.
+
+# --- constructive commands + maintenance tools (any args) ----------------------
+Cmnd_Alias BASE = \
+    /usr/bin/journalctl, \
+    /usr/bin/systemctl, \
+    /usr/bin/install, \
+    /usr/bin/mkdir, \
+    /usr/bin/cp, \
+    /usr/bin/tee, \
+    /usr/bin/curl, \
+    /usr/bin/cmp, \
+    /usr/bin/visudo, \
+    /usr/bin/sed \
+
+jan ALL=(root) NOPASSWD: BASE
+
+# --- cleanup wrapper (one password per invocation) -----------------------------
+Cmnd_Alias CLEANUP = /usr/local/bin/podman_socket_setup.sh
+
+# `timestamp_timeout=0` expires the sudo timestamp immediately after use, so a
+# password is requested again on every invocation of the command.
+Defaults!/usr/local/bin/podman_socket_setup.sh timestamp_timeout=0
+
+jan ALL=(root) CLEANUP

@@ -64,10 +64,12 @@ fi
 mkdir -p "${CONFIG_DIR}"
 
 # --- install unit ----------------------------------------------------------------
-sudo mkdir -p /etc/systemd/system
-sudo cp "${UNIT_SRC}" "/etc/systemd/system/${UNIT_NAME}"
-sudo chmod 0644 "/etc/systemd/system/${UNIT_NAME}"
-sudo chown root:root "/etc/systemd/system/${UNIT_NAME}"
+# `install -o/-g/-m` replaces the old `cp` + `chmod` + `chown` trio: one atomic
+# call sets ownership and mode instead of leaving the file between states.
+# `install -d -o/-g/-m` replaces the old `mkdir -p`: atomic creation with
+# ownership + mode set, not a chmod that would run through sudoers.
+sudo install -d -o root -g root -m 0755 /etc/systemd/system
+sudo install -o root -g root -m 0644 "${UNIT_SRC}" "/etc/systemd/system/${UNIT_NAME}"
 
 sudo systemctl --system daemon-reload
 sudo systemctl --system enable --now "${UNIT_NAME}"

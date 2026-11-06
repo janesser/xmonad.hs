@@ -44,7 +44,9 @@ if ! grep -rqE '^[[:space:]]*Include[[:space:]]+/etc/ssh/ssh_config\.d/' /etc/ss
     echo "   Add that line to /etc/ssh/ssh_config (then re-run cz apply)."
 fi
 
-sudo mkdir -p "${DEST_DIR}"
+# `install -d` replaces the old `mkdir -p`: creates /etc/ssh/ssh_config.d with
+# ownership + mode set atomically (it stays root:root 0755 either way).
+sudo install -d -o root -g root -m 0755 "${DEST_DIR}"
 sudo install -o root -g root -m 0644 "${SRC_FILE}" "${DEST}"
 
 echo "✅ ${DEST} installed."

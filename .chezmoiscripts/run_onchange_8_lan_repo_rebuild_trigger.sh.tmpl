@@ -70,7 +70,9 @@ for f in "${TIMER_NAME}" "${SVC_NAME}"; do
     if [ -f "${UNIT_DIR}/${f}" ] && cmp -s "${SRC}/${f}" "${UNIT_DIR}/${f}"; then
         echo "✅ ${UNIT_DIR}/${f} already installed and up to date."
     else
-        [ -f "${UNIT_DIR}/${f}" ] && sudo rm -f "${UNIT_DIR}/${f}"
+        # `install` overwrites the destination atomically, so no pre-`rm` is needed.
+        # Keeping it (instead of a `rm` + `install` pair) means this path never calls
+        # a destructive command through the cleanup sudoers drop-in.
         sudo install -o root -g root -m 0644 "${SRC}/${f}" "${UNIT_DIR}/${f}"
         echo "✅ Installed ${UNIT_DIR}/${f}"
     fi

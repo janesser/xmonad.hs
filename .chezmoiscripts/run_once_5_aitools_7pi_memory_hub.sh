@@ -108,7 +108,9 @@ if [ -f "${UNIT_DEST}" ] && cmp -s "${UNIT_SRC}" "${UNIT_DEST}"; then
     echo "✅ ${UNIT_DEST} already installed and up to date."
 else
     [ -f "${UNIT_SRC}" ] || { echo "⚠️  unit source not found: ${UNIT_SRC}"; exit 1; }
-    [ -f "${UNIT_DEST}" ] && sudo rm -f "${UNIT_DEST}"
+    # `install` overwrites the destination atomically, so no pre-`rm` is needed.
+    # Keeping it (instead of a `rm` + `install` pair) means this path never calls
+    # a destructive command through the cleanup sudoers drop-in.
     sudo install -o root -g root -m 0644 "${UNIT_SRC}" "${UNIT_DEST}"
     echo "✅ installed ${UNIT_DEST}"
 fi

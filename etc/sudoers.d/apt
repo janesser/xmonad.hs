@@ -1,0 +1,22 @@
+# /etc/sudoers.d/apt
+# sudoers drop-in for the ubuntu-rooted boxes: lincopta, raspberrypi and
+# cyberkleiber. Grants the package families (apt, nala, snap, update-alternatives,
+# extrepo, add-apt-repository) plus what rootful containers need on these boxes.
+#
+# The drop-in is installed on ubuntu-rooted boxes only — pacman boxes (flowerpower)
+# get `pacman` from their own host-specific drop-in.
+
+Cmnd_Alias PACKAGES = \
+    /usr/bin/apt, \
+    /usr/bin/add-apt-repository, \
+    /usr/bin/nala, \
+    /usr/bin/snap, \
+    /usr/bin/update-alternatives, \
+    /usr/bin/extrepo, \
+    /usr/sbin/setcap cap_perfmon+ep /usr/bin/btop \
+
+Cmnd_Alias PODMAN = \
+    /usr/bin/podman, \
+    /usr/bin/podman-compose \
+
+jan ALL=(root) NOPASSWD: PACKAGES, PODMAN
