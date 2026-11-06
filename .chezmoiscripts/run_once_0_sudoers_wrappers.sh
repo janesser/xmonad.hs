@@ -13,13 +13,8 @@
 
 set -euo pipefail
 
-SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
-for name in podman_socket_setup; do
-    src="${SRC_DIR}/usr/local/bin/${name}.sh"
-    dest="/usr/local/bin/${name}"
-    [ -f "${src}" ] || { echo "⚠️  source not found: ${src}"; exit 1; }
-    sudo install -o root -g root -m 0755 "${src}" "${dest}" && \
-        echo "✅ installed ${dest} (root:root, 0755)"
-done
+sudo install -o root -g root -m 0755 \
+    "$CHEZMOI_SOURCE_DIR/usr/local/bin/podman_socket_setup.sh" \
+    /usr/local/bin/podman_socket_setup.sh
 
 echo "sudoers grants: $(ls -1 /usr/local/bin/podman_socket_setup.sh | sed 's|^|/|')"
