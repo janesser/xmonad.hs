@@ -1,62 +1,50 @@
-# AGENTS.md — jan's home-directory map (pi global instructions)
+<!-- bmad:context -->
+<!-- Verified 2026-11-06 on `flowerpower` by path-checking disk state; standalone target — no git SHA to diff from. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
 
-These instructions are the **user-level** agent directory file
-(`<agent-dir>/AGENTS.md`, i.e. `~/.pi/agent/AGENTS.md`). They apply across
-**all** working directories — unlike `~/.local/share/chezmoi/AGENTS.md`, which
-is a project file that only loads when pi runs inside the chezmoi repo.
+## Orientation
 
-This is a compact map of the important paths in `~` and the evergreen,
-cwd-independent facts you need before touching anything. Keep it focused on
-*paths* and *boundaries*; repo-internal deploy minutiae belong in the repo's
-own AGENTS.md, not here.
+This is jan's global agent instruction file: the instructions pi-agent loads in every working directory, unlike `~/.local/share/chezmoi/AGENTS.md`, which only loads inside the chezmoi repo. It is a single chezmoi template rendered on each of five fleet members — so every claim below carries its host, and you must run `hostname` before applying any of them. Repo-internal deploy details live in the repo's own AGENTS.md, not here.
 
-## Home-directory path map
+## Host identity (apply before this file)
 
-| Path | What it is | Notes |
-|---|---|---|
-| `~/.pi/agent/` | **pi's own home** (agent dir). Do not manage with chezmoi. | `settings.json`, `models.json`, `auth.json`, `AGENTS.md`, `skills/`, `SESSIONS.md`. Persistent memory: `pi-hermes-memory/` (sessions.db + `skills/`). Conversations: `sessions/`. Packages in `settings.json.packages`. |
-| `~/.local/share/chezmoi/` | **chezmoi repo** (source of truth). Alias `cz`. | Git: `janesser/xmonad.hs.git`. Files here are *source templates* that chezmoi renders to their home locations. `cz apply` = install; `cz update` = pull + apply. |
-| `~/.config/` | Per-application config. | Rendered by chezmoi from `dot_config/`. e.g. `~/.config/chezmoi/chezmoi.toml` (runtime config), `~/.config/btop/btop.conf`. |
-| `~/.local/bin/` | User local binaries (no root). | `~/.local/bin/btop` = patched 1.4.7 (Intel GPU fix, `cap_perfmon=ep`). System `btop` at `/usr/bin/btop` stays vanilla. |
-| `~/.local/share/mise/` | mise toolchain installs. | Includes pi itself (`installs/pi/0.87.1/pi/...`). Docs: `.../pi/docs`. |
-| `~/.cache/huggingface/hub/` | Local GGUF models for the llama.cpp backend. | `ornith.gguf` is the default model (`settings.json.defaultModel`). Bind-mounted into the llama service. |
-| `~/projs/` | Personal dev clones (not dotfiles). | `~/projs/btop` = dev branch `btop-intel-gpu-fix`; `~/projs/btop-intel-gpu` = clean build clone used by the deploy script. |
-| `~/.agents/skills/` | Standard user-level **Agent Skills** location (spec). | Empty today — skills here load in every cwd. Pi also reads `<agent-dir>/skills/` and project `.agents/skills/`. |
+Determine your fleet member first: `hostname` → `flowerpower`, `raspberrypi`, `cyberkleiber`, `lincopta`, or `peacewagon`. Views below are qualified per machine; a claim with no host tag applies to all. Reachability splits LAN (no hostname suffix) from WAN via fritzbox DDNS (`*.wan`).
+- `flowerpower`: home desktop, agent config rendered here.
+- `raspberrypi`: router/NAS; proxied SSH to `cyberkleiber` via `.lan`, WAN through `fritz.net`.
+- `cyberkleiber`: reachable only via `ProxyJump raspberrypi.wan`; herdr remote host.
+- `lincopta`: direct SSH on LAN, age keys shared.
+- `peacewagon`: age key recipient only; not in SSH config.
 
-## bmad harness (project methodology)
+## Policy
 
-BMAD-METHOD skills are installed as a **user-level (global) skill set** under
-`~/.pi/agent/skills/bmad-*`. They are published there by the chezmoi run script
-`.chezmoiscripts/run_onchange_pi_bmad.sh.tmpl`, which re-publishes the skills
-whenever pi-agent could have changed (i.e. after any pi upgrade/reinstall, which
-wipes `~/.pi`). The project-local `_bmad/` / `.agents/` install is obsolete —
-`npx bmad-method install` is no longer run in the repo.
+- This file is rendered by chezmoi from `dot_pi/agent/AGENTS.md` — edit the source, never the render; every machine gets a different copy of the same template.
+- Privileged steps for `cz update` must run through `/etc/sudoers.d/chezmoi-pi`; do not sudo outside a chezmoi run script; if a needed command is missing, stop and ask.
+- Never edit `/etc/sudoers.d/chezmoi-pi`.
+- Workflows must run through BMAD skills where they exist (see Skill direction) — don't reinvent them in-chat.
+- Editing this file: change `~/.local/share/chezmoi/dot_pi/agent/AGENTS.md` first, then `cz re-add` or `cz add`, then `cz apply` to verify — never edit the render directly.
 
-To actually run a BMAD session in a project you must install the runtime into
-that project:
-    npx bmad-method install --yes --modules bmm --tools pi \
-        --directory <project-root> --action install --all-stable
+## Where things are
 
-The runtime's output (`_bmad-output/`) then lives in that project's root.
+(flowerpower) Agent config: `~/.pi/agent/` — `settings.json`, `skills/`, `sessions/`. Persistent memory in `pi-hermes-memory/`.
+(flowerpower) Dotfiles source: `~/.local/share/chezmoi/` — the repo (git remote `janesser/xmonad.hs.git`); `cz apply` installs, `cz update` pulls and applies.
+All machines: skills load path `~/.agents/skills/` — symlinks to `/usr/share/omarchy/default/agents/skills/`; real bmad skill installs are in `~/.pi/agent/skills/bmad-*`.
 
-## Evergreen environment facts
+## Running and verifying
 
-- **pi-agent sudo boundary (important).** pi-agent may run `cz update`. Privileged
-  steps run under the scoped NOPASSWD sudoers drop-in
-  `/etc/sudoers.d/chezmoi-pi` (only `apt, add-apt-repository, nala, snap,
-  usermod, groupadd, systemctl, update-alternatives, mkdir, chmod, chown, tee,
-  cp, gpg, mv, sed, extrepo, dpkg, curl, journalctl, setcap .../usr/bin/btop`,
-  plus direct chmod/chown on podman.sock). Do **not** sudo outside a chezmoi run
-  script; if a needed command is missing, STOP and ask. Never edit the sudoers
-  file. Prefer `cz apply`; reserve `cz update` for pulling upstream.
-- **Backend: llama.cpp at boot.** System unit `/etc/systemd/system/restart-llama-
-  server.service` (`WantedBy=multi-user.target`, no linger needed). Lifecycle:
-  `systemctl --system enable --now restart-llama-server`.
-- **Auto poweroff.** System timer + oneshot (`/etc/systemd/system/auto-poweroff.*`).
-  Inputs: `etc/systemd/system/auto-poweroff.times` and `.../auto-poweroff.delay`
-  (plain files — edit then `cz apply`). Cancel with `sudo shutdown -c`.
-- **btop dual-GPU (Iris Xe + NVIDIA).** Iris Xe (gpu1) vanishes on btop 1.4.6 due
-  to a hardcodes-`i915` perf-PMU bug. Fixed by a patched binary at
-  `~/.local/bin/btop` (`cap_perfmon=ep`, user-owned) built from `~/projs/btop`.
-  Needs jan's sudo **password** (the NOPASSWD setcap rule only named
-  `/usr/bin/btop`). Do not broaden sudoers for the local path.
+- A claim is only load-bearing if you can verify it **and** its removal changes agent behavior: assert things are real, assert things have impact. Unverified claims are candidates for removal; unimpacted claims are noise to cut.
+- Every claim below is unverified until you path-check it for this machine; if you cannot, treat it as false and ask before acting.
+- Verify every command or unit claim by running it — never by reading the block that describes it: `systemctl --system is-enabled <unit>` on this box, SSH into cyberkleiber or raspberrypi otherwise.
+- bmad skills publish to `~/.pi/agent/skills/bmad-*` via `.chezmoiscripts/run_onchange_pi_bmad.sh.tmpl`; project-local `_bmad/` installs are obsolete.
+
+## Skill direction
+
+- AGENTS.md changes: `bmad-project-context` (refresh to re-verify, audit to assert claims) — never hand-edit the block.
+- Research to support a decision: `bmad-deep-recon` (run here, or draft prompt for your own tool).
+- Everything else that has a BMAD skill: run the skill, don't write prose instructions around it.
+
+## Known pitfalls
+
+- Systemd units are per-machine and stale by default — `restart-llama-server.service` does not exist (`systemctl --system is-enabled` → not-found) on this box; llama.cpp starts from a chezmoi script instead.
+- `auto-poweroff.*` timer and its inputs exist as chezmoi source (`.chezmoiscripts/run_onchange_8_auto_poweroff_timer.sh.tmpl` with `etc/systemd/system/auto-poweroff.times`, `.delay`) but are not deployed to `/etc/systemd/system/`; the mechanism matters, the values change.
+- Fish overrides `SSH_AUTH_SOCK` when herder's proxy socket is dead — the shell sees the live system agent, not herder's.
+
+<!-- /bmad:context -->
