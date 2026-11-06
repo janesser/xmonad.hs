@@ -1,0 +1,16 @@
+# /etc/sudoers.d/chezmoi-omarchy
+# pi-agent: passwordless sudo for `omarchy update`.
+#
+# The `run_9_update_omarchy.sh` run script runs `omarchy update -y` on every
+# `cz update`. When it needs root it re-executes as `sudo omarchy update -y`,
+# which requires this drop-in: without it the password prompt aborts an unattended
+# `cz apply` before anything else can finish.
+#
+# Review + validate with:
+#   visudo -cf /etc/sudoers.d/chezmoi-omarchy
+# Source copy lives in this repo under etc/sudoers.d/ (NOT applied by chezmoi:
+# etc/ is in .chezmoiignore). It is installed, with explicit user consent, by
+# .chezmoiscripts/run_onchange_sudo_sudoers_chezmoi_pi_omarchy.sh.tmpl as part
+# of cz update.
+
+jan ALL=(ALL) NOPASSWD: /usr/bin/omarchy
