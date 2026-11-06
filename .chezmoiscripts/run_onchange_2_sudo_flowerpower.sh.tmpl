@@ -9,6 +9,8 @@ set -euo pipefail
 DEST=/etc/sudoers.d/flowerpower
 SRC="${CHEZMOI_SOURCE_DIR:-.}/etc/sudoers.d/flowerpower"
 
+command -v omarchy || exit 0
+
 if [ ! -f "${SRC}" ]; then
     echo "⚠️  Source sudoers file not found: ${SRC}"
     exit 1
