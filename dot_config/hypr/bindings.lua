@@ -65,7 +65,7 @@ o.bind("CTRL + odiaeresis", "Clipboard manager", "omarchy-shell shell toggle oma
 
 hl.unbind("SUPER + SHIFT + RETURN")
 o.bind("SUPER + SHIFT + RETURN", "Terminal", "foot")
-o.bind("SUPER + SHIFT + CTRL + RETURN", "Terminal (herdr)", "foot herdr")
+o.bind("SUPER + SHIFT + CTRL + RETURN", "Terminal (herdr)", "launch-herdr.sh")
 
 o.bind("SUPER + E", "File manager", "pcmanfm")
 o.bind("SUPER + SHIFT + W", "Browser", { omarchy = "browser" })
