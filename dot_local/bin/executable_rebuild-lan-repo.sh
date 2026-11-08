@@ -20,8 +20,9 @@
 #
 # Input:
 #   $LAN_REPO_LIST            optional override for packages.list
-#   $HOME/.local/build-lan-repo/packages.list  default policy file (chezmoi)
-#   $BUILD_DIR                build dir, defaults to /home/jan/builds
+#   ~/.local/build-lan-repo/packages.list                 default policy file (chezmoi)
+#                                                          rendered from dot_local/build-lan-repo/packages.list
+#   $BUILD_DIR                build dir, defaults to /media/sailor/lan-repo/builds
 # Output: journal (stdout/stderr of the systemd service), status marker in
 #         $BUILD_DIR/.last-run-status
 
@@ -29,8 +30,8 @@ set -uo pipefail
 
 SCRIPT_NAME="$(basename "$0")"
 
-LIST=${LAN_REPO_LIST:-"$HOME/.local/build-lan-repo/packages.list"}
-BUILD_DIR=${BUILD_DIR:-/home/jan/builds}
+LIST=${LAN_REPO_LIST:-$HOME/.local/build-lan-repo/packages.list}
+BUILD_DIR=${BUILD_DIR:-/media/sailor/lan-repo/builds}
 MARKER_DIR="$BUILD_DIR/.last-built"
 REBUILD=${REBUILD:-/home/jan/.local/bin/build-lan-repo.sh}
 # build host's repo dir (source of the rsync --delete into the Pi)

@@ -2,7 +2,7 @@
 #
 # The AUR packages the lan-repo serves at http://raspberrypi:8080/ (the repo
 # lives in $HOME/.local/arch-repo on the Pi and is rsynced from
-# /home/jan/builds/repo/ on the build host). This is the policy file: after any
+# /media/sailor/lan-repo/builds/repo/ on the build host). This is the policy file: after any
 # run of the rebuild trigger, the repo serves exactly `packages.list` + latest
 # versions — nothing more, nothing less.
 #
@@ -15,4 +15,3 @@
 hylki
 rencal-bin
 vscodium-bin
-gittyup

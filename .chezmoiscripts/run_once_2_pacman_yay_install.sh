@@ -10,7 +10,8 @@ omarchy pkg add \
     keepassxc \
     helix \
     rustdesk \
-    wakeonlan
+    wakeonlan \
+    lazygit
 
 omarchy plugin add https://github.com/jesusarchive/omarchy-dynamic-menu.git --enable --yes
 omarchy plugin add https://github.com/TheMogli/ToDoma.git --enable --yes
