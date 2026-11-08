@@ -51,8 +51,9 @@ was meant to surface. The robust path is sd.cpp + GGUF:
   durably:** no systemd timer, no `olle` dependency, so nothing auto-restarts it.
 - `olla.service` (:40114 → :8081) is the proxy; `llama-sycl.service` (Iris Xe,
   Qwen3.5-0.8B on :8082) does **not** use the V100 — leave it alone.
-  **RETIRED 2026-10-28:** `olla.service` is gone from the repo; machines that
-  still host it are cleaned by `uninstaller/olla_service_uninstall.sh`.
+  **RETIRED 2026-10-28:** `olla.service` is gone from the repo; any machine
+  that still hosted it was cleaned by `uninstaller/olla_service_uninstall.sh`,
+  which is itself gone now.
 - **State now (2026-10-08 ~23:4x):** ornith's manager + child killed; V100 is
   **free (~9 MiB)** and not respawning. **ornith is currently DOWN** — restore
   with `sudo systemctl --system start llama-cuda` (or `switch-ai-backend.sh

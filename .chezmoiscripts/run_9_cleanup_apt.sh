@@ -8,14 +8,6 @@ sudo apt clean
 
 ## CLEAN UPS
 
-# TeamViewer was removed from the repo (etc/apt sources + keyring). This
-# idempotent script purges any leftover TeamViewer install on every apply.
-bash "$CHEZMOI_SOURCE_DIR/uninstaller/teamviewer_uninstall.sh"
-
-# The Olla system unit (olla.service) is removed from the repo; this
-# idempotent script purges any leftover Olla install on every apply.
-bash "$CHEZMOI_SOURCE_DIR/uninstaller/olla_service_uninstall.sh"
-
 sudo apt remove --purge -y unattended-upgrades
 sudo apt remove --purge -y tmux
 sudo apt remove --purge -y postfix
