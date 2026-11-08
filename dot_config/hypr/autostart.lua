@@ -3,6 +3,7 @@
 
 o.launch_on_start("foot.btop")
 o.launch_on_start("nextcloud")
+o.launch_on_start("pwvucontrol")
 
 o.launch_on_start("rencal")
 o.launch_on_start("hylki")
@@ -20,6 +21,8 @@ hl.window_rule( { match = { class = "io.github.mrvladus.List" }, workspace = "2 
 hl.window_rule( { match = { title = "web.whatsapp.com_/" }, workspace = "2 silent" } )
 
 hl.window_rule( { match = { class = "zen" }, workspace = 3 } )
+
+hl.window_rule( { match = { class = "com.saivert.pwvucontrol" }, workspace = "9 silent" } )
 
 hl.window_rule( { match = { class = "KeePassXC" }, workspace = "8 silent" } )
 
