@@ -26,3 +26,4 @@ hl.window_rule( { match = { class = "com.saivert.pwvucontrol" }, workspace = "9 
 
 hl.window_rule( { match = { class = "KeePassXC" }, workspace = "8 silent" } )
 
+hl.window_rule( { match = { initial_title = "Bild-im-Bild" }, float = true, pin = true, move = { "monitor_w - window_w - 2", "30" } } )

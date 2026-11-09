@@ -11,7 +11,8 @@ omarchy pkg add \
     helix \
     rustdesk \
     wakeonlan \
-    lazygit
+    lazygit \
+    librewolf
 
 omarchy plugin add https://github.com/jesusarchive/omarchy-dynamic-menu.git --enable --yes
 omarchy plugin add https://github.com/TheMogli/ToDoma.git --enable --yes

@@ -68,7 +68,7 @@ o.bind("SUPER + SHIFT + RETURN", "Terminal", "foot")
 o.bind("SUPER + SHIFT + CTRL + RETURN", "Terminal (herdr)", "launch-herdr.sh")
 
 o.bind("SUPER + E", "File manager", "pcmanfm")
-o.bind("SUPER + SHIFT + W", "Browser", { omarchy = "browser" })
+o.bind("SUPER + SHIFT + W", "Browser", "librewolf")
 
 -- https://github.com/omacom/omarchy/blob/quattro/default/hypr/bindings/dictation.lua
 
