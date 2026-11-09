@@ -1,15 +1,20 @@
 # sd.cpp image mode via switch-ai-backend.sh
 
-Run image generation on the **V100 (32 GB)** by temporarily borrowing it from the
+Run image generation on the **V100 SXM2 (32 GB)** by temporarily borrowing it from the
 text backend, running a **batch** of sd.cpp (`stable-diffusion.cpp`) calls, then
 **automatically switching back** to the text backend. This is driven by
 `switch-ai-backend.sh image` — the same single script that swaps between
-`instruct` (llama.cpp, :8081) and `omni` (vLLM-Omni, :8091).
+`instruct` (llama.cpp, :8081) and `image` (sd.cpp on the V100).
 
-> The V100 holds **exactly one** big compute backend at a time. `switch-ai-backend
->.sh image` evicts whichever text backend holds it, runs the batch, then restores
-> that backend. Olla (:40114) is **not** restarted — its periodic discovery refresh
-> sees whichever backend is live.
+> **Status (2026-11-08): vLLM-Omni (:8091) is retired.** The box's omni engine
+ever designed (§13 of `discoveries/ai-server/README.md`) never ran. The current
+> swap: llama.cpp ↔ sd.cpp image batch on GPU0 (the SXM2 V100); the second
+> V100 (PCIe, card-2) hosts the little-brother text backend (:8082).
+
+> The V100 SXM2 holds **exactly one** big compute backend at a time. `switch-ai-backend
+>.sh image` evicts the text backend that holds it, runs the batch, then restores
+> that backend. Olla (:40114) is **not** installed (vLLM-Omni retired) — nothing
+> else listens on that port.
 
 ---
 

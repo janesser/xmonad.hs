@@ -7,6 +7,15 @@ updated: 2026-10-03
 
 # Local Multi-Accelerator AI Server — omni-modality
 
+> **READ ME FIRST (2026-11-08): this document describes a design that never got
+> executed.** `vLLM-Omni` (:8091, the omni-modal serving engine) was abandoned
+> before anything ran: nothing served on :8091, Olla was never installed,
+> `restart-vllm-omni.sh` doesn't exist, and the venv's python3.12 symlink is dead.
+> The box's actual state — llama.cpp (:8081) ↔ sd.cpp image batch on GPU0, little
+> brother (:8082) on card-2's V100 — is documented in **§13** and in
+> `little-brother-card2-swap.md`. Sections §8 (open questions), Handover D
+> (vLLM-Omni pivot) carry their own "RETIRED" markers.
+>
 > **Replaces / obsoletes** `discoveries/ai-llama-autostart.md`. That doc's scope
 > was "make llama.cpp's single server boot reliably."
 >
@@ -145,27 +154,20 @@ only what we test, not the API surface.)
 - **Similar (horizon):** a few more models; the MoE ones stay fast because only
   their active parameters run.
 
-## 8. Key open questions (load-bearing)
+## 8. Key open questions (load-bearing) *(from the vLLM-Omni design, retired — §13)*
 
-- **[RESOLVED — buildable, not a hardware dead-end] vLLM-Omni CAN run on the
-  V100 (sm_70).** 2026-10-03: disproved the earlier "impossible" verdict. The
-  prebuilt vLLM 0.30 wheel IS compiled for sm_7.5+ and fails on the V100 with
-  `no kernel image for device` / `libcudart.so.13`, but that's a *wheel*
-  problem. The V100 is CUDA Compute Capability **7.0** (Volta); nvcc here is
-  12.4, and **torch's cu126 line still ships sm_70 kernels**. So:
-  - **Build vLLM 0.30 from source against torch cu126** with
-    `TORCH_CUDA_ARCH_LIST=7.0`. `cuobjdump -elf` on the resulting
-    `_C_stable_libtorch.abi3.so` confirms `arch = sm_70`; torch cu126 matmul
-    runs on the real V100; vLLM imports and loads the sm_70 extensions cleanly.
-  - Older vLLM (0.20+) already needs torch ≥ 2.11 (cu128, sm_70 gone), so the
-    from-source cu126 build is the *only* path — V100 forks
-    (`1CatAI/1Cat-vLLM`, `jajmangold/vllm-sm70`) are not vLLM-Omni-compatible
-    and wouldn't give us audio/image/video anyway.
-  - **Conclusion:** the V100 is fine; what was needed is a **from-source
-    sm_70 build**, not a new card. Build recipe + gotchas live in §11d. The
-    remaining open items are operational (see below), not hardware.
+- **[RETIRED — vLLM-Omni pivot dead, 2026-10-23.]** The vLLM-Omni design (§11,
+  §8) was a design that never got executed: nothing ever ran on :8091, Olla
+  (`~/.config/olla/config.yaml`) was never installed, `restart-vllm-omni.sh`
+  doesn't exist, and the venv (`/media/sailor/ai-server/.venv`, python3.12
+  symlink dropped when uv upgraded to 3.15) is broken for launching it. The
+  V100 now hosts llama.cpp (:8081) or an sd.cpp image batch (§13 below);
+  card-2 (the second V100, `GPU-fb929bd...`, idle at ~11 MiB) hosts the
+  little-brother text backend (:8082) — design:
+  `discoveries/ai-server/little-brother-card2-swap.md`.
 - **[BUILD GOTCHAS — the cu126 build works if you do these right].** Not
-  blockers, but they cost time if you hit them cold:
+  blockers, but they cost time if you hit them cold: (kept for reference only;
+  vLLM-Omni is retired)
   - `pip` is **not** in the uv venv — use **`uv pip install`** everywhere.
   - vLLM's `setup.py` needs build-only deps present with
     `--no-build-isolation`: **`setuptools_rust`, `setuptools_scm`, `jinja2`,
@@ -175,7 +177,8 @@ only what we test, not the API surface.)
     `torch==` pins, so the build keeps the installed cu126 torch instead of
     pulling cu130.
   - The final multi-target compile `-j=8` **OOM-kills** (~step 240/331, exit
-    137 = SIGKILL) on this 14 GB box — cap **`MAX_JOBS=3`**.
+    137 = SIGKILL) on this 14 GB box — cap **`MAX_JOBS=3`**. (kept for reference only;
+    vLLM-Omni is retired)
   - Easiest deploy: `python setup.py build_ext --inplace` (in vllm-src), then
     copy the built `*.so` over the wheel's in site-packages (drop-in; same
     0.30.x ABI, only the CUDA arch differs). Do **not** trust a `pip install -e`
@@ -184,6 +187,9 @@ only what we test, not the API surface.)
   B-series / MUSA — **not** Iris Xe SYCL. The DG1 is out of scope; the V100 is
   the only serving accelerator. This also *removes* the old text<->image
   backend-switch fragility (#1498) — there is no ggml single-stack to break.
+- **[RETIRED] One model per process → routing.** vLLM-Omni never ran. The box's
+  two V100s now each hold one backend (card2-swap design); there is no omni
+  engine, no routing problem.
 - **[QUESTION] One model per process → routing reintroduced?** vLLM serves the
   model named on its command line, so a portfolio means **multiple vLLM server
   processes** (one per model) that clients must reach. Options: (a) a client
@@ -341,55 +347,52 @@ Verify with `cuobjdump -elf <so>` → `arch = sm_70`, and that `import vllm` +
   timeout concern, not the server's — make sure the OpenAI clients carry sane
   timeouts.
 
-## 13. Routing Olla + the single-V100 swap (vLLM-Omni wired in)
+## 13. Current state — llama.cpp ↔ sd.cpp on the V100 (vLLM-Omni retired)
 
-Olla (`:40114`) is the one OpenAI-compatible front end. It routes each request by
-reported model id to whichever backend is live. vLLM-Omni is added as a third
-static endpoint (`dot_config/olla/config.yaml`):
+> **Status (2026-10-23): vLLM-Omni is retired.** Nothing ever ran on :8091;
+> Olla (`~/.config/olla/config.yaml`) was never installed, `restart-vllm-omni.sh`
+> doesn't exist, and the venv's python symlink (3.12 → 3.15) is dead. The
+> box's single serving accelerator is **GPU0** (`V100-SXM2-32GB`, held by
+> llama.cpp on :8081); **GPU1** (`V100-PCIE-32GB`, the "little brother", idle at
+> ~11 MiB) hosts the card-2 backend (:8082, `llama-little-brother` design).
+> Only one workload holds GPU0 at a time.
 
-```yaml
-# in discovery.static.endpoints, after the two llama.cpp endpoints:
-- url: "http://127.0.0.1:8091"   # vLLM-Omni (restart-vllm-omni.sh) on the V100
-  name: "vllm-omni"
-  type: "openai-compatible"
-  priority: 50
-```
-
-**The swap is the whole design.** The box has *one* V100 (32 GB); only one
-backend can hold it at a time. The two live backends are:
-
-| mode | backend | port | unit |
-|---|---|---|---|
-| `instruct` | llama.cpp CUDA (:8081, ornith) | :8081 | `llama-cuda.service` (boot default) |
-| `omni`     | vLLM-Omni (:8091, Qwen2.5-Omni-7B) | :8091 | background process (`restart-vllm-omni.sh`) |
-
-Swap with one command (the `sudo` is the NOPASSWD drop-in's `systemctl --system`):
+**The swap.** `switch-ai-backend.sh {instruct|image}` swaps GPU0 between its text
+backend (llama.cpp on :8081) and an sd.cpp image batch:
 
 ```bash
-switch-ai-backend.sh omni Qwen/Qwen2.5-Omni-7B   # -> free VRAM from ornith, launch vLLM-Omni
-switch-ai-backend.sh instruct                    # -> stop vLLM-Omni, relaunch ornith on :8081
+# image: free GPU0 from llama.cpp, render, restore the text backend afterwards
+switch-ai-backend.sh image --batch /path/to/batch.json [--deadline SECONDS]
 ```
 
-`restart-vllm-omni.sh start` activates the venv (which exports the
-`LD_LIBRARY_PATH` that lets the torchcodec cu132 runtime find torch's bundled
-CUDA-13 libs), probes the NVIDIA driver (fails fast instead of OOMing into RAM),
-and forks `vllm serve … --omni --port 8091`, waiting on `/v1/models`.
+The batch file format is JSON with shared top-level flags plus a `calls` array;
+each call sets prompt/params and MUST define `output`. The current working
+progression (all models under `/media/sailor/ai-server/sd-probe/`):
+- **Flux.3 Image Klein Q8_0** — `/media/sailor/ai-server/sd-probe/diffusion_models_gguf/flux3-image-klein-base-Q8_0.gguf`
+  + `text_encoders_gguf/Qwen3VL-4B-Instruct-Q8_0.gguf` (llm) +
+  `vae/flux3/flux2-vae.safetensors` + `tokenizers/flux2-klein-qwen3-tokenizer.json`
 
-**Why the swap is manual, not automatic:**
+Verified 2026-11-08: sd.cpp built with `-DGGML_CUDA=ON` from the old clone
+(`/home/jan/projs/stable-diffusion.cpp`, has `flux3.hpp`), ~23s end-to-end,
+valid 512² PNG via `/home/jan/projs/stable-diffusion.cpp/build/bin/sd-cli`
+(on GPU0, with the text backend temporarily evicted by `switch-ai-backend.sh`).
+The master clone (`/home/jan/projs/stable-diffusion.cpp-main`) has no Flux.3
+support in its model loader — use the old one.
 
-- **Olla is never restarted by the switch** — its `ExecStartPre` requires :8081
-  reachable, so restarting while vLLM-Omni holds the V100 (no :8081) would fail.
-  Olla picks up the new backend's models on its periodic discovery refresh
-  (verified: with :8091 down, Olla stays healthy and keeps routing ornith).
-- **Reaping the llama backend does NOT umount the shared HF cache** bind mount
-  (`~/.cache/huggingface/hub` ← `/media/sailor/huggingface-hub`, fstab); it has
-  to stay mounted for vLLM-Omni. The reaper is port-bound, so it only kills the
-  `:8081`/`:8091` process, never a sibling backend.
-- **pi's llama backend is ornith on the same V100** — starting vLLM-Omni stops
-  ornith, so during `omni` mode pi has no coding backend. Do the swap deliberately.
-
-vLLM-Omni is **omni-only** (§11b note) — it cannot serve the plain-text models
-that instruct mode uses, which is exactly why the swap exists.
+**Gotchas:**
+- **`sd-cli` was never built on this box for a long time.** The documented path
+  `switch-ai-backend.sh` used (`/home/jan/projs/stable-diffusion.cpp/build/bin/sd-cli`) didn't
+  exist until 2026-11-08 (both clones were configured but never built). Build
+  with `-DGGML_CUDA=ON`, otherwise ggml builds **without CUDA** and the models
+  go into RAM — images render at ~140 s/it instead of ~23 s.
+- **The text backend holds GPU0.** `switch-ai-backend.sh image` stops it (via
+  `sudo systemctl stop llama-cuda`) and restores it afterwards; during a batch,
+  pi's coding backend is the little brother on :8082 (GPU1).
+- **HF cache bind mount** (`~/.cache/huggingface/hub` ← `/media/sailor/huggingface-hub`,
+  fstab) stays mounted — llama.cpp and sd.cpp share it; a reaper kills only the
+  port-bound process.
+- Olla / vLLM-Omni references (in §8, §11, Handover D) are **stale** — the design
+  was abandoned before execution. Card-2 swap design: `little-brother-card2-swap.md`.
 
 ---
 
@@ -411,50 +414,38 @@ remove the Olla layer and the `ola` autodetect provider / `OLLA_BASE_URL`, and
 drop `update-localai-hf-sources.sh`. The gguf model wiring is now irrelevant —
 vLLM-Omni uses native HF weights (§8 item 3).
 
-### D. vLLM-Omni pivot — handover for a new session (2026-10-03)
+### D. vLLM-Omni pivot — **RETIRED (2026-10-23)**
 
-**State: Olla wiring DONE · model downloading · activation pending your go-ahead.**
-
-#### ✅ Done
-- **torchcodec blocker RESOLVED.** `import vllm_omni` failed on `libnvrtc.so.13`/
-  `libcudart.so.13`; torch 2.13.0 *bundles* the CUDA-13 runtime under
-  `nvidia/cu13/lib` — torchcodec just couldn't find it. Fixed with a portable
-  `LD_LIBRARY_PATH` export in the venv activate (`/media/sailor/ai-server/.venv/bin/activate`,
-  lines ~132-137). `import vllm_omni` now succeeds; sm_70 V100 load verified. The
-  only residual is a benign vLLM 0.30.0 vs vLLM-Omni dev-version warning.
-- **Olla wired for vLLM-Omni.** Added the `vllm-omni` endpoint
-  (`127.0.0.1:8091`, `openai-compatible`, priority 50) to
-  `dot_config/olla/config.yaml`; Olla stays healthy with it down and picks up the
-  omni models on its discovery refresh. Committed.
-- **Lifecycle scripts** (in `~/.local/bin/`, rendered from `dot_local/bin/`):
-  `restart-vllm-omni.sh` (launch/stop vLLM-Omni on the V100) and
-  `switch-ai-backend.sh {omni|instruct}` (swap which backend holds the single V100).
-  Documented in **§13**.
-- **Model fit decided:** Qwen2.5-Omni-7B is **24 GB** of fp16 weights → won't fit
-  a 32 GB V100 once KV cache is added. Target is **Qwen2.5-Omni-3B (~12 GB)** —
-  comfortable headroom for stages + KV. Both are vLLM-Omni-supported.
-
-#### 🔄 In progress
-- **Qwen2.5-Omni-3B download** running detached (`hf download … --local-dir`),
-  landing in `/media/sailor/ai-server/models/Qwen2.5-Omni-3B/` (NOT the HF cache).
-  Check completion by counting weight shards:
-  `…/models/Qwen2.5-Omni-3B/*.safetensors` → expect **3**. Current: ~8/12 GB.
-- V100 still holds **ornith** (pi's llama backend, :8081, ~31 GB). Olla active.
-
-#### ⏳ Pending (next session)
-1. **Confirm download done** — 3 `.safetensors` shards present.
-2. **Activation swap** — *your call* (see ⚠️ below):
-   ```bash
-   switch-ai-backend.sh omni /media/sailor/ai-server/models/Qwen2.5-Omni-3B
-   ```
-   This stops ornith (frees VRAM) and launches vLLM-Omni on :8091; Olla picks it up.
-3. **Live omni test** — hit `/v1/chat/completions` on :8091 with text + audio +
-   image inputs to prove sm_70 kernel launch end-to-end. Then update §11 #1 from
-   *feasible* to *validated* and record real tok/s + VRAM footprint.
-4. **Optional:** LocalAI teardown (§13 → thread C): stop/disable the `localai`
-   user unit, remove the Olla layer + `ola` autodetect provider +
-   `update-localai-hf-sources.sh` — **only after** vLLM-Omni is standing, since
-   Olla is now vLLM-Omni's front end, not LocalAI's.
+> The vLLM-Omni design (§11/§8) was a design that never got executed: nothing ever
+> ran on :8091, Olla (`~/.config/olla/config.yaml`) was never installed,
+> `restart-vllm-omni.sh` doesn't exist, and the venv's python3.12 symlink was
+> dropped when uv upgraded to 3.15 — the box's actual image-gen path became
+> sd.cpp + GGUF on the V100 (see §13). This section is kept as an audit trail.
+>
+> **State: abandoned — vLLM-Omni never activated.**
+>
+> #### ✅ What was done (never executed)
+> - torchcodec blocker **resolved** in principle: `import vllm_omni` was fixed
+>   with a portable `LD_LIBRARY_PATH` export in the venv activate (`/media/sailor/ai-server/.venv/bin/activate`,
+>   lines ~132-137); sm_70 V100 load verified. The venv is now broken for launch
+>   (python 3.12 symlink gone when uv upgraded to 3.15).
+> - Olla wiring **never materialized**: `dot_config/olla/config.yaml` was never
+>   rendered, Olla's binary (`~/.local/share/mise/installs/github-thushan-olla/0.0.29/olla`)
+>   was never installed. Nothing listens on :40114.
+> - `restart-vllm-omni.sh` **doesn't exist** in `~/.local/bin/`. The only
+>   remaining swap script is `switch-ai-backend.sh`, now repurposed for the
+>   llama.cpp ↔ sd.cpp image batch swap (see §13).
+> - Qwen2.5-Omni-3B **downloaded** — 3 `.safetensors` shards at
+>   `/media/sailor/ai-server/models/Qwen2.5-Omni-3B/` (as documented, expecting 3)
+>   — but never activated; the vLLM venv is dead.
+>
+> #### ✅ What actually works instead (verified 2026-11-08)
+> - **Flux.3 Image Klein Q8_0 on GPU0 via sd.cpp** — built with `-DGGML_CUDA=ON`
+>   from the old clone (`/home/jan/projs/stable-diffusion.cpp`, has `flux3.hpp`),
+>   ~23 s end-to-end, valid 512² PNG; `switch-ai-backend.sh image --batch
+>   <card2-smoke json>` works and restores the text backend afterwards.
+> - **Two V100s, one backend each:** GPU0 = llama.cpp (:8081) or sd.cpp batch;
+>   GPU1 = little-brother text backend (:8082). Design: `little-brother-card2-swap.md`.
 
 #### ⚠️ Gotchas (hard-won — re-read before touching anything)
 - **One V100, one backend at a time.** ornith and vLLM-Omni fight for the same

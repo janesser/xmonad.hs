@@ -241,3 +241,29 @@ a source change.
 - [ ] Pick a box: V100 (32 GB, FLUX/2512 Q8_0) or RTX 2060 Mobile (6 GB, SDXL/SD1.5).
 - [ ] For Qwen-Image-2512: confirm a non-blanking Q8_0 GGUF before committing.
 - [ ] Pin GGUF providers (Civitai/gpustack / `unsloth/*-GGUF`) and verify blob integrity.
+
+## Verified (2026-11-08)
+
+**Flux.3 Image Klein Q8_0 on the V100 SXM2, end-to-end.** The box's current
+image-gen path — `switch-ai-backend.sh image --batch <file>` with a batch
+pointing at `/media/sailor/ai-server/sd-probe/diffusion_models_gguf/flux3-image-klein-base-Q8_0.gguf`
++ `text_encoders_gguf/Qwen3VL-4B-Instruct-Q8_0.gguf` (llm) + `vae/flux3/flux2-vae.safetensors` +
+`tokenizers/flux2-klein-qwen3-tokenizer.json`. Result: 512×512 valid PNG in
+~23 s end-to-end, using GPU0 for the models (the text backend is evicted by
+`switch-ai-backend.sh` and restored after).
+
+**Why this works but master's doesn't:** the two sd.cpp clones do different work:
+- **`/home/jan/projs/stable-diffusion.cpp`** (old clone, HEAD 77b72a2): has
+  `src/model/diffusion/flux3.hpp` — recognizes the Flux.3 `content_mode_blocks.*`
+  tensor naming. Built with `-DGGML_CUDA=ON` → `build/bin/sd-cli`. **This is the one that runs Flux.3 on GPU.**
+- **`/home/jan/projs/stable-diffusion.cpp-main`** (origin/master, HEAD d637cfb): no
+  Flux.3 recognition in `model_loader.cpp` — `get_sd_version()` returns
+  `VERSION_COUNT`, `new_sd_ctx_t failed: get sd version from file failed`. It was
+  built earlier without CUDA (`GGML_CUDA=OFF`), so even a model it *could*
+  recognize would run on CPU (~140 s/it). Reconfigure + rebuild with `-DGGML_CUDA=ON`
+  to get GPU.
+
+The `flux-2-klein-4b-Q4_0.gguf` used in the Oct-11/12 switchmode tests is gone from
+`sd-probe/diffusion_models_gguf/`; only Flux.3 Image Klein Q8_0 (6 GB, Q8_0) remains.
+Both models were valid at their time; Flux.3's `content_mode_blocks.*` naming
+requires the old clone's `flux3.hpp`, and master's model loader doesn't have it.

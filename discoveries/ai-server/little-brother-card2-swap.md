@@ -1,10 +1,15 @@
 # Little Brother on Card 2 — llama.cpp / sd.cpp swap system (Era 1)
 
-**Status: active (2026-10-23)** — design complete, not yet implemented. Next step:
-implement units + swap script under chezmoi, then smoke-test. Supersedes the
-switchmode eviction dance in `ai-little-brother.md` (that doc's protocol exists
-to keep the *only* text backend alive while the V100 is borrowed; with a
-dedicated card-2 text backend, the problem disappears).
+**Status: active (2026-10-23)** — design complete and **implemented in chezmoi**:
+`etc/systemd/system/llama-little-brother.service` (rendered at `/etc/systemd/system/`,
+installed by `.chezmoiscripts/run_once_5_aitools_2llama_startup.sh`) is loaded +
+active, running `start-little-brother.sh` on the card-2 V100 via
+`Environment=CUDA_VISIBLE_DEVICES=<PCIe UUID>`, and the box serves [::]:8082 on
+card 2 (GPU-fb929bd0-1296-491c-ed72-8f8494addcb8). Next step: smoke-test the
+full swap (text → sd.cpp → text) and confirm the card-2 unit survives a V100
+borrow. Supersedes the switchmode eviction dance in `ai-little-brother.md` (that
+doc's protocol exists to keep the *only* text backend alive while the V100 is
+borrowed; with a dedicated card-2 text backend, the problem disappears).
 
 **Forge provenance:** `_bmad-output/forge/vllm-dual-gpu-migration/.memlog.md`.
 

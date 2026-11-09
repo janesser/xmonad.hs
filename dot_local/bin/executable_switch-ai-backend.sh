@@ -6,10 +6,11 @@
 #   * instruct -> llama.cpp CUDA backend  (:8081, ornith)  [llama-cuda.service, boot default]
 #   * image    -> sd.cpp (stable-diffusion.cpp) sd-cli, runs a batch file
 #
-# Olla (:40114) routes each request by model id to whichever backend is live
-# and picks up the change on its discovery refresh. This script does NOT restart
-# Olla — its ExecStartPre requires :8081 reachable, so restarting while vLLM-Omni
-# or sd.cpp holds the V100 (no :8081) would fail; Olla's periodic refresh is enough.
+# vLLM-Omni (:8091) is retired — nothing runs on :8091. Olla (:40114) was never
+# installed: `dot_config/olla/config.yaml` was never rendered, the binary
+# (~/.local/share/mise/installs/github-thushan-olla/0.0.29/olla) doesn't exist.
+# No routing is wired — :8081/:8082 are the live backends. This script does NOT
+# restart anything else; nothing else listens on a backend port.
 #
 # sudo (NOPASSWD drop-in, /usr/bin/systemctl --system) is used ONLY to manage the
 # llama-cuda system unit. The only thing we do to a backend is STOP it — a plain
@@ -19,6 +20,9 @@
 set -uo pipefail
 
 SUDO=(sudo systemctl)        # array: invoked as "${SUDO[@]}" so 'sudo systemctl' splits into 2 args
+# sd-cli from the OLD clone (/home/jan/projs/stable-diffusion.cpp, HEAD 77b72a2)
+# — it has src/model/diffusion/flux3.hpp (Flux.3 `content_mode_blocks.*` naming)
+# and was built with -DGGML_CUDA=ON. Master's clone lacks Flux.3 support.
 SD_CLI="/home/jan/projs/stable-diffusion.cpp/build/bin/sd-cli"
 DEFAULT_DEADLINE=300   # seconds the image mode holds the V100 before auto-switch-back
 

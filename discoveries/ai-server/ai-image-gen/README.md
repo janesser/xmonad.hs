@@ -2,7 +2,17 @@
 
 Handover notes for local image-generation backends on this box.
 
-- **[stable-diffusion-cpp.md](stable-diffusion-cpp.md)** — *current direction.*
+> **Current state (2026-11-08): the working path is sd.cpp + Flux.3 Image Klein
+> Q8_0, verified on GPU0 (V100 SXM2) — ~23 s end-to-end, valid 512² PNG.**
+> Built with `-DGGML_CUDA=ON` from the old clone (`/home/jan/projs/stable-diffusion.cpp`,
+> has `flux3.hpp`). See `stable-diffusion-cpp.md` (Verified section) for the
+> build details; `switch-image-mode.md` for the `switch-ai-backend.sh image`
+> batch flow. vLLM-Omni + Qwen-Image is abandoned (`vllm-omni-2512-probe.md`).
+-
+- **Note on models:** `/media/sailor/ai-server/sd-probe/diffusion_models_gguf/` holds
+> `flux3-image-klein-base-Q8_0.gguf` (6 GB, Q8_0) — the only GGUF diffusion model
+> left here. The Flux.2-klein 4B Q4_0 used in the Oct-11/12 switchmode tests is gone.
+ **[stable-diffusion-cpp.md](stable-diffusion-cpp.md)** — *current direction.*
   sd.cpp + GGUF is now the preferred image-gen path (adopted 2026-10-08). Loads
   a pre-quantized GGUF straight to the card, sidestepping the bf16 load
   transient that sank the vLLM-Omni probe. Ranked model range (SDXL, FLUX.1-dev,
