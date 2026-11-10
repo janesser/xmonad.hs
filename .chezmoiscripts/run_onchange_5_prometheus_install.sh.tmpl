@@ -1,0 +1,54 @@
+#!/bin/bash
+# run_onchange_5_prometheus_install.sh.tmpl
+#
+# Install the prometheus.yml source (repo-managed, NOT applied by chezmoi;
+# etc/ is ignored) into /etc/prometheus/ and restart the service so it picks up
+# the new scrape configuration.
+#
+# Input:
+#   etc/prometheus/prometheus.yml     the config to install (root:root, 0644)
+#
+# Deploys to:
+#   /etc/prometheus/prometheus.yml    (0644 root:root)
+#
+# Sudo is used only for commands allowed by the scoped NOPASSWD sudoers drop-in
+# (AGENTS.md): `install` sets ownership and mode atomically.
+
+set -euo pipefail
+
+SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
+SRC="${SRC_DIR}/etc/prometheus/prometheus.yml"
+DEST=/etc/prometheus/prometheus.yml
+UNIT=prometheus.service
+
+# --- idempotent: nothing to do -----------------------------------------------
+if [ -f "${DEST}" ] && sudo cmp -s "${SRC}" "${DEST}"; then
+    echo "✅ ${DEST} already installed and up to date. Nothing to do."
+    exit 0
+fi
+
+[ -f "${SRC}" ] || { echo "⚠️  missing source: ${SRC}"; exit 1; }
+
+# --- install (atomic, ownership + mode in one call) --------------------------
+sudo install -o root -g root -m 0644 "${SRC}" "${DEST}"
+
+# --- validate before restarting ----------------------------------------------
+if ! promtool check config "${DEST}" > /tmp/prometheus-check.log 2>&1; then
+    echo "⚠️  promtool rejected ${DEST} (it is not installed yet, rolling back):"
+    cat /tmp/prometheus-check.log >&2 || true
+    rm -f "${DEST}"
+    exit 1
+fi
+
+# --- restart the service -----------------------------------------------------
+sudo systemctl --system restart "${UNIT}"
+
+echo "✅ ${DEST} installed and validated."
+echo "Check with: sudo promtool check config ${DEST} ; curl http://127.0.0.1:9090/api/v1/targets"
+
+# --- chezmoi change filter (re-run when the input changes) -------------------
+# The SHA256 of the inputs is embedded below as a comment, so the *rendered*
+# script changes whenever an input file changes and chezmoi re-runs it. On
+# unchanged applies the script is skipped entirely — no `sudo`, no prompt.
+#
+#   inputs hash: {{ print (include "etc/prometheus/prometheus.yml") | sha256sum }}
