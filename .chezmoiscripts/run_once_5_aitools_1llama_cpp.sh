@@ -23,12 +23,11 @@ command -v apt >/dev/null || exit 0
 
 log() { echo "$(basename "$0"): $*"; }
 
-LLAMA_REF="v0.8.0"
+LLAMA_REF="v0.9.0"
 log "Building $LLAMA_REF"
 
 
 source "${CHEZMOI_SOURCE_DIR:-$HOME/.local/share/chezmoi}/commons/mise_assert-uv.sh"
-uv tool install gpustat
 
 # --- paths ------------------------------------------------------------------
 LLAMA_DIR="$HOME/projs/llama.cpp"

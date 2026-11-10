@@ -73,7 +73,7 @@ LB_UNIT_SRC="${SRC_DIR}/etc/systemd/system/${LITTLE_BROTHER_UNIT}"
 if [ -f "${LB_UNIT_SRC}" ]; then
     LB_UUID="$(sed -n 's/^Environment=CUDA_VISIBLE_DEVICES=//p' "${LB_UNIT_SRC}" | head -1)"
     if [ -n "${LB_UUID}" ] && nvidia-smi -L 2>/dev/null | grep -qF "${LB_UUID}"; then
-        BACKENDS+=( "llama-little-brother.service|.local/bin/start-little-brother.sh|8082|yes" )
+        BACKENDS+=( "llama-little-brother.service|.local/bin/restart-llama-cuda.sh|8082|yes" )
     else
         echo "ℹ️  ${LITTLE_BROTHER_UNIT} skipped — GPU ${LB_UUID:-<no UUID in unit>} not in nvidia-smi -L (box without card 2)."
     fi

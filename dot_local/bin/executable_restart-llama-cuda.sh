@@ -1,8 +1,7 @@
 #!/bin/bash
 
 PORT="${PORT:-8081}"
-MODEL="InternScience/Sage-A1.5-Q4_K_M-GGUF"
-CTX=0
+MODEL="${MODEL:-InternScience/Sage-A1.5-Q4_K_M-GGUF:Q4_K_M}"
 
 got=0
 for pid in $(pgrep -x llama 2>/dev/null; pgrep -x llama-server 2>/dev/null); do
@@ -11,7 +10,7 @@ for pid in $(pgrep -x llama 2>/dev/null; pgrep -x llama-server 2>/dev/null); do
     case "$cmd" in
         *"$PORT"*)
             comm=$(cat "/proc/$pid/comm" 2>/dev/null)
-            echo "start-little-brother: reaping stale :$PORT backend pid $pid ($comm)"
+            echo "restart-llama-cuda: reaping stale :$PORT backend pid $pid ($comm)"
             kill "$pid" 2>/dev/null
             for i in $(seq 1 10); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
             kill -0 "$pid" 2>/dev/null && { echo "SIGKILL unresponsive $pid" >&2; kill -9 "$pid" 2>/dev/null; }
@@ -25,13 +24,18 @@ if ! mountpoint "$HOME/.cache/huggingface/hub" 2>/dev/null; then
     echo "WARNING: HF cache is not a mountpoint — llama will fetch the model on demand if missing." >&2
 fi
 
-exec llama serve \
+if [ "$MODEL" == "ANY" ]; then
+    MODEL_PARAM="--models-max 1"
+else
+    MODEL_PARAM="-hf $MODEL"
+fi
+
+exec llama serve $MODEL_PARAM \
     --host :: \
     --port "$PORT" \
     -dev CUDA0 \
     --metrics \
     --no-ui \
-    -hf "$MODEL" --ctx-size "$CTX" \
     --temp 1.0 \
     --top-p 0.95 \
     --top-k 20 \
@@ -43,4 +47,4 @@ exec llama serve \
     --flash-attn on \
     --ctx-checkpoints 256 \
     --checkpoint-min-step 1024 \
-    -lv 4
+    -lv 3
