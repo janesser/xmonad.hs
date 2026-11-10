@@ -30,14 +30,25 @@
 
 ------------------------------------------------------------------------------------------
 
+local paths = require("default.hypr.paths")
+
 -- https://github.com/omacom/omarchy/blob/quattro/default/hypr/bindings/tiling.lua
+
+require(paths.omarchy_path .. "/default/hypr/bindings/tiling")
+
+hl.unbind("SUPER + TAB")
+o.bind("SUPER + TAB", "Cycle windows in workspace", hl.dsp.window.cycle_next())
+hl.unbind("SUPER + SHIFT + TAB")
+o.bind("SUPER + SHIFT + TAB", "Cycle windows in workspace", hl.dsp.window.cycle_next({ next = false }))
+
 -- https://github.com/omacom/omarchy/blob/quattro/default/hypr/bindings/media.lua
 
-local paths = require("default.hypr.paths")
-require(paths.omarchy_path .. "/default/hypr/bindings/tiling")
 require(paths.omarchy_path .. "/default/hypr/bindings/media")
 
-o.bind("SUPER + RETURN", "Move to root", hl.dsp.layout("movetoroot"))
+o.bind("SUPER + CTRL + UP", "Move up", hl.dsp.window.swap({direction = "up"}))
+o.bind("SUPER + CTRL + DOWN", "Move down", hl.dsp.window.swap({direction = "down"}))
+o.bind("SUPER + CTRL + LEFT", "Move left", hl.dsp.window.swap({direction = "left"}))
+o.bind("SUPER + CTRL + RIGHT", "Move right", hl.dsp.window.swap({direction = "right"}))
 o.bind("SUPER + SPACE", "Cycle workspace layout", "omarchy-hyprland-workspace-layout-toggle")
 o.bind("SUPER + SHIFT + C", "Close window", hl.dsp.window.close())
 
@@ -69,6 +80,11 @@ o.bind("SUPER + SHIFT + CTRL + RETURN", "Terminal (herdr)", "launch-herdr.sh")
 
 o.bind("SUPER + E", "File manager", "pcmanfm")
 o.bind("SUPER + SHIFT + W", "Browser", "librewolf")
+
+-- documentation says "CTRL + SHIFT + ]"
+o.bind("CTRL + SHIFT + F", "float/unfloat video", hl.dsp.send_shortcut({ mods = "CTRL + SHIFT", key = "9" }))
+
+o.bind("SUPER + CTRL + T", "Toggle TODO", "omarchy-shell shell toggle todo.plugin")
 
 -- https://github.com/omacom/omarchy/blob/quattro/default/hypr/bindings/dictation.lua
 
