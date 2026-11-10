@@ -4,4 +4,4 @@
 # boxes instead of failing the whole `cz apply`.
 command -v omarchy >/dev/null || exit 0
 
-# omarchy update -y # FIXME bad sudo usage for now
+omarchy update -y # FIXME bad sudo usage for now

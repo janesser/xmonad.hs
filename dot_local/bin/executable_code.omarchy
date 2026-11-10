@@ -1,0 +1,6 @@
+#!/bin/bash
+
+OMARCHY_CONFIG=~/.config/omarchy
+
+codium -n -w $OMARCHY_CONFIG
+chezmoi add -r $OMARCHY_CONFIG
