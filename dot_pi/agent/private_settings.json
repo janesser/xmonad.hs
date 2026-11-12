@@ -1,0 +1,41 @@
+{
+  "packages": [
+    "npm:pi-web-access",
+    "npm:pi-ghidra",
+    "npm:pi-paster",
+    "git:github.com/janesser/pi-hermes-memory",
+    "npm:@aalzubidy/pi-signal",
+    "git:github.com/janesser/Crossbar"
+  ],
+  "lastChangelogVersion": "1.5.0",
+  "theme": "dark",
+  "defaultProvider": "crossbar-llamacpp-cyberkleiber-fritz-box-8081",
+  "defaultModel": "InternScience/Sage-A1.5-Q4_K_M-GGUF:Q4_K_M",
+  "defaultThinkingLevel": "medium",
+  "hideThinkingBlock": true,
+  "compaction": {
+    "enabled": false
+  },
+  "retry": {
+    "enabled": true,
+    "maxRetries": 10,
+    "baseDelayMs": 60000,
+    "provider": {
+      "timeoutMs": 900000
+    }
+  },
+  "httpIdleTimeoutMs": 900000,
+  "quietStartup": true,
+  "treeFilterMode": "default",
+  "terminal": {
+    "showTerminalProgress": true
+  },
+  "collapseChangelog": true,
+  "extensionChangelogVersions": {
+    "{\"source\":\"npm:pi-web-access\",\"scope\":\"user\"}": "0.47.0",
+    "{\"source\":\"npm:pi-ghidra\",\"scope\":\"user\"}": "0.3.0",
+    "{\"source\":\"git:github.com/janesser/pi-hermes-memory\",\"scope\":\"user\"}": "0.9.10",
+    "{\"source\":\"git:github.com/janesser/Crossbar@feat/window-provenance\",\"scope\":\"user\"}": "0.8.0",
+    "{\"source\":\"git:github.com/janesser/Crossbar@feat/resume-reprobe\",\"scope\":\"user\"}": "0.8.0"
+  }
+}
