@@ -81,8 +81,8 @@ o.bind("SUPER + SHIFT + CTRL + RETURN", "Terminal (herdr)", "launch-herdr.sh")
 o.bind("SUPER + E", "File manager", "pcmanfm")
 o.bind("SUPER + SHIFT + W", "Browser", "librewolf")
 
--- documentation says "CTRL + SHIFT + ]"
-o.bind("CTRL + SHIFT + F", "float/unfloat video", hl.dsp.send_shortcut({ mods = "CTRL + SHIFT", key = "9" }))
+-- documentation says "CTRL + SHIFT + ]"F
+o.bind("SUPER + SHIFT + F", "float/unfloat video", hl.dsp.send_shortcut({ mods = "CTRL + SHIFT", key = "9" }))
 
 o.bind("SUPER + CTRL + T", "Toggle TODO", "omarchy-shell shell toggle todo.plugin")
 
