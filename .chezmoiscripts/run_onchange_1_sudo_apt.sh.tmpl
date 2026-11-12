@@ -4,6 +4,8 @@
 # Install the sudoers drop-in for the ubuntu-rooted boxes (lincopta, raspberrypi,
 # cyberkleiber): `apt`. Grants the package families plus what rootful containers
 # need on these boxes. Not installed on pacman boxes — that's flowerpower's job.
+#
+# inputs hash: {{ print (include "etc/sudoers.d/apt") | sha256sum }}
 
 set -euo pipefail
 

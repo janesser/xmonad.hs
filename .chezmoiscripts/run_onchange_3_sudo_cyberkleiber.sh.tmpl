@@ -3,6 +3,8 @@
 #
 # Install the sudoers drop-in for cyberkleiber (= hp_z6_g4, memory hub and
 # ai-server): `systemd-run` for card2-swap's transient root units.
+#
+# inputs hash: {{ print (include "etc/sudoers.d/cyberkleiber") | sha256sum }}
 
 set -euo pipefail
 

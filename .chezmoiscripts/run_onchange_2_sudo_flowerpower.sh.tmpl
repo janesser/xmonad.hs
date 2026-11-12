@@ -3,6 +3,8 @@
 #
 # Install the sudoers drop-in for flowerpower (= omarchy = chuwi_ubook_xpro):
 # `pacman` package family and the camera-debug tools of the Chuwi UBook XPro.
+#
+# inputs hash: {{ print (include "etc/sudoers.d/flowerpower") | sha256sum }}
 
 set -euo pipefail
 

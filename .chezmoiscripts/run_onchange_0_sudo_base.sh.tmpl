@@ -5,8 +5,7 @@
 # grants the constructive commands used by `cz update` plus the two cleanup
 # wrappers, which require a password on every invocation.
 #
-#   source: etc/sudoers.d/base          (NOT applied by chezmoi; etc/ is ignored)
-#   target: /etc/sudoers.d/base         (root:root, mode 0440)
+# inputs hash: {{ print (include "etc/sudoers.d/base") | sha256sum }}
 
 set -euo pipefail
 

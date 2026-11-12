@@ -16,6 +16,8 @@
 
 set -euo pipefail
 
+[[ "$(hostname)" == "cyberkleiber" ]] || exit 0
+
 SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
 SRC="${SRC_DIR}/etc/prometheus/prometheus.yml"
 DEST=/etc/prometheus/prometheus.yml
