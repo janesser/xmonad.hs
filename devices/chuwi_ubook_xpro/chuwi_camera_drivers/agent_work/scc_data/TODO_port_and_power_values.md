@@ -1,8 +1,11 @@
-# TODO — remaining SCC items (runtime inspection, per handover §6)
+# TODO — remaining SCC items (static Ghidra preferred over runtime inspection)
 
 All of the following live in code/objects that Ghidra can't see statically
-(runtime-injected HAL + heap-constructed sensor objects). Recover them with
-kernel-mode WinDbg on the driver (this is the correct layer for a .sys), exactly
+(runtime-injected HAL + heap-constructed sensor objects). Prefer **Ghidra on Windows**
+(`TODO_ghidra_windows.md`) — it decompiles `SetRegister`/`SensorOn` cleanly and does not
+pause the debugged system. WinDbg (this file's original plan) only adds risk: a kernel
+breakpoint stops all execution, which froze the Windows UI in prior runs on this box.
+Recover the runtime items with kernel-mode WinDbg on the driver only if Ghidra fails,
 as the handover §6 prescribes.
 
 ## A. Exact I/O port(s) + Power0/Power1/PowerEn bytes (deliverable #1 + #2)
