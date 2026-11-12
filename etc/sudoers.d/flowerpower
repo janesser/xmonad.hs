@@ -10,6 +10,25 @@ Cmnd_Alias PACKAGES = \
     /usr/bin/pacman-mirrors \
 
 Cmnd_Alias CAMERA_DEBUG = \
-    /usr/local/bin/camera_ec_debug.sh \
+    /usr/local/bin/camera_ec_debug.sh, \
+    /usr/bin/i2cdetect ^-y [0-9]$, \
+    /usr/bin/modprobe ^ov5648$, \
+    /usr/bin/modprobe ^ov2680$, \
+    /usr/bin/modprobe ^ipu3-cio2$, \
+    /usr/bin/modprobe ^ipu3-imgu$, \
+    /usr/bin/rmmod ^ov5648$, \
+    /usr/bin/rmmod ^ov2680$, \
+    /usr/bin/rmmod ^ipu3-cio2$, \
+    /usr/bin/rmmod ^ipu3-imgu$, \
+    /usr/bin/insmod ^/home/jan/.local/share/chezmoi/devices/chuwi_ubook_xpro/chuwi_camera_drivers/agent_work/[a-zA-Z0-9_]+\\.ko$, \
+    /usr/bin/rmmod ^scc_camera_proto$, \
+    /usr/bin/rmmod ^intel_skl_int3472_tps68470$, \
+    /usr/bin/media-ctl ^-p$, \
+    /usr/bin/media-ctl ^-d /dev/media[0-9]+ -p$, \
+    /usr/bin/media-ctl ^-l "ov2680 [0-9]+-00[0-9a-fA-F]+:[0-9]+" -> "ipu3-csi2 [0-9]+:[0-9]+" \[ENABLED\]$, \
+    /usr/bin/v4l2-ctl ^--list-devices$, \
+    /usr/bin/v4l2-ctl ^-d /dev/video[0-9]+ --all$, \
+    /usr/bin/v4l2-ctl ^-d /dev/video[0-9]+ --list-formats-ext$, \
+    /usr/bin/v4l2-ctl ^-d /dev/video[0-9]+ --stream-mmap.*$
 
 jan ALL=(root) NOPASSWD: PACKAGES, CAMERA_DEBUG
