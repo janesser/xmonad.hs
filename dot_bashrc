@@ -25,3 +25,7 @@ alias cz=chezmoi
 alias hx=helix
 
 export PATH=$PATH:$HOME/go/bin
+# ~/.local/bin is on PATH for login shells (via .profile) and for fish; this
+# makes every command installed there available to non-login shells too (plain
+# ssh), where .profile never runs.
+export PATH=$PATH:$HOME/.local/bin
