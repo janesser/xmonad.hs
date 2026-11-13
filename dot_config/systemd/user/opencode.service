@@ -1,0 +1,43 @@
+# Installed by .chezmoiscripts/run_once_5_aitools_8opencode.sh
+# Renders to ~/.config/systemd/user/opencode.service — a userspace unit shared
+# by every box that has opencode on PATH.
+#
+# OpenCode AI coding agent web UI, exposed on the LAN. Runs standalone (a
+# foreground process tracked by systemd — the pattern opencode's docs recommend
+# for always-on hosts) rather than opencode's shared background service, so the
+# model backends (:8081/:8082) stay behind it and are never bound to the LAN.
+#
+# Listen on every network interface (0.0.0.0), default port 49374 (opencode's
+# Linux default). Clients connect with:
+#
+#   http://<box>:49374            # browser web UI, via 'opencode pair'
+#   opencode --server :49374      # TUI connected to the same server
+#
+# This is a united unit: on every box it calls `opencode` from PATH. opencode
+# lands on PATH either way — npm/mise install (the AI server), the mise shim
+# (flowerpower) or the standalone arm64 binary (the Pi). The three dirs that may
+# host it are all in PATH, so the unit file is identical on every box and needs
+# no hardcoded binary path. `opencode` is not resolvable via ExecStart= itself
+# (systemd resolves it with its own default PATH), so we run it through
+# `/usr/bin/env`, which then uses the unit's Environment=PATH to find it.
+# No secrets live in this unit (the generated server password is printed by
+# `opencode serve` and lives in its logs).
+
+[Unit]
+Description=OpenCode AI coding agent web UI (:49374, LAN)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jan
+Group=jan
+Environment=HOME=/home/jan
+Environment=USER=jan
+Environment=PATH=/home/jan/.local/share/mise/installs/node/latest/bin:/home/jan/.local/share/mise/shims:/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/env opencode serve --hostname 0.0.0.0 --port 49374
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
