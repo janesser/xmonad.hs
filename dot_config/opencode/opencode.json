@@ -1,0 +1,48 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "llama-cuda-card1/sage-a1.5",
+  "providers": {
+    "llama-cuda-card1": {
+      "name": "Card 1 (:8081) — Sage-A1.5 Q4_K_M (V100 SXM2 CUDA0)",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:8081/v1"
+      },
+      "models": {
+        "sage-a1.5": {
+          "modelID": "InternScience/Sage-A1.5-Q4_K_M-GGUF:Q4_K_M",
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
+        }
+      }
+    },
+    "llama-cuda-card2": {
+      "name": "Card 2 (:8082) — Sage-A1.5 Q4_K_M (PCIe V100 card 2)",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:8082/v1"
+      },
+      "models": {
+        "sage-a1.5": {
+          "modelID": "InternScience/Sage-A1.5-Q4_K_M-GGUF:Q4_K_M",
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
+        }
+      }
+    }
+  }
+}

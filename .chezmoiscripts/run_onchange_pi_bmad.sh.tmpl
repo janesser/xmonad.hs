@@ -53,9 +53,19 @@
 
 set -uo pipefail
 
+export PATH="$HOME/.local/bin:$PATH"
+eval "$(mise activate bash)" || {
+  echo "[bmad] mise not on PATH — skipping BMAD update (needs Node >= 20.12)."
+  exit 1
+}
+
 # Staging dir where the bmad installer can write its runtime + generated skills.
 STAGE="${HOME}/.local/share/bmad"
-SKILLS_DIR="${HOME}/.pi/agent/skills"
+# Published to ~/.agents/skills/ — the Agent Skills location pi-agent and opencode
+# both read by default (pi docs: "Pi also supports the Agent Skills locations
+# ~/.agents/skills/"; opencode docs: "Global compatibility: ~/.agents/skills"). One
+# publication point, no tool-specific config entry needed.
+SKILLS_DIR="${HOME}/.agents/skills"
 
 # Prerequisite: Node (the installer needs Node >= 20.12).
 if ! command -v node >/dev/null 2>&1; then
@@ -89,6 +99,24 @@ if cp -a "${STAGE}/.agents/skills/"* "${SKILLS_DIR}/" 2>/dev/null; then
   echo "[bmad] NOTE: repo-local _bmad/ install is now obsolete — skills are global."
 else
   echo "[bmad] WARNING: failed to copy skills from staging to ${SKILLS_DIR}."
+fi
+
+# Optional cleanup of the legacy publication point. bmad skills used to publish into
+# ~/.pi/agent/skills/, which pi-agent also reads. Both locations now carry identical
+# skills, so a tool that reads both (pi-agent: "Pi also supports the Agent Skills
+# locations ~/.agents/skills/") would see duplicate skill IDs and warn about them
+# ("Name collisions keep the first discovered skill and produce a warning"). Removing
+# the legacy copies after publishing keeps one source of truth.
+# BMD_CLEANUP_PI=no keeps them (e.g. for tools reading only that location).
+if [ "${BMD_CLEANUP_PI:-yes}" = "yes" ]; then
+  pi_skills_dir="${HOME}/.pi/agent/skills"
+  count=$(find "${pi_skills_dir}" -maxdepth 1 -type d -name 'bmad-*' 2>/dev/null | wc -l | tr -d ' ')
+  if [ "${count}" -gt 0 ]; then
+    find "${pi_skills_dir}" -maxdepth 1 -type d -name 'bmad-*' -exec rm -rf {} + 2>/dev/null
+    echo "[bmad] removed ${count} legacy bmad skills from ${pi_skills_dir}"
+  else
+    echo "[bmad] no legacy bmad skills in ${pi_skills_dir}"
+  fi
 fi
 exit 0
 # --- chezmoi change filter (re-run only when pi-agent can have changed) -------
