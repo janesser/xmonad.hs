@@ -36,6 +36,7 @@
     "{\"source\":\"npm:pi-ghidra\",\"scope\":\"user\"}": "0.3.0",
     "{\"source\":\"git:github.com/janesser/pi-hermes-memory\",\"scope\":\"user\"}": "0.9.10",
     "{\"source\":\"git:github.com/janesser/Crossbar@feat/window-provenance\",\"scope\":\"user\"}": "0.8.0",
-    "{\"source\":\"git:github.com/janesser/Crossbar@feat/resume-reprobe\",\"scope\":\"user\"}": "0.8.0"
+    "{\"source\":\"git:github.com/janesser/Crossbar@feat/resume-reprobe\",\"scope\":\"user\"}": "0.8.0",
+    "{\"source\":\"git:github.com/janesser/Crossbar\",\"scope\":\"user\"}": "0.8.0"
   }
 }
