@@ -1,0 +1,43 @@
+# Installed by
+# .chezmoiscripts/run_once_5_aitools_8signal_pi.sh
+# to /etc/systemd/system/signal-pi.service
+#
+# Persistent pi agent on raspberrypi that receives Signal messages. It runs
+# `pi --print` with the PI_SIGNAL_* env vars set; the @aalzubidy/pi-signal
+# extension (installed in ~/.pi/agent/settings.json) does everything else:
+#
+#   1. connect to signal-cli's SSE endpoint and stream incoming messages
+#      in-memory (never written to a log file)
+#   2. inject each Note-to-Self message into the agent session
+#      (`pi.sendUserMessage()`, `deliverAs: followUp`)
+#   3. on `agent_end` reply via the daemon JSON-RPC API (grey / sync bubbles
+#      since the recipient is the account itself)
+#   4. let all fleet instances consume the stream, but only the one with
+#      PI_SIGNAL_PRIMARY=true actually handles messages — all others stay silent
+#
+# No separate listener script is needed: `pi --print` stays alive on its own.
+# Once the extension's SSE connection is open, Node's event loop never empties
+# (the keep-alive request holds it), so a single invocation waits indefinitely
+# for incoming messages instead of exiting after its one-shot prompt. Responses
+# are written to stdout (the journal) and auto-sent to Signal.
+
+[Unit]
+Description=Signal bot — persistent pi agent listening for Signal messages (raspberrypi)
+After=network-online.target signal-receive.service
+Wants=network-online.target signal-receive.service
+
+[Service]
+Type=simple
+User=jan
+Environment=HOME=/home/jan
+Environment=USER=jan
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=PI_SIGNAL_ACCOUNT=+4917620128275
+Environment=PI_SIGNAL_DAEMON_URL=http://raspberrypi.local:8081
+Environment=PI_SIGNAL_PRIMARY=true
+ExecStart=/home/jan/.local/share/mise/installs/pi/latest/pi/pi --print
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
