@@ -55,3 +55,15 @@
 -- Enable touchpad gestures for moving focus (helpful on scrolling layout).
 -- hl.gesture({ fingers = 3, direction = "left", action = function() hl.dispatch(hl.dsp.focus({ direction = "l" })) end })
 -- hl.gesture({ fingers = 3, direction = "right", action = function() hl.dispatch(hl.dsp.focus({ direction = "r" })) end })
+hl.config({
+    input = {
+        touchpad = {
+            disable_while_typing = true
+        }
+    }
+})
+
+hl.device({
+    name = "hs-ch12u-ptp-01-04-14-usb-keyboard-touchpad",
+    disable_while_typing = true,
+})
