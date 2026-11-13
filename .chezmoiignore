@@ -16,6 +16,9 @@ AGENTS.md
 
 _bmad*
 
+.config/omarchy/plugins
+.config/omarchy/default/dictation.lock
+
 {{- if eq .chezmoi.hostname "flowerpower" }}
 # ignore fish scripts
 .chezmoiscripts/*.fish
