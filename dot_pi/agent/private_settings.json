@@ -7,7 +7,7 @@
     "npm:@aalzubidy/pi-signal",
     "git:github.com/janesser/Crossbar"
   ],
-  "lastChangelogVersion": "1.5.0",
+  "lastChangelogVersion": "1.5.2",
   "theme": "dark",
   "defaultProvider": "crossbar-llamacpp-cyberkleiber-fritz-box-8081",
   "defaultModel": "InternScience/Sage-A1.5-Q4_K_M-GGUF:Q4_K_M",

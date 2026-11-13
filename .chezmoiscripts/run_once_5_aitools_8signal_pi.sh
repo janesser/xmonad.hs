@@ -8,9 +8,10 @@
 #      setup wizard on this box — just moved into the repo for idempotent
 #      management)
 #   signal-pi.service         /etc/systemd/system/signal-pi.service
-#     (pi --print with PI_SIGNAL_* env vars — the extension consumes the SSE
-#      stream, injects messages into the agent session and auto-replies via the
-#      daemon JSON-RPC API; no separate listener script is needed)
+#     (pi --mode rpc --no-session with PI_SIGNAL_* env vars — the extension
+#      consumes the SSE stream, injects messages into the agent session and
+#      auto-replies via the daemon JSON-RPC API; pi keeps one session for the
+#      whole process lifetime so the extension's ctx never goes stale)
 #
 # Both units are raspberrypi-only: one Signal account runs on one host. On any
 # other host this script logs and exits 0.
