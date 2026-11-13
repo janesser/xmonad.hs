@@ -4,7 +4,7 @@
 
 signal-cli 0.14.10 is installed and running on **raspberrypi** with the same account. The integration **is now in chezmoi**: two units (`signal-receive` + `signal-pi`) are deployed via a hostname-gated run script.
 
-Status: the daemon (`signal-receive.service`, port 8081) and the persistent bot listener (`signal-pi.service`, `pi --print` with the signal env vars in its unit `Environment=`) are both running. The remaining verification is the end-to-end message flow — which needs the phone.
+Status: both units are deployed, enabled, and running (see *Verified 2026-11-13* below). The end-to-end message → reply flow was verified on 2026-11-13 by a Note-to-Self from the phone — see *End-to-end verification*.
 
 The listener's env vars are now in `signal-pi.service`'s `Environment=` lines; they were previously only set via a manual edit on cyberkleiber's `pi-memory-hub.service` (a dead config, no pi instance there).
 
@@ -48,10 +48,17 @@ The `@aalzubidy/pi-signal` extension (installed in `~/.pi/agent/settings.json`, 
 on `agent_end`. The only thing a persistent bot needs is **a running pi instance whose
 extensions see the env vars**.
 
-`pi --print` (no TTY → print mode) stays alive on its own: once the extension's open SSE
-connection holds Node's event loop, a single invocation waits indefinitely for incoming
-messages instead of exiting after its one-shot prompt. Responses go to stdout (the journal)
+`pi --mode rpc --no-session` (no TTY) stays alive on its own: it keeps one session for the
+whole lifetime of the process, so the extension's ctx never goes stale — and a `tty` is
+allocated as stdin (`StandardInput=tty`, `TTYPath=/dev/tty2`) because a device node never
+sends EOF (EOF would exit the process after ~6 s). Responses go to stdout (the journal)
 and are auto-sent back to Signal.
+
+> **Why not `pi --print`?** Print mode starts a fresh session per run, so the extension's
+captured ctx goes stale on the first injected message (`sendReaction` → `pi.exec` →
+`assertActive: This extension ctx is stale after session replacement or reload`) and the
+service exits. That was the 2026-11-13 crash at 10:16. RPC mode keeps a single persistent
+session, so this never happens.
 
 `PI_SIGNAL_PRIMARY=true` is required to activate the SSE listener; all other fleet instances
 stay silent (they skip `startSSEListener`).
@@ -88,26 +95,39 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now signal-receive.service signal-pi.service
 ```
 
-### Verification (raspberrypi, 2026-11-13)
+### Verified 2026-11-13 (both services + end-to-end)
 
-`cz apply --force` deployed both units. `systemctl --system status` now shows:
+`cz apply` + the hostname-gated install script deployed both units; both match the repo
+byte-for-byte (`cmp -s`) and are enabled at boot.
 
 | Unit | State |
 |---|---|
 | `signal-receive.service` | active (running), enabled at boot, `-a +4917620128275 daemon --http 0.0.0.0:8081` |
-| `signal-pi.service` | **active (running)** since 09:46, PID `pi --print`; `[signal] SSE connected — listening for incoming messages` in the journal |
+| `signal-pi.service` | **active (running)** since ~12:24, PID `pi --mode rpc --no-session`; `[signal] SSE connected — listening for incoming messages` in the journal; stable >9 min in testing |
+
+#### End-to-end message → reply (verified 2026-11-13)
+
+A Note-to-Self sent from the phone arrived in the SSE stream (`[Signal from Self
+(+4917620128275)]: Slt`), was injected into the agent session, the agent ran (via cyberkleiber's
+llama.cpp, `Sage-A1.5-Q4_K_M-GGUF`), and `signal_send` delivered the reply
+`Salut ! 👋 Comment ça va ?` to `+4917620128275`. **No crash, no stale ctx.** (The agent used
+`signal_send` directly, so the extension suppressed its auto-reply on `agent_end` to avoid a
+duplicate — matching the documented behavior.) A plain daemon-RPC `send` to the account itself
+does **not** loop back through the SSE stream (that is a signal-cli routing detail, not a pi issue).
 
 The run script is idempotent: a second run reports both units "already installed and up to
 date" — no `sudo`, no prompt, no restart.
 
-### Still unverified (needs the phone)
+### Remaining notes
 
-- **Message reception + auto-reply**: the extension injects messages into the agent session
-  and replies via the daemon JSON-RPC API, but this end-to-end path can only be tested by
-  sending a Note-to-Self from the phone.
-- **Conversation continuity**: `pi --print` sessions are one-shot; each injected message starts
-  a new run in the same process. The session accumulates messages while the service lives,
-  but a service restart starts a fresh session (no history).
+- **Conversation continuity**: `pi --mode rpc` keeps one session for the lifetime of the process;
+  each injected message starts a new run in that session. A service restart starts a fresh
+  session (no history) — this is the only remaining limitation.
+- **`PI_SIGNAL_PRIMARY=false` on fleet peers** would be harmless: the extension skips the SSE
+  listener on non-primary instances, so they stay silent and never consume the stream.
+- **The daemon-RPC `send` to the account's own number does not loop back through the SSE stream**
+  (signal-cli routing detail) — only a Note-to-Self from a linked device comes in as an
+  incoming message. This is why the phone test was the real verification.
 - **`PI_SIGNAL_PRIMARY=false` on fleet peers** would be harmless: the extension skips the SSE
   listener on non-primary instances, so they stay silent and never consume the stream.
 
