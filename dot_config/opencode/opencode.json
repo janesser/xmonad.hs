@@ -6,7 +6,7 @@
       "name": "Card 1 (:8081) — Sage-A1.5 Q4_K_M (V100 SXM2 CUDA0)",
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
-        "baseURL": "http://127.0.0.1:8081/v1"
+        "baseURL": "http://cyberkleiber:8081/v1"
       },
       "models": {
         "sage-a1.5": {
@@ -27,7 +27,7 @@
       "name": "Card 2 (:8082) — Sage-A1.5 Q4_K_M (PCIe V100 card 2)",
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
-        "baseURL": "http://127.0.0.1:8082/v1"
+        "baseURL": "http://cyberkleiber:8082/v1"
       },
       "models": {
         "sage-a1.5": {
