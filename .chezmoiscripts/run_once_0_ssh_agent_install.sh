@@ -1,6 +1,7 @@
 #!/bin/bash
 
-command -v apt && sudo apt install -y ssh-agent
+# apt-file search /usr/bin/ssh-agent
+command -v apt && sudo apt install -y openssh-client
 # sudo pacman -Fy ssh-agent
 command -v pacman && sudo pacman -Sy --noconfirm openssh
 
