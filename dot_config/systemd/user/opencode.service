@@ -6,6 +6,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 ExecStart=opencode serve --hostname 0.0.0.0 --port 49374
+# journalctl --user -u opencode.service | grep "server password" | tail -n 1
 
 [Install]
 WantedBy=default.target
