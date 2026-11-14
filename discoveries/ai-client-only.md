@@ -36,7 +36,7 @@ every `cz apply`:
 - symlinks `llama`, `llama-bench`, `llama-fit-params`, `llama-server` →
   `~/projs/llama.cpp/build_cuda/bin/…` (now **dangling** — the build is gone),
 - launchers `restart-llama-cuda.sh`, `restart-llama-sycl.sh`,
-- the generic `llama-emergency*.sh`, `llama-handover*.sh`, `llama-integration-test.sh`.
+-- (removed: llama-emergency*, llama-handover*, llama-integration-test.sh are gone from the repo) 
 
 They come back because the sources under `dot_local/bin/`
 (`executable_restart-llama-cuda.sh`, `symlink_llama`, …) are **shared across all
