@@ -4,6 +4,7 @@ pi = "latest"
 uv = "latest"
 ghcup = "latest"
 gh = "latest"
+opencode = { version = "latest", minimum_release_age = "0s", lazy = true, auto_update = "4h" }
 
 [settings.upgrade]
 auto_prune = false

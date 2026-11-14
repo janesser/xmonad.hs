@@ -9,4 +9,4 @@ if [ "$(loginctl show-user jan --no-ask-password -p Linger --value 2>/dev/null |
     fi
 fi
 
-systemctl --user enable openservice --now
+systemctl --user enable opencode --now
