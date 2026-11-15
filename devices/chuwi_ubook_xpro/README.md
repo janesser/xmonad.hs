@@ -200,3 +200,35 @@ Available cameras:
 #### fix up media-ctl ?
 
 <https://www.linuxtv.org/downloads/v4l-dvb-apis-new/pdf/media.pdf>
+
+## ALSA Internal Microphone Fix
+
+The internal microphone (in the display bezel) had no ALSA quirk entry for this board, so Linux used generic auto-detection which left the codec's `0x12` pin (bezel mic) with **no VREF** → constant maximum-signal saturation, zero dynamic range, Voxtype could not understand speech.
+
+### The Fix
+
+Kernel driver change in `sound/hda/codecs/realtek/alc269.c`:
+
+```c
+[ALC269VB_FIXUP_CHUWI_UBOOK_XPRO] = {
+	.type = HDA_FIXUP_PINS,
+	.v.pins = (const struct hda_pintbl[]) {
+		{ 0x12, 0x99a3092f }, /* int-mic (bezel) with VREF */
+		{ 0x14, 0x99170150 }, /* speaker */
+		{ }
+	},
+},
+
+SND_PCI_QUIRK(0x1c6c, 0x1246, "CHUWI UBook XPro", ALC269VB_FIXUP_CHUWI_UBOOK_XPRO),
+```
+
+### Status
+
+- Build + install done (module `snd-hda-codec-alc269.ko` at `/lib/modules/7.2.15-1-omarchy/kernel/sound/hda/codecs/realtek/`)
+- Verified running on `flowerpower` after reboot — recording now shows real dynamics (~-5.5 dB mean instead of fully clipped)
+- ASR switched from Whisper to Cohere (much better results)
+- Source: <https://github.com/janesser/chuwi-ubook-xpro-mic-fix>
+
+### Remaining
+
+Fine-tune `Mic Boost Volume` in alsamixer to reduce occasional 0 dB clipping peaks.

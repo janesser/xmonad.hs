@@ -72,6 +72,9 @@
   "plugins": [
     {
       "id": "jesusarchive.dynamic-menu"
+    },
+    {
+      "id": "io.voxtype.settings"
     }
   ]
 }
