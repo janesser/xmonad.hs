@@ -33,7 +33,7 @@ Type=simple
 User=jan
 Environment=HOME=/home/jan
 Environment=USER=jan
-Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/home/jan/.local/bin
 Environment=PI_SIGNAL_ACCOUNT=+4917620128275
 Environment=PI_SIGNAL_DAEMON_URL=http://raspberrypi.local:8081
 Environment=PI_SIGNAL_PRIMARY=true
