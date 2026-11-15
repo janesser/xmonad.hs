@@ -5,7 +5,8 @@
     "npm:pi-paster",
     "git:github.com/janesser/pi-hermes-memory",
     "npm:@aalzubidy/pi-signal",
-    "git:github.com/janesser/Crossbar"
+    "git:github.com/janesser/Crossbar",
+    "git:github.com/obra/superpowers"
   ],
   "lastChangelogVersion": "1.5.2",
   "theme": "dark",
