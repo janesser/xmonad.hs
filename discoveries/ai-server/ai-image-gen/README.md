@@ -4,14 +4,19 @@ Handover notes for local image-generation backends on this box.
 
 > **Current state (2026-11-08): the working path is sd.cpp + Flux.3 Image Klein
 > Q8_0, verified on GPU0 (V100 SXM2) — ~23 s end-to-end, valid 512² PNG.**
-> Built with `-DGGML_CUDA=ON` from the old clone (`/home/jan/projs/stable-diffusion.cpp`,
-> has `flux3.hpp`). See `stable-diffusion-cpp.md` (Verified section) for the
-> build details; `switch-image-mode.md` for the `switch-ai-backend.sh image`
-> batch flow. vLLM-Omni + Qwen-Image is abandoned (`vllm-omni-2512-probe.md`).
+> Built with `-DGGML_CUDA=ON` from upstream master (commit `0f8a467`,
+> `master-1094-3bad892-2-g0f8a467`), which also adds Day-0 MiniMax-H3-Image
+> support. See `stable-diffusion-cpp.md` (Verified section) for the build details;
+> `switch-image-mode.md` for the `switch-ai-backend.sh image` batch flow. vLLM-Omni +
+> Qwen-Image is abandoned (`vllm-omni-2512-probe.md`). MiniMax-H3-Image weights are
+> downloaded but **cannot run on this box** — see `minimax-h3-verification.md` for why.
 -
 - **Note on models:** `/media/sailor/ai-server/sd-probe/diffusion_models_gguf/` holds
 > `flux3-image-klein-base-Q8_0.gguf` (6 GB, Q8_0) — the only GGUF diffusion model
 > left here. The Flux.2-klein 4B Q4_0 used in the Oct-11/12 switchmode tests is gone.
+- **MiniMax-H3-Image trial** (`minimax-h3-verification.md`): sd.cpp upstream master
+> supports it, but one V100-32GB leaves ~26 GB VRAM loaded with zero headroom. The
+> working path stays Flux 3 Image Klein Q8_0; the weights remain locally for a bigger box.
  **[stable-diffusion-cpp.md](stable-diffusion-cpp.md)** — *current direction.*
   sd.cpp + GGUF is now the preferred image-gen path (adopted 2026-10-08). Loads
   a pre-quantized GGUF straight to the card, sidestepping the bf16 load

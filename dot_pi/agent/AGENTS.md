@@ -28,6 +28,41 @@ Determine your fleet member first: `hostname` → `flowerpower`, `raspberrypi`, 
 (flowerpower) Dotfiles source: `~/.local/share/chezmoi/` — the repo (git remote `janesser/xmonad.hs.git`); `cz apply` installs, `cz update` pulls and applies.
 All machines: skills load path `~/.agents/skills/` — symlinks to `/usr/share/omarchy/default/agents/skills/`; bmad skills are published there by the agentic script (bmad's own default placement, no staging step), the legacy `~/.pi/agent/skills/bmad-*` copies were removed.
 
+## Image generation (Flux.3, V100)
+
+When asked to generate or redesign logos/markers/images, **don't hand-write SVG** — use the local Flux.3 diffusion model on the shared V100 via `switch-ai-backend.sh`:
+
+```bash
+# 1. write a JSON batch file (one entry per variant; must define 'output')
+# 2. run it: the script stops llama.cpp, runs sd.cpp, then restores it
+/home/jan/.local/bin/switch-ai-backend.sh image --batch /tmp/batch.json --deadline 900
+```
+
+Batch template — shared top-level flags + a `calls` array; each call sets its own prompt/params:
+
+```json
+{
+  "model": "/media/sailor/ai-server/sd-probe/diffusion_models_gguf/flux3-image-klein-base-Q8_0.gguf",
+  "llm": "/media/sailor/ai-server/sd-probe/text_encoders_gguf/Qwen3VL-4B-Instruct-Q8_0.gguf",
+  "vae": "/media/sailor/ai-server/sd-probe/vae/flux2-vae.safetensors",
+  "vae-format": "flux2",
+  "tokenizer": "/media/sailor/ai-server/sd-probe/tokenizers/flux2-klein-qwen3-tokenizer.json",
+  "guidance": 7.5,
+  "steps": 30,
+  "width": 1024,
+  "height": 1024,
+  "flow-shift": 1.0,
+  "calls": [
+    {"prompt": "...", "seed": 1, "output": "/tmp/out/variant_1.png"}
+  ]
+}
+```
+
+- The script switches the V100 to sd.cpp mode (default deadline 300s; `--deadline 900` for longer batches), runs each call in sequence, then restores llama.cpp on :8081.
+- Each 1024×1024 call took ~45–65s. Batch of 5 → ~5 min.
+- Outputs land wherever `output` points; copy them to the target host afterwards via `scp`.
+- Verify with `nvidia-smi` before/after: a stalled batch can hold the card and starve llama.cpp on restore.
+
 ## Running and verifying
 
 - A claim is only load-bearing if you can verify it **and** its removal changes agent behavior: assert things are real, assert things have impact. Unverified claims are candidates for removal; unimpacted claims are noise to cut.
