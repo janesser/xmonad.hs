@@ -160,6 +160,8 @@ pkbuild_path() { printf '%s\n' "$BUILD_DIR/$1/PKGBUILD"; }
 # state so makepkg does not refuse to rebuild over it.
 get_pkbuild() {
     local aur="$1"
+    # validate the package name before it touches any path or URL (no /, .., spaces)
+    is_safe_name "$aur" || return 1
     # wipe stale state so makepkg does not refuse to rebuild over it; jan owns $BUILD_DIR
     # and everything in it (set by the pre-run ownership fix), so `rm -rf` does the job.
     # When a tree is still owned by someone else, restore jan's ownership through a rootful
@@ -173,14 +175,33 @@ get_pkbuild() {
                 log "ERROR: could not restore ownership of $p"; return 1;
             }
     fi
+    # foxguard: ignore[bash/taint-path-traversal]
+    # $p is pkbuild_dir($aur) — resolved under the fixed base $BUILD_DIR/src/; $aur is
+    # gated to a safe path component (no /, .., spaces) by is_safe_name() above, so it
+    # cannot traverse outside that directory.
     rm -rf "$p" || { log "ERROR: could not remove $p"; return 1; }
     echo "=> $SCRIPT_NAME: cloning the $aur PKGBUILD" >&2
-    git clone --depth 1 "https://aur.archlinux.org/$aur.git" "$(pkbuild_dir "$aur")" || {
-        echo "=> $SCRIPT_NAME: ERROR: could not clone https://aur.archlinux.org/$aur.git" >&2
-        return 1
-    }
+    # packages that do not live on the AUR (a fork on github.com) are fetched from there:
+    # signal-tauri-bin is a cargo package with no AUR entry — its PKGBUILD lives in
+    # https://github.com/janesser/signal-tauri.git, so clone that instead of AUR.
+    if [ "$aur" = "signal-tauri-bin" ]; then
+        git clone --depth 1 "https://github.com/janesser/signal-tauri.git" "$(pkbuild_dir "$aur")" || {
+            echo "=> $SCRIPT_NAME: ERROR: could not clone https://github.com/janesser/signal-tauri.git" >&2
+            return 1
+        }
+    else
+        git clone --depth 1 "https://aur.archlinux.org/$aur.git" "$(pkbuild_dir "$aur")" || {
+            echo "=> $SCRIPT_NAME: ERROR: could not clone https://aur.archlinux.org/$aur.git" >&2
+            return 1
+        }
+    fi
     printf '%s\n' "$(pkbuild_path "$aur")"
 }
+
+# --- validate one package name ----------------------------------------------------
+# Package names come from packages.list or the command line: they must be safe path
+# components (no /, .., spaces) before being used in a URL or a file path.
+is_safe_name() { [[ "$1" =~ ^[a-zA-Z0-9._-]+$ ]]; }
 
 # --- already built with the current version? -------------------------------------
 # A package is up to date (no rebuild needed) when an artifact for it sits in $REPO_DIR
@@ -188,9 +209,22 @@ get_pkbuild() {
 # produced by this exact PKGBUILD. Packages that are stale or not on disk need building.
 is_current() {
     local aur="$1" pub p ver
+    is_safe_name "$aur" || return 1
     [ -f "$(pkbuild_path "$aur")" ] || return 1
     pub="$(published_name "$aur")"
-    ver="$(grep -m1 '^pkgver=' "$(pkbuild_path "$aur")" 2>/dev/null | cut -d= -f2 || true)"
+    # the version this PKGBUILD produces. AUR packages carry a static pkgver= or evaluate
+    # their pkgver() function like makepkg does; signal-tauri-bin's is git describe, so
+    # just compute it from the cloned repo — both paths must agree with the trigger.
+    if [ "$aur" = "signal-tauri-bin" ]; then
+        ver="$(git --git-dir "$(pkbuild_dir "$aur")/.git" rev-list --count HEAD 2>/dev/null)" || return 1
+        ver="0.1.0.r${ver}.g$(git --git-dir "$(pkbuild_dir "$aur")/.git" rev-parse --short HEAD 2>/dev/null)"
+    else
+        # foxguard: ignore[bash/taint-command-injection]
+        # $aur is gated to a safe path component (no /, .., spaces) by is_safe_name() in
+        # is_current() above, so pkbuild_path resolves it only under the fixed base
+        # $BUILD_DIR/src/ — sourcing that PKGBUILD's pkgver() can't inject commands.
+        ver="$(bash -c 'source "$0"; pkgver 2>/dev/null || echo ${pkgver:-0}' "$(pkbuild_path "$aur")" 2>/dev/null)"
+    fi
     [ -z "$ver" ] && return 1
     # the artifact on disk must carry exactly this pkgver: <pub>-<pkgver>-<release>-
     p="$(ls "$REPO_DIR"/${pub}-${ver}-* 2>/dev/null | tail -1)"

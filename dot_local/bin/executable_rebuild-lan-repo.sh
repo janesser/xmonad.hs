@@ -78,6 +78,37 @@ ver_gt() {
     printf '%s\n%s\n' "$2" "$1" | sort -V | tail -n1 | grep -qxF "$1"
 }
 
+# --- upstream version of one package -------------------------------------------
+# AUR packages are polled via their cgit feed. signal-tauri-bin does not live on the
+# AUR (a fork on github.com) and has no feed — its PKGBUILD computes pkgver() from
+# git describe, so clone shallowly and compute exactly that version: what makepkg would
+# build next. The two paths must agree or the rebuild trigger never sees a bump.
+upstream_version() {
+    local aur="$1" tmp ver
+    if [ "$aur" = "signal-tauri-bin" ]; then
+        tmp="$(mktemp -d)"
+        if ! git clone --depth 1 --quiet https://github.com/janesser/signal-tauri.git "$tmp" 2>/dev/null; then
+            rm -rf "$tmp"; return 1
+        fi
+        ver="$(grep -m1 '^version=' "$tmp/Cargo.toml" 2>/dev/null | cut -d= -f2)"
+        printf '%s.r%s.g%s\n' "${ver:-0.1.0}" "$(cd "$tmp" && git rev-list --count HEAD)" \
+            "$(cd "$tmp" && git rev-parse --short HEAD)"
+        rm -rf "$tmp"
+    else
+        # validated as a safe path component: only AUR package names are allowed here, so
+        # the URL host is fixed and only the parameter value may vary.
+        is_safe_name "$aur" || return 1
+        # AUR feed: entries are newest first; the first entry after the feed title is the
+        # newest version.
+        local feed="https://aur.archlinux.org/cgit/aur.git/atom/?h=$aur"
+        # foxguard: ignore[bash/taint-ssrf]
+        # $feed comes from an allowlist-gated package name (is_safe_name above), so only the
+        # query parameter may vary — the URL host is fixed to AUR and no SSRF is possible.
+        printf '%s\n' "$(curl -s -m 30 "$feed" | grep -oE '<title>[^<]*' | tail -n +2 | head -1 | \
+            sed 's/<title>//' | grep -oE '[0-9]+(\.[0-9]+)+(-[a-zA-Z0-9]+)?')"
+    fi
+}
+
 # --- last built version of one package ------------------------------------------
 # $BUILD_DIR/<pkg>/.last-built-pkgver (primary) falls back to the stash that
 # survives build-lan-repo.sh's package-dir cleanup.
@@ -98,10 +129,9 @@ for pkg in "${PACKAGES[@]}"; do
     feed="https://aur.archlinux.org/cgit/aur.git/atom/?h=$pkg"
     # entries are newest first; the first entry after the feed title is the newest
     # commit ("chore: update to <VERSION>" or an AUR equivalent).
-    new_ver="$(curl -s -m 30 "$feed" | grep -oE '<title>[^<]*' | tail -n +2 | head -1 | \
-               sed 's/<title>//' | grep -oE '[0-9]+(\.[0-9]+)+(-[a-zA-Z0-9]+)?')"
+    new_ver="$(upstream_version "$pkg")"
     if [ -z "$new_ver" ]; then
-        log "$pkg: AUR feed unreachable or unreadable, skipping; failure counted at exit"
+        log "$pkg: upstream unreachable or unreadable, skipping; failure counted at exit"
         EXIT=1
         continue
     fi
