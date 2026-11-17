@@ -344,7 +344,9 @@ for pkg in "$@"; do
     chmod a+w "/builds/$pkg/PKGBUILD"
     # -f overwrites leftover state from a previous, possibly incomplete run.
     # -n (not --noninteractive): this archlinux:base-devel sudo accepts short opts only
-su builder -c "cd /builds/$pkg && sudo -n pacman -Sy --noconfirm && makepkg --syncdeps --noconfirm --nocheck --force"
+# -Syu: full upgrade, required because base-devel's cached DB is partial (openssl
+# conflicts with installed curl/libarchive when the repo moved on)
+su builder -c "cd /builds/$pkg && sudo -n pacman -Syu --noconfirm && makepkg --syncdeps --noconfirm --nocheck --force"
 done
 # The container's non-root users map onto a host UID that is not jan (a stale tree like
 # $BUILD_DIR/<pkg>/pkg/ can neither be cleaned nor inspected by jan afterwards). Map everything
