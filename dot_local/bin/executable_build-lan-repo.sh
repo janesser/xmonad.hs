@@ -339,8 +339,11 @@ chmod 440 /etc/sudoers.d/builder
 chmod 777 /builds
 for pkg in "$@"; do
     chmod 777 "/builds/$pkg"
+    # makepkg's update_pkgver() rewrites pkgver= in the PKGBUILD when writable, so
+    # the placeholder version (see pkbuild()) is replaced by the git-describe value.
+    chmod a+w "/builds/$pkg/PKGBUILD"
     # -f overwrites leftover state from a previous, possibly incomplete run.
-    su builder -c "cd /builds/$pkg && sudo pacman -Sy --noconfirm && makepkg --syncdeps --noconfirm --nocheck --force"
+    su builder -c "cd /builds/$pkg && sudo --noninteractive pacman -Sy --noconfirm && makepkg --syncdeps --noconfirm --nocheck --force"
 done
 # The container's non-root users map onto a host UID that is not jan (a stale tree like
 # $BUILD_DIR/<pkg>/pkg/ can neither be cleaned nor inspected by jan afterwards). Map everything
