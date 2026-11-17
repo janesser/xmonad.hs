@@ -343,7 +343,8 @@ for pkg in "$@"; do
     # the placeholder version (see pkbuild()) is replaced by the git-describe value.
     chmod a+w "/builds/$pkg/PKGBUILD"
     # -f overwrites leftover state from a previous, possibly incomplete run.
-    su builder -c "cd /builds/$pkg && sudo --noninteractive pacman -Sy --noconfirm && makepkg --syncdeps --noconfirm --nocheck --force"
+    # -n (not --noninteractive): this archlinux:base-devel sudo accepts short opts only
+su builder -c "cd /builds/$pkg && sudo -n pacman -Sy --noconfirm && makepkg --syncdeps --noconfirm --nocheck --force"
 done
 # The container's non-root users map onto a host UID that is not jan (a stale tree like
 # $BUILD_DIR/<pkg>/pkg/ can neither be cleaned nor inspected by jan afterwards). Map everything
