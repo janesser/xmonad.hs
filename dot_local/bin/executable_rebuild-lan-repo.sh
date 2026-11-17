@@ -78,6 +78,13 @@ ver_gt() {
     printf '%s\n%s\n' "$2" "$1" | sort -V | tail -n1 | grep -qxF "$1"
 }
 
+# --- git clone over https (bypassing host-level ssh rewrites) -------------------
+# The host's ~/.config/git/config rewrites `https://github.com/janesser/*` to
+# `git@github.com:janesser/` — agent-backed, unavailable to the systemd rebuild
+# trigger. Override the rewrite for github.com and keep the clone on plain https
+# (no key, no agent needed).
+git_https_clone() { git -c 'url."https://github.com/janesser/".insteadOf=' "$@"; }
+
 # --- upstream version of one package -------------------------------------------
 # AUR packages are polled via their cgit feed. signal-tauri-bin does not live on the
 # AUR (a fork on github.com) and has no feed — its PKGBUILD computes pkgver() from
@@ -87,7 +94,8 @@ upstream_version() {
     local aur="$1" tmp ver
     if [ "$aur" = "signal-tauri-bin" ]; then
         tmp="$(mktemp -d)"
-        if ! git clone --depth 1 --quiet https://github.com/janesser/signal-tauri.git "$tmp" 2>/dev/null; then
+        # plain https (the host's git config would otherwise rewrite this to ssh)
+        if ! git_https_clone --depth 1 --quiet https://github.com/janesser/signal-tauri.git "$tmp" 2>/dev/null; then
             rm -rf "$tmp"; return 1
         fi
         ver="$(grep -m1 '^version=' "$tmp/Cargo.toml" 2>/dev/null | cut -d= -f2)"

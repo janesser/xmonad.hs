@@ -55,6 +55,13 @@ PI_DIR="$HOME/.local/arch-repo"
 MARKER_DIR="$BUILD_DIR/.last-built"
 NPROC=$(nproc 2>/dev/null || echo 1)
 
+# --- git clone over https (bypassing host-level ssh rewrites) -------------------
+# The host's ~/.config/git/config rewrites `https://github.com/janesser/*` to
+# `git@github.com:janesser/` — agent-backed, unavailable without a forwarded agent.
+# Override the rewrite for github.com and keep the clone on plain https (no key, no
+# agent needed).
+git_https_clone() { git -c 'url."https://github.com/janesser/".insteadOf=' "$@"; }
+
 KEEP_SRC=0
 REPO_ONLY=0
 RECONCILE_ONLY=0
@@ -185,7 +192,8 @@ get_pkbuild() {
     # signal-tauri-bin is a cargo package with no AUR entry — its PKGBUILD lives in
     # https://github.com/janesser/signal-tauri.git, so clone that instead of AUR.
     if [ "$aur" = "signal-tauri-bin" ]; then
-        git clone --depth 1 "https://github.com/janesser/signal-tauri.git" "$(pkbuild_dir "$aur")" || {
+        # plain https (the host's git config would otherwise rewrite this to ssh)
+        git_https_clone --depth 1 "https://github.com/janesser/signal-tauri.git" "$(pkbuild_dir "$aur")" || {
             echo "=> $SCRIPT_NAME: ERROR: could not clone https://github.com/janesser/signal-tauri.git" >&2
             return 1
         }
