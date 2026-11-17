@@ -83,7 +83,7 @@ ver_gt() {
 # `git@github.com:janesser/` — agent-backed, unavailable to the systemd rebuild
 # trigger. Override the rewrite for github.com and keep the clone on plain https
 # (no key, no agent needed).
-git_https_clone() { git -c 'url."https://github.com/janesser/".insteadOf=' "$@"; }
+git_https_clone() { git -c 'url."https://github.com/janesser/".insteadOf=' clone "$@"; }
 
 # --- upstream version of one package -------------------------------------------
 # AUR packages are polled via their cgit feed. signal-tauri-bin does not live on the

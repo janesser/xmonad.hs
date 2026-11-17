@@ -60,7 +60,7 @@ NPROC=$(nproc 2>/dev/null || echo 1)
 # `git@github.com:janesser/` — agent-backed, unavailable without a forwarded agent.
 # Override the rewrite for github.com and keep the clone on plain https (no key, no
 # agent needed).
-git_https_clone() { git -c 'url."https://github.com/janesser/".insteadOf=' "$@"; }
+git_https_clone() { git -c 'url."https://github.com/janesser/".insteadOf=' clone "$@"; }
 
 KEEP_SRC=0
 REPO_ONLY=0
