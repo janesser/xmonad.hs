@@ -95,10 +95,15 @@ upstream_version() {
     if [ "$aur" = "signal-tauri-bin" ]; then
         tmp="$(mktemp -d)"
         # plain https (the host's git config would otherwise rewrite this to ssh)
-        if ! git_https_clone --depth 1 --quiet https://github.com/janesser/signal-tauri.git "$tmp" 2>/dev/null; then
+        # the full history (no --depth 1): signal-tauri-bin's pkgver() counts commits, and a
+        # shallow clone always reports rev-list --count HEAD as 1 — which compares as older
+        # than what makepkg actually built (it uses the real count), so the trigger would
+        # silently stop rebuilding this package after its first run.
+        if ! git_https_clone --quiet https://github.com/janesser/signal-tauri.git "$tmp" 2>/dev/null; then
             rm -rf "$tmp"; return 1
         fi
-        ver="$(grep -m1 '^version=' "$tmp/Cargo.toml" 2>/dev/null | cut -d= -f2)"
+        # the PKGBUILD's pkgver(): <cargo version>.r<commit count>.g<head hash>
+        ver="$(sed -n 's/^version *= *//p' "$tmp/Cargo.toml" | tr -d ' "' | head -1)"
         printf '%s.r%s.g%s\n' "${ver:-0.1.0}" "$(cd "$tmp" && git rev-list --count HEAD)" \
             "$(cd "$tmp" && git rev-parse --short HEAD)"
         rm -rf "$tmp"

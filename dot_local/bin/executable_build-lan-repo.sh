@@ -1,17 +1,31 @@
 #!/usr/bin/env bash
-# executable_build-lan-repo.sh — build AUR packages in an Arch container on the
-# fleet build host (cyberkleiber, 32GB) and publish them to the lan_repo on the
-# Raspberry Pi.
+# executable_build-lan-repo.sh — build AUR packages in a memory-capped Arch container on the
+# fleet build host (cyberkleiber) and publish them to the lan_repo on the Raspberry Pi.
 #
-#   executable_build-lan-repo.sh [packages.list] [pkg1 pkg2...] [--repo-only]
-#                                [--keep-src] [--reconcile]
+#   executable_build-lan-repo.sh [packages.list] [--build <pkg>...] [pkg1 pkg2...]
+#                                [--repo-only] [--keep-src] [--reconcile]
+#
+# Two mutually exclusive modes, determined by how the script is called:
+#
+#   full (default, no package name): rebuild everything in packages.list — every
+#       entry of the policy file is cloned, built and reconciled against it, so
+#       after a run the repo serves exactly `packages.list` + latest versions.
+#       This is the mode of the daily rebuild trigger (16:00, systemd timer).
+#
+#   targeted (`--build <pkg>` or one or more bare package names): build and
+#       upload ONLY the named package(s) — clone, patch, build in the container,
+#       publish their artifact to the repo and rsync it to the Pi. The policy
+#       file is never consulted (a targeted build must always be uploaded even
+#       when the target leaves packages.list), and nothing else in the repo is
+#       touched.
 #
 #   [packages.list]    Policy file (default: ~/.local/build-lan-repo/packages.list,
-#                      the chezmoi-rendered one): everything on it must be served
-#                      by the lan-repo, nothing else. Every call reconciles the repo
-#                      against it — packages that leave the list are dropped.
-#   [pkg1 pkg2...]     AUR names to build (overrides the policy list).
-#   --package <name>   same as giving the name (backwards compatible flag).
+#                      the chezmoi-rendered one): only consulted in full mode.
+#                      everything on it must be served by the lan-repo, nothing
+#                      else. Packages that leave the list are dropped.
+#   [pkg1 pkg2...]     AUR names to build (overrides the policy list, targeted).
+#   --build <name>     same as giving the name (targeted build).
+#   --package <name>   same as --build <name> (backwards compatible flag).
 #   --reconcile        skip all builds: drop everything not on packages.list and
 #                      regenerate the db (the rebuild trigger uses this when nothing
 #                      moved so a package removed from packages.list really vanishes).
@@ -19,9 +33,12 @@
 #   --keep-src         keep the AUR clones in $BUILD_DIR instead of removing them.
 #
 # Flow: clone PKGBUILDs -> makepkg in one memory-capped Arch container
-# (archlinux:base-devel) -> repo-add (only what remains on disk after reconciliation)
-# -> rsync to the Pi -> mark last-built versions. The lan-repo serves exactly
-# packages.list + latest versions after every run.
+# (archlinux:base-devel) -> publish every built artifact into $REPO_DIR
+# -> (full mode only) reconcile against packages.list -> repo-add -> rsync to
+# the Pi -> mark last-built versions. Every build uploads its artifact: it lands
+# in $REPO_DIR and is served by the repo after the run. The lan-repo serves
+# exactly packages.list + latest versions after every full run, and only the
+# targeted package(s) are uploaded by a targeted run.
 #
 # Build performance on the workstation host: makepkg uses MAKEFLAGS (parallel),
 # cargo/rustc read CARGO_BUILD_JOBS (crates in parallel) and RUSTFLAGS
@@ -32,59 +49,55 @@
 #
 # Sudo is used only for the memory-capped container (needed on the build host)
 # and the run is scoped to the build host via the hostname guard below.
+#
+# This script is the family's entry point: it parses arguments, decides the mode
+# and the package set, writes $BUILD_DIR/.build-lan-repo-config (mode + flags +
+# packages) and dispatches to the sibling stages (build-lan-repo-build.sh,
+# build-lan-repo-publish.sh), each of which can also run standalone once that
+# config exists. The whole family is podman-native: every container invocation
+# calls `podman` directly, never through /usr/bin/docker's emulation layer.
+
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+source "$SCRIPT_DIR/build-lan-repo-common.sh"
 
 set -uo pipefail
 
-SCRIPT_NAME="$(basename "$0")"
-
-log() { echo "=> $SCRIPT_NAME: $*" >&2; }
-
-# --- hostname guard: only meaningful on the build hosts -----------------------
-if [ "$(hostname)" != "cyberkleiber" ] && [ "$(hostname)" != "lincopta" ]; then
-    log "only intended for the fleet build hosts (cyberkleiber/lincopta); run on the build host, not on $(hostname)"
-    exit 1
-fi
-
-BUILD_DIR="${BUILD_DIR:-/media/sailor/lan-repo/builds}"
-REPO_DIR="$BUILD_DIR/repo"
-CONTAINER_ENGINE="${CONTAINER_ENGINE:-docker}"
 BUILD_HOST="${BUILD_HOST:-cyberkleiber}"
-PI_HOST="${PI_HOST:-f3nt0t9dnh9t8l0v.myfritz.net}"
-PI_USER="jan"
-PI_DIR="$HOME/.local/arch-repo"
-MARKER_DIR="$BUILD_DIR/.last-built"
-NPROC=$(nproc 2>/dev/null || echo 1)
-
-# --- git clone over https (bypassing host-level ssh rewrites) -------------------
-# The host's ~/.config/git/config rewrites `https://github.com/janesser/*` to
-# `git@github.com:janesser/` — agent-backed, unavailable without a forwarded agent.
-# Override the rewrite for github.com and keep the clone on plain https (no key, no
-# agent needed).
-git_https_clone() { git -c 'url."https://github.com/janesser/".insteadOf=' clone "$@"; }
-
-KEEP_SRC=0
-REPO_ONLY=0
-RECONCILE_ONLY=0
+LIST="${LAN_REPO_LIST:-$HOME/.local/build-lan-repo/packages.list}"
+TARGETED=()     # packages requested via --build (targeted mode)
 PACKAGES=()
 POSITIONAL=()
+RECONCILE_ONLY=0
+REPO_ONLY=0
+KEEP_SRC=0
+MODE="full"
+
 while [ $# -gt 0 ]; do
     case "$1" in
         --host)        BUILD_HOST="$2"; shift 2 ;;
         --host=*)      BUILD_HOST="${1#*=}"; shift 2 ;;
         --pi)          PI_HOST="$2"; shift 2 ;;
         --pi=*)        PI_HOST="${1#*=}"; shift 2 ;;
+        --build)       [[ $2 =~ ^[a-zA-Z0-9._-]+$ ]] || { log "ERROR: invalid package name: $2"; exit 1; }
+                    TARGETED+=("$2"); shift 2 ;;
+        --build=*)     [[ ${1#*=} =~ ^[a-zA-Z0-9._-]+$ ]] || { log "ERROR: invalid package name: $1"; exit 1; }
+                    TARGETED+=("${1#*=}"); shift ;;
+        --package)     [[ $2 =~ ^[a-zA-Z0-9._-]+$ ]] || { log "ERROR: invalid package name: $2"; exit 1; }
+                    TARGETED+=("$2"); shift 2 ;;   # backwards compatible --build
+        --package=*)   [[ ${1#*=} =~ ^[a-zA-Z0-9._-]+$ ]] || { log "ERROR: invalid package name: $1"; exit 1; }
+                    TARGETED+=("${1#*=}"); shift ;;
         --keep-src)    KEEP_SRC=1; shift ;;
         --repo-only)   REPO_ONLY=1; shift ;;
         --reconcile)   RECONCILE_ONLY=1; shift ;;
-        --package)     PACKAGES+=("$2"); shift 2 ;;
-        --package=*)   PACKAGES+=("${1#*=}"); shift ;;
         -h|--help)     head -8 "$0"; exit 0 ;;
         *)             POSITIONAL+=("$1"); shift ;;
     esac
 done
 
-# --- packages.list: the policy (the authority for what the repo serves) ---------
-LIST="${LAN_REPO_LIST:-$HOME/.local/build-lan-repo/packages.list}"
+# bare package names are targeted builds too (e.g. build-lan-repo.sh hylki)
+TARGETED+=("${POSITIONAL[@]+"${POSITIONAL[@]}"}")
+
+# --- packages.list: the policy (the authority for what the repo serves) ---------------
 PACKAGES_FROM_LIST=()
 if [ -f "$LIST" ]; then
     while IFS= read -r line || [ -n "$line" ]; do
@@ -94,459 +107,54 @@ if [ -f "$LIST" ]; then
     done < "$LIST"
 fi
 
-# --- the package set: explicit args win, then the policy list -----------------
-if [ ${#POSITIONAL[@]} -gt 0 ] || [ ${#PACKAGES[@]} -gt 0 ]; then
-    BUILD_SET=("${PACKAGES[@]+"${PACKAGES[@]}"}" "${POSITIONAL[@]}")
+# --- the package set and the mode: full rebuild or targeted build ---------------------
+if [ ${#TARGETED[@]} -gt 0 ]; then MODE="targeted"; fi
+
+BUILD_SET=()
+if [ "$MODE" = "targeted" ]; then
+    [ ${#TARGETED[@]} -gt 0 ] || { log "ERROR: --build requires a package name"; exit 1; }
+    BUILD_SET=("${TARGETED[@]}")
 else
     if [ ! -f "$LIST" ]; then
         log "ERROR: no packages to build (no arguments and $LIST not found)"
         exit 1
     fi
+    [ ${#PACKAGES_FROM_LIST[@]} -gt 0 ] || {
+        log "ERROR: $LIST is empty"; exit 1; }
     BUILD_SET=("${PACKAGES_FROM_LIST[@]}")
 fi
 
-echo "=> $SCRIPT_NAME: building ${#BUILD_SET[@]} package(s) on $BUILD_HOST, publishing to pi@$PI_HOST"
+echo "=> $0: $MODE rebuild of ${#BUILD_SET[@]} package(s) on $BUILD_HOST, publishing to pi@$PI_HOST"
 for p in "${BUILD_SET[@]}"; do echo "   -> $p"; done
 
-# --- the published name of one AUR package --------------------------------------
-published_name() {
-    local aur="$1"
-    if [[ "$aur" == *"-bin" ]]; then
-        printf '%s\n' "$aur"
-    else
-        printf '%s\n' "${aur}-bin"
-    fi
-}
+# --- dispatch config (mode + flags + package set for the stages) ------------------------
+# The build stage reads this file and writes $BUILD_DIR/.build.sh; the publish stage
+# reads it to reconcile the repo and regenerate the db. A standalone run of either stage
+# works once this file exists — or via its own --build / --reconcile / --keep-src flags.
+mkdir -p "$BUILD_DIR"
+{
+    echo "MODE=$MODE"
+    echo "KEEP_SRC=$KEEP_SRC"
+    echo "REPO_ONLY=$REPO_ONLY"
+    echo "RECONCILE_ONLY=$RECONCILE_ONLY"
+    printf '%s\n' "${BUILD_SET[@]}"
+} > "$BUILD_DIR/.build-lan-repo-config"
 
-# --- the name a package publishes as ----------------------------------------------
-# AUR names are valid path components; packages that already end in -bin publish
-# as-is. For the others the script used to add -bin — but makepkg names the
-# artifact after the PKGBUILD's pkgname (which may be <aur> or <aur>-bin).
-# Use the actual name so the repo serves what the build produced and the
-# reconcile keeps it on disk.
-pkgname_from_pkbuild() {
-    local pkbuild="$(pkbuild_path "$1")"
-    [ -f "$pkbuild" ] || return 1
-    grep -m1 '^pkgname=' "$pkbuild" \
-        | sed 's/^pkgname=[[:space:]]*//' \
-        | sed 's/[()]//g' \
-        | sed 's/"//g' \
-        | sed "s/'//g" \
-        | awk '{print $1}'
-}
+# --- the build stages live next to this script -------------------------------------------
+FAMILY_DIR="$SCRIPT_DIR"
 
-# --- the published name of one AUR package --------------------------------------
-published_name() {
-    local aur="$1"
-    if [[ "$aur" == *"-bin" ]]; then
-        printf '%s\n' "$aur"
-    else
-        pkgname_from_pkbuild "$aur" || printf '%s\n' "${aur}-bin"
-    fi
-}
-
-# --- the AUR name of a published artifact (fallback for leftovers) --------------
-# hylki-bin -> hylki (the AUR package), hylki -> hylki.
-aur_name() {
-    local pub="$1"
-    if [[ "$pub" == *"-bin" ]]; then
-        printf '%s\n' "${pub%-bin}"
-    else
-        printf '%s\n' "$pub"
-    fi
-}
-
-# --- the build dir and PKGBUILD of one package ----------------------------------
-pkbuild_dir() { printf '%s\n' "$BUILD_DIR/$1"; }
-pkbuild_path() { printf '%s\n' "$BUILD_DIR/$1/PKGBUILD"; }
-
-# --- get the PKGBUILD for one package -------------------------------------------
-# Always clone the current AUR PKGBUILD: a stale local one (left from an earlier,
-# possibly incomplete run) would otherwise decide the version that gets built instead
-# of the one upstream published. Removing $BUILD_DIR/<pkg> first also wipes leftover
-# state so makepkg does not refuse to rebuild over it.
-get_pkbuild() {
-    local aur="$1"
-    # validate the package name before it touches any path or URL (no /, .., spaces)
-    is_safe_name "$aur" || return 1
-    # wipe stale state so makepkg does not refuse to rebuild over it; jan owns $BUILD_DIR
-    # and everything in it (set by the pre-run ownership fix), so `rm -rf` does the job.
-    # When a tree is still owned by someone else, restore jan's ownership through a rootful
-    # container run before removing it: `sudo` requires a TTY, which non-interactive runs
-    # (the systemd rebuild trigger, an agent run) do not have — that is what made the stale
-    # package dir block the AUR clone. A tree that does not exist yet needs no cleanup.
-    # $(printf %q ...) on an unquoted assignment clears the taint chain: $p is
-    # pkbuild_dir($aur) — resolved under the fixed base $BUILD_DIR/src/; $aur is gated to a
-    # safe path component (no /, .., spaces) by is_safe_name() above.
-    p=$(printf '%q' "$(pkbuild_dir "$aur")")
-    if [ -d "$p" ] && ! [ -w "$p" ]; then
-        $CONTAINER_ENGINE run --rm -v "$BUILD_DIR:/builds" archlinux:base-devel \
-            bash -c "chmod -R u+w '$p' && chown -R 0:0 '$p'" || {
-                log "ERROR: could not restore ownership of $p"; return 1;
-            }
-    fi
-    # $p is pkbuild_dir($aur) — resolved under the fixed base $BUILD_DIR/src/; $aur is
-    # gated to a safe path component (no /, .., spaces) by is_safe_name() above, so it
-    # cannot traverse outside that directory.
-    rm -rf "$p" || { log "ERROR: could not remove $p"; return 1; }
-    echo "=> $SCRIPT_NAME: cloning the $aur PKGBUILD" >&2
-    # packages that do not live on the AUR (a fork on github.com) are fetched from there:
-    # signal-tauri-bin is a cargo package with no AUR entry — its PKGBUILD lives in
-    # https://github.com/janesser/signal-tauri.git, so clone that instead of AUR.
-    if [ "$aur" = "signal-tauri-bin" ]; then
-        # plain https (the host's git config would otherwise rewrite this to ssh)
-        git_https_clone --depth 1 "https://github.com/janesser/signal-tauri.git" "$(pkbuild_dir "$aur")" || {
-            echo "=> $SCRIPT_NAME: ERROR: could not clone https://github.com/janesser/signal-tauri.git" >&2
-            return 1
-        }
-    else
-        git clone --depth 1 "https://aur.archlinux.org/$aur.git" "$(pkbuild_dir "$aur")" || {
-            echo "=> $SCRIPT_NAME: ERROR: could not clone https://aur.archlinux.org/$aur.git" >&2
-            return 1
-        }
-    fi
-    printf '%s\n' "$(pkbuild_path "$aur")"
-}
-
-# --- validate one package name ----------------------------------------------------
-# Package names come from packages.list or the command line: they must be safe path
-# components (no /, .., spaces) before being used in a URL or a file path.
-is_safe_name() { [[ "$1" =~ ^[a-zA-Z0-9._-]+$ ]]; }
-
-# --- already built with the current version? -------------------------------------
-# A package is up to date (no rebuild needed) when an artifact for it sits in $REPO_DIR
-# and its file name contains the PKGBUILD's pkgver — i.e. the published artifact was
-# produced by this exact PKGBUILD. Packages that are stale or not on disk need building.
-is_current() {
-    local aur="$1" pub p ver
-    is_safe_name "$aur" || return 1
-    [ -f "$(pkbuild_path "$aur")" ] || return 1
-    pub="$(published_name "$aur")"
-    # the version this PKGBUILD produces. AUR packages carry a static pkgver= or evaluate
-    # their pkgver() function like makepkg does; signal-tauri-bin's is git describe, so
-    # just compute it from the cloned repo — both paths must agree with the trigger.
-    if [ "$aur" = "signal-tauri-bin" ]; then
-        ver="$(git --git-dir "$(pkbuild_dir "$aur")/.git" rev-list --count HEAD 2>/dev/null)" || return 1
-        ver="0.1.0.r${ver}.g$(git --git-dir "$(pkbuild_dir "$aur")/.git" rev-parse --short HEAD 2>/dev/null)"
-    else
-        # $aur is gated to a safe path component (no /, .., spaces) by is_safe_name() above,
-        # so pkbuild_path resolves it under the fixed base $BUILD_DIR/src/. The $(printf %q
-        # ...) assignment clears the taint chain and stops backticks/`$` from becoming
-        # commands in `bash -c`. That sanitized path is the argument to `bash -c`, not $aur.
-        pkg=$(printf '%q' "$(pkbuild_path "$aur")")
-        ver="$(bash -c 'source "$0"; pkgver 2>/dev/null || echo ${pkgver:-0}' "$pkg" 2>/dev/null)"
-    fi
-    [ -z "$ver" ] && return 1
-    # the artifact on disk must carry exactly this pkgver: <pub>-<pkgver>-<release>-
-    p="$(ls "$REPO_DIR"/${pub}-${ver}-* 2>/dev/null | tail -1)"
-    [ -z "$p" ] && p="$(ls "$REPO_DIR"/${pub%-bin}-bin-${ver}-* 2>/dev/null | tail -1)"
-    [ -n "$p" ]
-}
-
-# --- setup -----------------------------------------------------------------------
-mkdir -p "$REPO_DIR"
-mkdir -p "$BUILD_DIR/src"
-
-# --- the build dir must be owned by us: a previous container run hands the
-#     ownership of $BUILD_DIR over to a container-internal UID (podman rootless
-#     maps container UIDs onto another host range), which silently kills the
-#     script — sed -i and the package lookup both fail on an unreadable tree. ---
-if ! [ -w "$BUILD_DIR" ]; then
-    log "$BUILD_DIR is not writable by $(whoami) — fixing ownership"
-    sudo chown -R "$(whoami):$(id -gn)" "$BUILD_DIR" || {
-        log "ERROR: could not fix ownership of $BUILD_DIR"
-        exit 1
-    }
-fi
-
-# --- restore jan's ownership over the whole build dir ------------------------------
-# A previous run leaves files under $BUILD_DIR owned by the container's non-root builder
-# user, which maps onto a host UID that is not jan — jan cannot remove or chown them.
-# Inside this rootless container, the container's root maps onto jan on the host, so
-# chmod + chown everything to 0:0 there makes jan the owner of every file again. The
-# mount point needs to be activated first (idmapped mount quirk).
-$CONTAINER_ENGINE run --rm \
-    -v "$BUILD_DIR:/builds" \
-    archlinux:base-devel \
-    bash -c 'mkdir -p /builds && chmod -R u+w /builds && chown -R 0:0 /builds' || {
-        log "WARNING: could not restore ownership of $BUILD_DIR (some files may be stale)"
-    }
-
-# --- clone every PKGBUILD (must exist before the container run) -----------------
-# and record where each one lives so its artifact can be found afterwards.
-BUILD_DIRS=()
-for aur in "${BUILD_SET[@]}"; do
-    if ! get_pkbuild "$aur" >/dev/null; then
-        log "ERROR: could not get the PKGBUILD for $aur"
+# --- run the build stage (skipped when only reconciling or repo-add is requested) --------
+if [ "$RECONCILE_ONLY" != "1" ] && [ "$REPO_ONLY" != "1" ]; then
+    if ! "$FAMILY_DIR/build-lan-repo-build.sh" "$@"; then
+        log "ERROR: build stage failed"
         exit 1
     fi
-    # makepkg writes the artifact into the build dir root (next to PKGBUILD, e.g.
-# vscodium-bin-1.143.17232-1-x86_64.pkg.tar.zst); $BUILD_DIR/<pkg>/pkg is only
-# the fakeroot install tree. Search the build dir for artifacts.
-    BUILD_DIRS+=("$(pkbuild_dir "$aur")")
-done
-# --- post-clone patches ---------------------------------------------------------
-# AUR PKGBUILDs that fail with the current versions of their dependencies (e.g.
-# gitahead vendors libssh2 with an old CMakeLists.txt — `cmake_minimum_required(VERSION < 3.5)`
-# is rejected by CMake 4) need a small patch so they build instead of being dropped
-# from the repo. Apply it here, after cloning.
-for aur in "${BUILD_SET[@]}"; do
-    case "$aur" in
-        gitahead)
-            p="$(pkbuild_dir "$aur")/PKGBUILD"
-            [ -f "$p" ] || continue
-            # add the CMake 4 compat flag to the cmake invocation in build()
-            awk '/^\tcmake \\$/ {printf "%s\n\t\t-DCMAKE_POLICY_VERSION_MINIMUM=3.5 \\\n", $0; next} {print}' "$p" > "$(dirname "$p")/PKGBUILD.tmp" && mv "$(dirname "$p")/PKGBUILD.tmp" "$p"
-            # vendored cmark sets `cmake_policy(SET CMP0048 OLD)` — unsupported by CMake 4.x
-            for f in $(find "$BUILD_DIR/src/$aur" "$p" -name "CMakeLists.txt" 2>/dev/null); do
-                sed -i 's/cmake_policy(SET CMP0048 OLD)/cmake_policy(SET CMP0048 NEW)/' "$f" 2>/dev/null || true
-            done
-            log "patched PKGBUILD for $aur: cmake 4 compat (-DCMAKE_POLICY_VERSION_MINIMUM=3.5, cmark policy)"
-            ;;
-    esac
-done
-
-# --- omit already-built packages (no rebuild needed) ------------------------------
-# A package that was published with this exact PKGBUILD is up to date: its artifact
-# for pkgver=<pkgver> sits in $REPO_DIR, so it stays on disk and in the db while
-# nothing is rebuilt in the container. Only when a package moves (stale or missing
-# artifact) does it get built.
-ORIG_SET=("${BUILD_SET[@]+"${BUILD_SET[@]}"}")
-REBUILD_SET=()
-SKIPPED=()
-for aur in "${BUILD_SET[@]}"; do
-    if is_current "$aur" 2>/dev/null; then
-        artifact="$(ls "$REPO_DIR"/$(published_name "$aur")-* 2>/dev/null | tail -1)"
-        log "omitting $aur (already built: $(basename "$artifact"))"
-        SKIPPED+=("$aur")
-    else
-        REBUILD_SET+=("$aur")
-    fi
-done
-if [ ${#REBUILD_SET[@]} -eq 0 ]; then
-    log "no package needs rebuilding (all up to date) — only reconciling the repo"
 fi
 
-# --- build all packages in one container -----------------------------------------
-if [ "$RECONCILE_ONLY" != "1" ] && [ "$REPO_ONLY" != "1" ] && [ ${#REBUILD_SET[@]} -gt 0 ]; then
-    echo "=> $SCRIPT_NAME: building ${REBUILD_SET[*]} in $CONTAINER_ENGINE (archlinux:base-devel)"
-    echo "   (skipped ${#SKIPPED[@]} already-built of the original ${#ORIG_SET[@]})"
-    # Each package is built in its own work dir, so write one build script for the
-    # container (avoids all quoting layers of `bash -c` inside `bash -c`). The
-    # build dirs must be writable for the container's non-root builder user, because
-    # podman rootless maps a container UIDs onto another host range.
-    cat > "$BUILD_DIR/.build.sh" <<'EOF'
-useradd -m -s /bin/bash builder
-printf 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
-chmod 440 /etc/sudoers.d/builder
-chmod 777 /builds
-for pkg in "$@"; do
-    chmod 777 "/builds/$pkg"
-    # makepkg's update_pkgver() rewrites pkgver= in the PKGBUILD when writable, so
-    # the placeholder version (see pkbuild()) is replaced by the git-describe value.
-    chmod a+w "/builds/$pkg/PKGBUILD"
-    # -f overwrites leftover state from a previous, possibly incomplete run.
-    # -n (not --noninteractive): this archlinux:base-devel sudo accepts short opts only
-# -Syu: full upgrade, required because base-devel's cached DB is partial (openssl
-# conflicts with installed curl/libarchive when the repo moved on)
-su builder -c "cd /builds/$pkg && sudo -n pacman -Syu --noconfirm && makepkg --syncdeps --noconfirm --nocheck --force"
-done
-# The container's non-root users map onto a host UID that is not jan (a stale tree like
-# $BUILD_DIR/<pkg>/pkg/ can neither be cleaned nor inspected by jan afterwards). Map everything
-# back to the container's root, which maps onto jan on the host — this keeps $BUILD_DIR usable
-# for the next run.
-chown -R 0:0 /builds
-EOF
-    $CONTAINER_ENGINE run --rm \
-        --memory=24g --memory-swap=24g \
-        --network host \
-        -v "$BUILD_DIR:/builds" \
-        -e MAKEFLAGS="-j$NPROC" \
-        -e CARGO_BUILD_JOBS="$NPROC" \
-        -e RUSTFLAGS="-C target-cpu=native -C parallel-compiler" \
-        archlinux:base-devel \
-        bash /builds/.build.sh "${REBUILD_SET[@]}" || {
-        echo "=> $SCRIPT_NAME: container build failed"
-        exit 1
-    }
-    # a rootless container preserves jan's ownership of the bind mount, so `chown` (which
-    # needs root) is only required when an earlier run took ownership away. Also fixes non-
-    # interactive runs: sudo cannot prompt for a password without a TTY.
-    if ! [ -w "$BUILD_DIR" ]; then
-        log "restoring ownership of $BUILD_DIR (taken over by an earlier container run)"
-        sudo chown -R "$(whoami):$(id -gn)" "$BUILD_DIR" || {
-            log "ERROR: could not restore ownership of $BUILD_DIR"
-            exit 1
-        }
-    else
-        log "ownership intact ($CONTAINER_ENGINE preserved it) — skipping chown"
-    fi
-    chmod 755 "$BUILD_DIR"
-else
-    echo "=> $SCRIPT_NAME: skipping the container build (--repo-only/--reconcile)"
-fi
-
-# --- find one published artifact ----------------------------------------------------
-# The newest artifact for a package, across $REPO_DIR (an earlier run) and the build dirs.
-# An older artifact sitting in $REPO_DIR must never shadow a newly built one: preferring
-# $REPO_DIR first is exactly how stale versions survive a rebuild, so everything from
-# packages.list ends up with its latest version after every run.
-find_package() {
-    local pub="$1" p d n tmp="$BUILD_DIR/.find_pkg.$$"
-    : >"$tmp"
-    for d in "$REPO_DIR" "${BUILD_DIRS[@]+"${BUILD_DIRS[@]}"}"; do
-        for n in "$pub" "$(aur_name "$pub")"; do
-            for p in "$d"/${n}-*.pkg.tar.zst; do
-                [ -e "$p" ] || continue
-                # a package with debug options builds two artifacts (main + -debug): the main
-                # one is what pacman needs, so skip the -debug one. Without this it sorts ahead
-                # of the main artifact and ends up in the repo instead of it.
-                [[ "$(basename "$p")" == *"-debug-"* ]] && continue
-                printf '%s\t%s\n' "$(basename "$p")" "$p" >>"$tmp"
-            done
-        done
-    done
-    # the newest artifact by version, from $REPO_DIR (an earlier run) or a build dir
-    p="$(sort -t$'\t' -k1,1Vr "$tmp" | head -1 | cut -f2)"
-    rm -f "$tmp"
-    [ -z "$p" ] && return 1
-    printf '%s\n' "$p"
-}
-
-# --- publish all packages ---------------------------------------------------------
-# The published artifact is <published-name>-<version>-<arch>.pkg.tar.zst, e.g.
-# hylki-bin-1.47.0-1-x86_64.pkg.tar.zst.
-# A package that produced no artifact (unreachable upstream, missing dependency) is
-# logged as a failure and the run continues: the repo still needs to be reconciled,
-# the db regenerated and rsynced so the packages that did build end up in the repo.
-PUBLISHED=()
-FAILED=()
-for aur in "${BUILD_SET[@]}"; do
-    pub="$(published_name "$aur")"
-    # the newest artifact: from $REPO_DIR (an earlier run) or the package's build dir
-    PKG="$(find_package "$pub" || true)"
-    if [ -z "$PKG" ]; then
-        log "ERROR: no $pub package found for $aur (build dir or repo)"
-        FAILED+=("$aur")
-        continue
-    fi
-    # the artifact may already live in $REPO_DIR (an earlier run); copying it onto
-    # itself is a no-op with an error exit, so skip when it's already there.
-    [ "$(dirname "$PKG")" != "$REPO_DIR" ] && cp "$PKG" "$REPO_DIR/"
-    PUBLISHED+=("$aur")
-    echo "=> $SCRIPT_NAME: $aur -> $pub ($(basename "$PKG"))"
-done
-if [ ${#FAILED[@]} -gt 0 ]; then
-    log "ERROR: no artifact for ${FAILED[*]} (will not be served by the repo)"
-fi
-
-# --- reconcile: what remains on disk after dropping everything not in packages.list -
-# Every package that leaves packages.list is dropped (plus its db entry), so the
-# lan-repo serves exactly packages.list + latest versions after every run.
-if [ -f "$LIST" ]; then
-    REMAINING=()
-    for f in "$REPO_DIR"/*.pkg.tar.zst; do
-        [ -f "$f" ] || continue
-        name="$(basename "$f")"
-        kept=0
-        for pkg in "${PACKAGES_FROM_LIST[@]}"; do
-            [[ "$name" == "$(published_name "$pkg")-"* ]] && kept=1
-        done
-        if [ $kept -eq 1 ]; then
-            REMAINING+=("$f")
-        else
-            rm -f "$f"
-            log "dropped stale artifact $(basename "$f") (not in $LIST)"
-        fi
-    done
-else
-    # no policy file — keep everything on disk; the db is regenerated below from
-    # all artifacts that are there.
-    for f in "$REPO_DIR"/*.pkg.tar.zst; do
-        [ -f "$f" ] || continue
-        REMAINING+=("$f")
-    done
-fi
-
-# --- regenerate the db (repo-add is an Arch tool — run it in the container) --------
-# The db must contain ONLY what is on disk: a stale db (entries for packages that
-# are not on disk) makes pacman fail when it tries to download missing files.
-rm -f "$REPO_DIR/repo.db.tar.gz" "$REPO_DIR/repo.db.tar.gz.old" \
-      "$REPO_DIR/repo.files.tar.gz" "$REPO_DIR/repo.files.tar.gz.old"
-ARGS=()
-for f in "${REMAINING[@]}"; do ARGS+=("/repo/$(basename "$f")"); done
-if [ ${#ARGS[@]} -gt 0 ]; then
-    $CONTAINER_ENGINE run --rm \
-        -v "$REPO_DIR:/repo" \
-        archlinux:base-devel \
-        bash -c 'pacman -Sy --noconfirm pacman-contrib && repo-add /repo/repo.db.tar.gz "$@"' bash "${ARGS[@]}" 2>&1 | tail -5 || {
-        echo "=> $SCRIPT_NAME: repo-add failed (unsigned package? check SIGNKEY in makepkg.conf)"
-        exit 1
-    }
-fi
-if [ ! -f "$REPO_DIR/repo.db.tar.gz" ]; then
-    log "ERROR: repo-add did not produce a db (no artifacts on disk? see logs)"
-    exit 1
-fi
-log "repo.db regenerated ($(ls "$REPO_DIR"/*.pkg.tar.zst | wc -l) artifact(s) on disk)"
-
-# --- sync to the Pi ---------------------------------------------------------------
-echo "=> $SCRIPT_NAME: rsyncing repo to pi@$PI_HOST:$PI_DIR"
-# the Pi's SSH listener is on 6622 (myfritz), not the default 22
-rsync -a --delete -e "ssh -p 6622" "$REPO_DIR/" "$PI_USER@$PI_HOST:$PI_DIR/" || {
-    log "ERROR: rsync to the Pi failed"
-    exit 1
-}
-echo "=> $SCRIPT_NAME: repo synced to pi@$PI_HOST:$PI_DIR"
-
-# --- housekeeping -----------------------------------------------------------------
-# mark what was last built ($BUILD_DIR/<pkg>/.last-built-pkgver, with a stash copy
-# that survives the package dir cleanup below) and remove the AUR clones.
-if [ ${#PUBLISHED[@]} -gt 0 ]; then
-    mkdir -p "$MARKER_DIR"
-    for aur in "${PUBLISHED[@]}"; do
-        ver="$(grep -m1 '^pkgver=' "$(pkbuild_path "$aur")" 2>/dev/null | cut -d= -f2 || true)"
-        if [ -z "$ver" ]; then
-            # fall back to the version baked into the artifact's name on disk
-            pat="$REPO_DIR/$(published_name "$aur")-*"
-            ver="$(ls $pat 2>/dev/null | sed 's|.*/||' | grep -m1 -oE '[0-9]+(\.[0-9]+)+(-[a-zA-Z0-9]+)?')"
-        fi
-        if [ -z "$ver" ]; then
-            log "WARNING: could not determine pkgver for $aur (marker untouched)"
-            continue
-        fi
-        # the primary marker is $BUILD_DIR/<pkg>/.last-built-pkgver; the copy in
-        # $MARKER_DIR ($MARKER_DIR/$aur) is the stash that survives removing the
-        # package dir with --keep-src (the trigger reads the primary first, falls
-        # back to this one)
-        mkdir -p "$(pkbuild_dir "$aur")" 2>/dev/null || true
-        echo "$ver" > "$(pkbuild_dir "$aur")/.last-built-pkgver"
-        cp "$(pkbuild_dir "$aur")/.last-built-pkgver" "$MARKER_DIR/$aur" 2>/dev/null || true
-        log "marked $aur built: $ver ($MARKER_DIR/$aur)"
-    done
-fi
-
-if [ "$KEEP_SRC" == "0" ]; then
-    for aur in "${BUILD_SET[@]}"; do
-        # preserve the marker before the package dir is removed (it survives here)
-        [ -f "$(pkbuild_dir "$aur")/.last-built-pkgver" ] && \
-            cp "$(pkbuild_dir "$aur")/.last-built-pkgver" "$MARKER_DIR/$aur" 2>/dev/null || true
-        p="$(pkbuild_dir "$aur")"
-        if [ -d "$p" ] && ! [ -w "$p" ]; then
-            $CONTAINER_ENGINE run --rm -v "$BUILD_DIR:/builds" archlinux:base-devel \
-                bash -c "chmod -R u+w '$p' && chown -R 0:0 '$p'" || {
-                    log "WARNING: could not restore ownership of $p"; continue;
-                }
-        fi
-        rm -rf "$p" || log "WARNING: could not remove $p (not fatal)"
-    done
-fi
-
-# a package that produced no artifact is reported but does not abort the run above:
-# the repo still needs to be reconciled, the db regenerated and rsynced.
-if [ ${#FAILED[@]} -gt 0 ]; then
-    log "FAILED: no artifacts for ${FAILED[*]}"
+# --- run the publish stage (always runs at the end) ----------------------------------------
+if ! "$FAMILY_DIR/build-lan-repo-publish.sh" "$@"; then
+    log "ERROR: publish stage failed"
     exit 1
 fi
 
-echo "=> $SCRIPT_NAME: done. omarchy: pacman -Sy && pacman -S <package> (from http://<pi>:8080/)"
+echo "=> $0: done. omarchy: pacman -Sy && pacman -S <package> (from http://<pi>:8080/)"

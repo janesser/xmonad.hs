@@ -28,7 +28,15 @@ set -uo pipefail
 PORT=8082
 TEXT_UNIT="llama-little-brother"
 JOB_GLOB="card2-image-*"
-UNIT_FILE="/etc/systemd/system/llama-little-brother.service"
+# The unit file is the single source of truth for WHICH card this system owns
+# (Era 2: re-pin the card = edit that one line). It lives in jan's user scope
+# (dot_config/systemd/user/${TEXT_UNIT}.service) now — a system-scope fallback is
+# kept so the UUID stays readable on boxes that still carry /etc/systemd/system/.
+if [ -f "$HOME/.config/systemd/user/${TEXT_UNIT}.service" ]; then
+    UNIT_FILE="$HOME/.config/systemd/user/${TEXT_UNIT}.service"
+else
+    UNIT_FILE="/etc/systemd/system/${TEXT_UNIT}.service"
+fi
 STATE_FILE="${HOME}/.local/share/card2/state"
 LOCK_FILE="${HOME}/.local/share/card2/lock"
 SWITCH="${HOME}/.local/bin/switch-ai-backend.sh"
@@ -41,13 +49,54 @@ die() {
     exit 1
 }
 
-# The unit file is the single source of truth for WHICH card this system owns
-# (Era 2: re-pin the card = edit that one line).
-require_card2() {
-    [ -f "$UNIT_FILE" ] || die "no card-2 unit installed here ($UNIT_FILE missing — box without the card?)"
-    local u
-    u="$(sed -n 's/^Environment=CUDA_VISIBLE_DEVICES=//p' "$UNIT_FILE" | head -1)"
-    [ -n "$u" ] || die "no CUDA_VISIBLE_DEVICES UUID in $UNIT_FILE"
+# The unit is in jan's user scope (default.target.wants/*.service) unless only the
+# system-scope file exists. `systemctl --user` needs this to reach the bus that
+# knows the unit — without the session D-Bus address it connects to nothing.
+text_unit_scope() {
+    [ -f "$HOME/.config/systemd/user/${TEXT_UNIT}.service" ] && echo user || echo system
+}
+
+# `systemctl --user` talks to jan's own user manager. It needs the session D-Bus
+# bus (unset when this script runs from systemd or via sudo) — supply it here so
+# a call from any context can reach jan's scope. Never use `sudo systemctl` for a
+# user-scope unit: that bus is system scope and cannot see jan's units at all.
+user_bus() {
+    export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
+    export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/1000/bus}"
+}
+
+# Stop the text unit — always through the bus that knows it.
+stop_text_unit() {
+    if [ "$(text_unit_scope)" = "user" ]; then
+        user_bus
+        timeout 150 systemctl --user stop "${TEXT_UNIT}" || die "failed to stop ${TEXT_UNIT}"
+    else
+        timeout 150 sudo systemctl stop "${TEXT_UNIT}" || die "failed to stop ${TEXT_UNIT}"
+    fi
+}
+
+# Start the text unit and wait for :8082. Two failure modes need guarding:
+#  - after a crash loop, systemd rate-limits rapid start requests ("Start
+#    request repeated too quickly", 10s window) and reset-failed is not in
+#    the drop-in → retry with a 15s ride-out;
+#  - `systemctl start` can BLOCK its client indefinitely while the unit is
+#    stuck activating/crash-looping → client-side timeout on every call.
+start_text_unit() {
+    local try
+    for try in 1 2 3; do
+        if [ "$(text_unit_scope)" = "user" ]; then
+            user_bus
+            if timeout 120 systemctl --user start "${TEXT_UNIT}" 2>/dev/null && wait_ready; then
+                return 0
+            fi
+        else
+            if timeout 120 sudo systemctl start "${TEXT_UNIT}" 2>/dev/null && wait_ready; then
+                return 0
+            fi
+        fi
+        sleep 15
+    done
+    return 1
 }
 
 state_get() {
@@ -159,7 +208,7 @@ cmd_image() {
     log "state=swapping (batch ${batch}, deadline ${deadline}s, keep-text=${keep_text})"
 
     if [ "${keep_text}" = "0" ]; then
-        timeout 150 sudo systemctl stop "${TEXT_UNIT}" || die "failed to stop ${TEXT_UNIT}"
+        stop_text_unit
         STOPPED_TEXT=1
     fi
 
@@ -230,7 +279,12 @@ cmd_text() {
 cmd_status() {
     local mode text_active jobs port_ok
     mode="$(state_get)"
-    text_active="$(systemctl is-active "${TEXT_UNIT}" 2>/dev/null || true)"
+    if [ "$(text_unit_scope)" = "user" ]; then
+        user_bus
+        text_active="$(systemctl --user is-active "${TEXT_UNIT}" 2>/dev/null || true)"
+    else
+        text_active="$(systemctl is-active "${TEXT_UNIT}" 2>/dev/null || true)"
+    fi
     jobs="$(systemctl list-units --state=active --plain --no-legend "${JOB_GLOB}" 2>/dev/null | awk '{print $1}' | tr '\n' ' ')"
     [ -n "$jobs" ] || jobs="none"
     # The state file records what the script last did; the port probe records

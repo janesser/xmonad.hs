@@ -222,17 +222,27 @@ growing as more secrets are added — refresh this figure when it changes.
 ## Backend: llama.cpp server at boot
 
 The llama.cpp server is a **backend** service, not a user dotfile. It is started
-at every boot (before any login) by a *system* systemd unit —
-`/etc/systemd/system/llama-cuda.service` (`WantedBy=multi-user.target`).
-Because it is a system unit, no `loginctl enable-linger` is required.
+at every boot (before any login) by a *user* systemd unit —
+`~/.config/systemd/user/llama-cuda.service` (`WantedBy=default.target`) — provisioned
+by `.chezmoiscripts/run_once_5_aitools_2llama_startup.sh`. The user manager is up at
+boot because jan has `Linger=yes`, so the boot availability is unchanged. The other
+two backends (`llama-little-brother`, :8082 on card 2, and the hub, :8083) follow the
+same pattern: user-scope units that started with a session, each in its own run script.
 
 - Provisioned by `.chezmoiscripts/run_once_5_aitools_2llama_startup.sh`, which
   installs the unit and adds the huggingface-hub bind-mount to `/etc/fstab`
   (`bind,nofail`) so the hub is available without passwordless `sudo mount`.
 - Everything runs under the scoped NOPASSWD sudoers drop-in (`install`, `tee`,
   `cp`, `systemctl`) — see the sudo boundary above.
-- Lifecycle: `systemctl --system enable --now llama-cuda`,
-  `journalctl --system -u llama-cuda -f`.
+- Lifecycle: `systemctl --user enable --now llama-cuda`,
+  `journalctl --user -u llama-cuda -f`.
+
+The stale system-scope unit is removed by `.chezmoiscripts/run_once_9_uninstallers.sh`
+on every apply (it needs a terminal to authorize root; otherwise it stops + disables the
+unit and waits for jan to remove it). All backends are also managed by
+`switch-ai-backend.sh` (instruct/image) and `llama-emergency.sh`, which route their
+`systemctl` calls through the bus that knows the unit — never `sudo systemctl`, which
+cannot reach user scope.
 
 ### Mutual support protocol — RETIRED (2026-10-23)
 

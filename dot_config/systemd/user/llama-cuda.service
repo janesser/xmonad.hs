@@ -1,0 +1,40 @@
+# Installed by
+# .chezmoiscripts/run_once_5_aitools_2llama_startup.sh
+# to ~/.config/systemd/user/llama-cuda.service (jan's user scope, runs with the
+# session — replaces the former system unit at /etc/systemd/system/llama-cuda.service)
+#
+# The main 27B llama.cpp text backend on the shared V100 (SXM2), :8081. It is the
+# boot-time router/backend: `switch-ai-backend.sh instruct` restarts it to bring
+# the 27B back on :8081 after an image batch. It lives in jan's user scope now —
+# `loginctl enable-linger` for jan (Linger=yes) keeps the user manager alive at boot,
+# so the unit still starts before any login, exactly like the former system unit did.
+#
+# The unit execs restart-llama-cuda.sh (reaps a stale orphan on :8081, then execs
+# `llama serve` in the foreground), and waits for CUDA to be ready before starting.
+# HF model material stays at /media/sailor/huggingface-hub: it is mounted at boot
+# (`/etc/fstab`, bind,nofail) so a user-scope unit sees it too.
+#
+# It is the PRIMARY backend (:8081, the router) — the little brother on card 2
+# (:8082, CUDA) is its SEPARATE text backend: own lifecycle, own port, own GPU.
+
+[Unit]
+Description=Restart llama.cpp server via ~/.local/bin/restart-llama-cuda.sh (primary backend :8081)
+After=local-fs.target media-passeport.mount nvidia-persistenced.service sys-bus-pci-drivers-nvidia.device
+Wants=nvidia-persistenced.service
+
+[Service]
+Environment=HOME=/home/jan
+Environment=USER=jan
+Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HF_HOME=/media/sailor/huggingface-hub
+Environment=HUGGINGFACE_HUB_CACHE=/media/sailor/huggingface-hub
+ExecStartPre=/usr/bin/bash -c 'for i in $(seq 1 8); do if llama serve --list-devices 2>/dev/null | grep -q CUDA; then exit 0; fi; echo "llama-cuda: CUDA not ready, attempt $${i}/8, retrying..." >&2; sleep 2; done; echo "llama-cuda: no CUDA device after 8 attempts, refusing to fall back to CPU" >&2; exit 1'
+ExecStart=/usr/bin/bash /home/jan/.local/bin/restart-llama-cuda.sh
+Type=exec
+KillSignal=SIGTERM
+TimeoutStartSec=120s
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

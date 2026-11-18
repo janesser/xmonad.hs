@@ -7,12 +7,13 @@
 #   TLS material    ~/.local/share/pi-hermes-memory/hub/tls/  (local-only)
 #   store + tokens  ~/.local/share/pi-hermes-memory/hub/      (local-only)
 #   launcher        ~/.local/bin/pi-memory-hub-serve.sh
-#   unit            /etc/systemd/system/pi-memory-hub.service (User=jan, boot)
+#   unit            ~/.config/systemd/user/pi-memory-hub.service (User=jan, session)
 #
 # cyberkleiber ONLY — the hub is the single brain box (spine AD-1). On any
-# other host this script logs and exits 0. The hub is a SEPARATE boot service
-# from the AI backend (AD-2): own lifecycle, own port 8083, so llama-cuda
-# handovers never darken shared memory.
+# other host this script logs and exits 0. The hub is a SEPARATE service from the
+# AI backend (AD-2): own lifecycle, own port 8083, so llama-cuda handovers never
+# darken shared memory. Note: it is now a *user* unit — it starts with jan's session
+# instead of at every boot (the former system unit is replaced by the uninstaller).
 #
 # Secrets never touch the repo (AD-5/AD-14): the local CA + server cert and
 # the token store are generated/placed under ~/.local/share/pi-hermes-memory/
@@ -22,6 +23,14 @@
 # (see the repo AGENTS.md).
 
 set -euo pipefail
+
+# User-scope units are managed by jan's own systemd user manager, which is only
+# reachable via the session D-Bus bus (`$DBUS_SESSION_BUS_ADDRESS`). In `cz apply`
+# run scripts neither it nor `$XDG_RUNTIME_DIR` is set, so both are supplied here
+# explicitly (falling back to jan's manager socket). Without them `systemctl --user`
+# talks to nothing at all — the unit cannot be enabled or started.
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
+export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/1000/bus}"
 
 SRC_DIR="${CHEZMOI_SOURCE_DIR:-.}"
 UNIT=pi-memory-hub.service
@@ -95,7 +104,7 @@ if [ ! -f "${TLS_DIR}/hub.crt" ]; then
 fi
 mkdir -p "${HUB_DATA}"
 
-# --- 4. launcher + unit ---------------------------------------------------------
+# --- 4. launcher + user-space unit ----------------------------------------------
 # The launcher is also rendered by chezmoi (dot_local/bin); this install keeps
 # the run script self-contained and the deployed copy identical to the source.
 if [ -f "${LAUNCHER_DEST}" ] && cmp -s "${SRC_DIR}/dot_local/bin/executable_pi-memory-hub-serve.sh" "${LAUNCHER_DEST}"; then
@@ -104,24 +113,27 @@ else
     install -m 0755 "${SRC_DIR}/dot_local/bin/executable_pi-memory-hub-serve.sh" "${LAUNCHER_DEST}"
     echo "✅ installed ${LAUNCHER_DEST}"
 fi
-if [ -f "${UNIT_DEST}" ] && cmp -s "${UNIT_SRC}" "${UNIT_DEST}"; then
-    echo "✅ ${UNIT_DEST} already installed and up to date."
-else
-    [ -f "${UNIT_SRC}" ] || { echo "⚠️  unit source not found: ${UNIT_SRC}"; exit 1; }
-    # `install` overwrites the destination atomically, so no pre-`rm` is needed.
-    # Keeping it (instead of a `rm` + `install` pair) means this path never calls
-    # a destructive command through the cleanup sudoers drop-in.
-    sudo install -o root -g root -m 0644 "${UNIT_SRC}" "${UNIT_DEST}"
-    echo "✅ installed ${UNIT_DEST}"
-fi
-sudo systemctl daemon-reload
-sudo systemctl enable "${UNIT}"
 
-# --- 5. start when not already serving ------------------------------------------
+# The unit itself is rendered by chezmoi from dot_config/systemd/user/pi-memory-hub.service.
+# It must replace the old system unit — both daemons fight for port 8083, so the
+# system one has to go first (it is stopped here; the stale file is removed later by
+# uninstaller/signal_service_uninstall.sh).
+if systemctl is-active --quiet "${UNIT}" 2>/dev/null; then
+    echo "⚠️  stopping the old /etc/systemd/system/${UNIT} (user-space unit takes over) ..."
+    sudo -n systemctl stop "${UNIT}" || true
+    sudo -n systemctl disable "${UNIT}" || true
+fi
+
+# --- 5. enable + start the user-space unit --------------------------------------
+# `systemctl --user` talks to jan's own user manager, so no sudo here — the run
+# script itself executes as jan. (The base sudoers drop-in only covers system scope.)
+systemctl --user daemon-reload || true
+systemctl --user enable --now "${UNIT}" 2>/dev/null || true
+
 # Guard on the healthz probe (not is-active): never restart a live hub.
 if curl -fsS --cacert "${TLS_DIR}/ca.crt" "https://127.0.0.1:${PORT}/healthz" >/dev/null 2>&1; then
     echo "✅ hub already serving on :${PORT} — left running."
 else
-    sudo systemctl start "${UNIT}"
+    systemctl --user start "${UNIT}"
     echo "✅ ${UNIT} started."
 fi

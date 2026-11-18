@@ -1,0 +1,45 @@
+# Installed by
+# .chezmoiscripts/run_once_5_aitools_2llama_startup.sh
+# to ~/.config/systemd/user/llama-little-brother.service (jan's user scope, runs with
+# the session — replaces the former system unit at /etc/systemd/system/llama-little-brother.service)
+#
+# Little brother — llama.cpp text backend on card 2 (PCIe V100), [::]:8082. The "always
+# up" second text backend: small auxiliary model, text backend, 24/7 (sub-agent work,
+# cheap/fast tasks, image-batch operator). Its model is read from ~/.config/card2/
+# little-brother.model (default InternScience/Sage-A1.5-Q4_K_M-GGUF) by the launcher;
+# this unit sets MODEL=ANY so `--models-max 1` is passed instead — i.e. the server keeps
+# whatever model it has cached and never blocks on a new download.
+#
+# It is pinned to card 2 by UUID (never by global index — survives reordering) and runs
+# -dev CUDA0, so it never touches the 27B on CUDA0. It is a SEPARATE backend from
+# llama-cuda (:8081, the router): its own lifecycle, its own port (8082), its own card.
+#
+# The unit execs restart-llama-cuda.sh (same launcher as the router: reaps a stale
+# orphan on :8082, then execs llama serve in the foreground so systemd tracks it).
+#
+# Secrets are NOT in this unit or in the repo: HF tokens stay in $HF_HOME. The unit
+# carries no tokens or keys.
+
+[Unit]
+Description=Little brother — llama.cpp text backend on card 2 (PCIe V100), [::]:8082
+After=local-fs.target media-passeport.mount nvidia-persistenced.service sys-bus-pci-drivers-nvidia.device
+Wants=nvidia-persistenced.service
+
+[Service]
+Environment=CUDA_VISIBLE_DEVICES=GPU-fb929bd0-1296-491c-ed72-8f8494addcb8
+Environment=PORT=8082
+Environment=MODEL=ANY
+Environment=HOME=/home/jan
+Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HF_HOME=/media/sailor/huggingface-hub
+Environment=HUGGINGFACE_HUB_CACHE=/media/sailor/huggingface-hub
+ExecStartPre=/usr/bin/bash -c 'for i in $(seq 1 8); do if llama serve --list-devices 2>/dev/null | grep -q CUDA; then exit 0; fi; echo "llama-cuda: CUDA not ready, attempt $${i}/8, retrying..." >&2; sleep 2; done; echo "llama-cuda: no CUDA device after 8 attempts, refusing to fall back to CPU" >&2; exit 1'
+ExecStart=/usr/bin/bash /home/jan/.local/bin/restart-llama-cuda.sh
+Type=exec
+KillSignal=SIGTERM
+TimeoutStartSec=120s
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

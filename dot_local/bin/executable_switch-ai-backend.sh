@@ -12,14 +12,48 @@
 # No routing is wired — :8081/:8082 are the live backends. This script does NOT
 # restart anything else; nothing else listens on a backend port.
 #
-# sudo (NOPASSWD drop-in, /usr/bin/systemctl --system) is used ONLY to manage the
-# llama-cuda system unit. The only thing we do to a backend is STOP it — a plain
-# `systemctl stop llama-cuda` — no manual signal scanning. Stopping the llama-cuda
-# unit does NOT umount the shared HF cache bind mount — it must stay mounted for
-# sd.cpp.
+# The backends live in jan's user scope now (rendered by chezmoi to
+# ~/.config/systemd/user/*.service). `systemctl --user` needs the session D-Bus bus
+# (unset when this script runs from systemd or via sudo), so every unit call is
+# routed through the bus that knows the unit. Never use `sudo systemctl` for a
+# user-scope unit — that bus cannot see jan's units at all.
 set -uo pipefail
 
 SUDO=(sudo systemctl)        # array: invoked as "${SUDO[@]}" so 'sudo systemctl' splits into 2 args
+                             # (system scope only — see route below)
+
+# The unit lives in jan's user scope (`~/.config/systemd/user/<unit>.service`) unless
+# only the system-scope file exists. Read which one from disk so `systemctl` can reach it.
+unit_scope() {
+    [ -f "$HOME/.config/systemd/user/$1.service" ] && echo user || echo system
+}
+
+# `systemctl --user` talks to jan's own user manager; supply the session D-Bus bus so a
+# call from any context (terminal, systemd unit, sudo) reaches it.
+user_bus() {
+    export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
+    export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/1000/bus}"
+}
+
+# Stop $1 — through the bus that knows it. Returns 0 if the unit is down afterwards.
+stop_unit() {
+    if [ "$(unit_scope "$1")" = "user" ]; then
+        user_bus
+        timeout 120 systemctl --user stop "$1" 2>/dev/null || true
+    else
+        timeout 120 sudo systemctl stop "$1" 2>/dev/null || true
+    fi
+}
+
+# Restart $1 — through the bus that knows it. (NOT start: see restore below.)
+restart_unit() {
+    if [ "$(unit_scope "$1")" = "user" ]; then
+        user_bus
+        timeout 120 systemctl --user restart "$1" 2>/dev/null || true
+    else
+        timeout 120 sudo systemctl restart "$1" 2>/dev/null || true
+    fi
+}
 # sd-cli from the OLD clone (/home/jan/projs/stable-diffusion.cpp, HEAD 77b72a2)
 # — it has src/model/diffusion/flux3.hpp (Flux.3 `content_mode_blocks.*` naming)
 # and was built with -DGGML_CUDA=ON. Master's clone lacks Flux.3 support.
@@ -48,10 +82,20 @@ wait_ready() {
 # the V100, so image mode can restore it afterwards. vLLM-Omni (:8091) is
 # retired — the V100 now hosts the 27B on :8081 or an sd.cpp batch.
 is_active() {
-  if systemctl --system is-active --quiet llama-cuda 2>/dev/null; then
-    echo llama
+  # Route through the bus that knows the unit: user scope (jan's session) or system.
+  if [ "$(unit_scope llama-cuda)" = "user" ]; then
+    user_bus
+    if systemctl --user is-active --quiet llama-cuda 2>/dev/null; then
+      echo llama
+    else
+      echo ""
+    fi
   else
-    echo ""
+    if systemctl --system is-active --quiet llama-cuda 2>/dev/null; then
+      echo llama
+    else
+      echo ""
+    fi
   fi
 }
 
@@ -59,8 +103,9 @@ restore() {
   local who="$1"
   case "$who" in
     llama)
-      "${SUDO[@]}" restart llama-cuda   # NOT start: the unit is RemainAfterExit 'active (exited)', so
-                                      #   start is a no-op and won't relaunch the reaped orphan backend
+      restart_unit llama-cuda   # NOT start: the unit is RemainAfterExit 'active (exited)', so
+                                #   start is a no-op and won't relaunch the reaped orphan backend
+                                # (route: user scope via the session bus, system via sudo)
       if wait_ready 8081; then echo "switch: llama.cpp backend healthy on :8081.";
       else echo "switch: llama.cpp not healthy on :8081." >&2; exit 1; fi
       ;;
@@ -185,7 +230,7 @@ EOF
 case "${1:-instruct}" in
   instruct)
     echo "== switching to llama.cpp (:8081, ornith) =="
-    "${SUDO[@]}" restart llama-cuda                      # relaunch the llama backend on :8081 (see restore: start==no-op on a stale-active oneshot)
+    restart_unit llama-cuda                              # relaunch the llama backend on :8081 (see restore: start==no-op on a stale-active oneshot)
     if wait_ready 8081; then
       echo "switch: llama.cpp backend healthy on :8081."
     else
@@ -222,7 +267,8 @@ case "${1:-instruct}" in
     else
       WHO="$(is_active)"
       echo "== switching to sd.cpp image mode (:V100, deadline ${DEADLINE}s) =="
-      "${SUDO[@]}" stop llama-cuda                      # stop the llama backend; frees the V100
+      stop_unit llama-cuda                              # stop the llama backend; frees the V100
+                                                        # (route: user scope via the session bus, system via sudo)
       if [ "$(nvidia-smi --query-gpu=memory.used --format=csv,noheader 2>/dev/null | tr -dc 0-9)" != 0 ] 2>/dev/null; then
         echo "switch: WARNING V100 still shows memory used — a non-text holder may hold it" >&2
       fi

@@ -135,10 +135,15 @@ date" — no `sudo`, no prompt, no restart.
 
 - `~/.profile` no longer carries the Signal env vars (they were never verified there); the
   listener's are now in `signal-pi.service`'s `Environment=` lines.
-- On **cyberkleiber**, `PI_SIGNAL_ACCOUNT` + `PI_SIGNAL_DAEMON_URL` still linger in the
+- On **cyberkleiber**, `PI_SIGNAL_ACCOUNT` + `PI_SIGNAL_DAEMON_URL` still lingered in the
   environment of `pi-memory-hub.service` (added manually, no pi instance runs there — so they
-  are dead config; a `cz apply` there drops them). They do not affect anything until a
-  `signal-pi` unit is deployed to that box, where `PI_SIGNAL_PRIMARY=false` would be needed.
+  are dead config; a `cz apply` there drops them). They were dropped when the hub was moved to
+  user scope (`~/.config/systemd/user/pi-memory-hub.service`) in this session.
+- The stale system-scope `signal-receive.service` on cyberkleiber outlived the migration to
+  user scope and still ran the old root-owned `/usr/local/bin/signal-receive-loop.sh` (port
+  8080, localhost only). It is now stopped + disabled; `uninstaller/signal_service_uninstall.sh`
+  removes the file from the box on the next `cz apply` (or manually: `sudo rm`). The account runs
+  only on **raspberrypi** — a second instance desyncs/duplicates messages.
 - `.chezmoiscripts/run_once_5_aitools_8signal_pi.sh` is not affected by the
   `.chezmoiignore` rule for `.chezmoiscripts/8_*` (that pattern matches filenames starting
   with `8_`; this one starts with `run_once_5_aitools_`).
