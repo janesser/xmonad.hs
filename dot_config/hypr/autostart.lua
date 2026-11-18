@@ -14,16 +14,23 @@ o.launch_on_start("zapfast")
 
 -- $ hyprctl clients
 
-hl.window_rule( { match = { class = "signal" }, workspace = "2 silent" } )
-hl.window_rule( { match = { class = "co.hyprlab.Hylki" }, workspace = "2 silent" } )
-hl.window_rule( { match = { class = "rencal" }, workspace = "2 silent" } )
-hl.window_rule( { match = { class = "io.github.mrvladus.List" }, workspace = "2 silent" } )
-hl.window_rule( { match = { class = "zapfast" }, workspace = "2 silent" } )
+hl.window_rule({ match = { class = "signal" }, workspace = "2 silent" })
+hl.window_rule({ match = { class = "co.hyprlab.Hylki" }, workspace = "2 silent" })
+hl.window_rule({ match = { class = "rencal" }, workspace = "2 silent" })
+hl.window_rule({ match = { class = "io.github.mrvladus.List" }, workspace = "2 silent" })
+hl.window_rule({ match = { class = "zapfast" }, workspace = "2 silent" })
 
-hl.window_rule( { match = { class = "zen" }, workspace = 3 } )
+hl.window_rule({ match = { class = "zen" }, workspace = 3 })
+hl.window_rule({ match = { class = "librewolf", float = false }, workspace = 3 })
 
-hl.window_rule( { match = { class = "com.saivert.pwvucontrol" }, workspace = "9 silent" } )
+hl.window_rule({ match = { class = "com.saivert.pwvucontrol" }, workspace = "9 silent" })
 
-hl.window_rule( { match = { class = "KeePassXC" }, workspace = "8 silent" } )
+hl.window_rule({ match = { class = "KeePassXC" }, workspace = "8 silent" })
 
-hl.window_rule( { match = { initial_title = "Bild-im-Bild" }, float = true, pin = true, move = { "monitor_w - window_w - 2", "30" } } )
+hl.window_rule({
+    match = { initial_title = "Bild-im-Bild" },
+    float = true,
+    pin = true,
+    size = { 400, 300 },
+    move = { "monitor_w - 402", "30" }
+})
