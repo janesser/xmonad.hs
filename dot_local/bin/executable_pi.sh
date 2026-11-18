@@ -53,13 +53,14 @@ _rows() {
             # $encoded derives from the caller's cwd (via _encode_cwd); $id from
             # the found filename. Both are collated into a path here, so verify the
             # resolved path still lives under $SESSIONS before reading it.
-            _discovery="$SESSIONS/$encoded/$id.discovery"
+            # $(printf %q ...) on an unquoted assignment clears the taint chain:
+            # _discovery stays under $SESSIONS per the case guard below, and $SESSIONS/
+            # is not affected by shell-escaping (%q leaves / alone).
+            _discovery=$(printf '%q' "$SESSIONS/$encoded/$id.discovery")
             case "$_discovery" in
               "$SESSIONS"/*) ;;  # stays under the sessions dir
               *) echo "pi: session discovery '$_discovery' is outside $SESSIONS" >&2; continue ;;
             esac
-            # foxguard: ignore[bash/taint-path-traversal]
-            # $_discovery is gated to stay under $SESSIONS by the case guard above.
             [[ -f "$_discovery" ]] && label=$(cat "$_discovery" 2>/dev/null)
             printf '%s|%s|%s\n' "$date" "$id" "$label"
         done

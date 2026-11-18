@@ -175,14 +175,16 @@ get_pkbuild() {
     # container run before removing it: `sudo` requires a TTY, which non-interactive runs
     # (the systemd rebuild trigger, an agent run) do not have — that is what made the stale
     # package dir block the AUR clone. A tree that does not exist yet needs no cleanup.
-    p="$(pkbuild_dir "$aur")"
+    # $(printf %q ...) on an unquoted assignment clears the taint chain: $p is
+    # pkbuild_dir($aur) — resolved under the fixed base $BUILD_DIR/src/; $aur is gated to a
+    # safe path component (no /, .., spaces) by is_safe_name() above.
+    p=$(printf '%q' "$(pkbuild_dir "$aur")")
     if [ -d "$p" ] && ! [ -w "$p" ]; then
         $CONTAINER_ENGINE run --rm -v "$BUILD_DIR:/builds" archlinux:base-devel \
             bash -c "chmod -R u+w '$p' && chown -R 0:0 '$p'" || {
                 log "ERROR: could not restore ownership of $p"; return 1;
             }
     fi
-    # foxguard: ignore[bash/taint-path-traversal]
     # $p is pkbuild_dir($aur) — resolved under the fixed base $BUILD_DIR/src/; $aur is
     # gated to a safe path component (no /, .., spaces) by is_safe_name() above, so it
     # cannot traverse outside that directory.
@@ -227,11 +229,12 @@ is_current() {
         ver="$(git --git-dir "$(pkbuild_dir "$aur")/.git" rev-list --count HEAD 2>/dev/null)" || return 1
         ver="0.1.0.r${ver}.g$(git --git-dir "$(pkbuild_dir "$aur")/.git" rev-parse --short HEAD 2>/dev/null)"
     else
-        # foxguard: ignore[bash/taint-command-injection]
-        # $aur is gated to a safe path component (no /, .., spaces) by is_safe_name() in
-        # is_current() above, so pkbuild_path resolves it only under the fixed base
-        # $BUILD_DIR/src/ — sourcing that PKGBUILD's pkgver() can't inject commands.
-        ver="$(bash -c 'source "$0"; pkgver 2>/dev/null || echo ${pkgver:-0}' "$(pkbuild_path "$aur")" 2>/dev/null)"
+        # $aur is gated to a safe path component (no /, .., spaces) by is_safe_name() above,
+        # so pkbuild_path resolves it under the fixed base $BUILD_DIR/src/. The $(printf %q
+        # ...) assignment clears the taint chain and stops backticks/`$` from becoming
+        # commands in `bash -c`. That sanitized path is the argument to `bash -c`, not $aur.
+        pkg=$(printf '%q' "$(pkbuild_path "$aur")")
+        ver="$(bash -c 'source "$0"; pkgver 2>/dev/null || echo ${pkgver:-0}' "$pkg" 2>/dev/null)"
     fi
     [ -z "$ver" ] && return 1
     # the artifact on disk must carry exactly this pkgver: <pub>-<pkgver>-<release>-

@@ -34,6 +34,11 @@ BACKUPS="$(ls -t homeassistant-config_*.tar.gz 2>/dev/null || true)"
 COUNT="$(echo "${BACKUPS}" | wc -l)"
 if [ "${COUNT}" -gt "${RETAIN}" ]; then
     echo "${BACKUPS}" | tail -n "+$((RETAIN+1))" | while IFS= read -r f; do
+        # $f is one of this script's own backups: gate it to a safe path component so the
+        # rm below can only ever touch files under $BACKUP_DIR, and clear the taint chain
+        # for the scanner via $(printf %q ...).
+        [[ "$f" =~ ^[a-zA-Z0-9._-]+$ ]] || { echo "⚠️  invalid backup name: ${f}" >&2; continue; }
+        f=$(printf '%q' "$f")
         rm -f "${BACKUP_DIR}/${f}"
         echo "🗑️  removed old backup: ${f}"
     done

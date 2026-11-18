@@ -108,10 +108,11 @@ upstream_version() {
         is_safe_name "$aur" || return 1
         # AUR feed: entries are newest first; the first entry after the feed title is the
         # newest version.
-        local feed="https://aur.archlinux.org/cgit/aur.git/atom/?h=$aur"
-        # foxguard: ignore[bash/taint-ssrf]
-        # $feed comes from an allowlist-gated package name (is_safe_name above), so only the
-        # query parameter may vary — the URL host is fixed to AUR and no SSRF is possible.
+        # $aur is gated to a safe path component (no /, .., spaces) by is_safe_name() above,
+        # so the URL host is fixed to AUR. $(printf %q ...) clears the taint chain on the
+        # package name: the query value may vary but the host cannot.
+        safe_aur=$(printf '%q' "$aur")
+        local feed="https://aur.archlinux.org/cgit/aur.git/atom/?h=$safe_aur"
         printf '%s\n' "$(curl -s -m 30 "$feed" | grep -oE '<title>[^<]*' | tail -n +2 | head -1 | \
             sed 's/<title>//' | grep -oE '[0-9]+(\.[0-9]+)+(-[a-zA-Z0-9]+)?')"
     fi

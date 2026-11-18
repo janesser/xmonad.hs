@@ -24,10 +24,26 @@ if [ -z "$GROM_VERSION" ]; then
     echo "$(basename "$0"): ERROR: could not determine the latest grom release (check network)."
     exit 1
 fi
+# Source the shared release-tag validation helper (commons is a source tree, ignored by
+# chezmoi rendering — see .chezmoiignore). The tag always carries the v prefix once
+# normalized (v0.3.0) so it can be used directly as a URL path component.
+source "$CHEZMOI_SOURCE_DIR/commons/validate_release_tag.sh"
+GROM_TAG="$(normalize_release_tag "$GROM_VERSION")"
+
+# Fail-closed release-version guard: $GROM_VERSION comes from a GitHub response, so
+# before the tag is interpolated into download URLs below, it must be an exact GitHub
+# release tag or be rejected. (This file isn't currently flagged by foxguard — its
+# taint chain passes through python3, which the scanner can't model — but the guard is
+# still the right runtime defense.)
+if [[ ! "$GROM_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
+    echo "$(basename "$0"): ERROR: invalid grom release tag: $GROM_TAG"
+    exit 1
+fi
+
 # Strip the v prefix (v0.3.0 -> 0.3.0).
-GROM_VERSION="${GROM_VERSION#v}"
-GROM_RELEASE="https://github.com/qf-studio/grom/releases/download/v${GROM_VERSION}/grom_${GROM_VERSION}_linux_amd64.tar.gz"
-GROM_CHECKSUMS="https://github.com/qf-studio/grom/releases/download/v${GROM_VERSION}/checksums.txt"
+GROM_VERSION="${GROM_TAG#v}"
+GROM_RELEASE="https://github.com/qf-studio/grom/releases/download/${GROM_TAG}/grom_${GROM_VERSION}_linux_amd64.tar.gz"
+GROM_CHECKSUMS="https://github.com/qf-studio/grom/releases/download/${GROM_TAG}/checksums.txt"
 # Stamp of the release version currently installed at ~/.local/bin/grom.
 GROM_STAMP="$HOME/.local/share/grom_deployed_version"
 

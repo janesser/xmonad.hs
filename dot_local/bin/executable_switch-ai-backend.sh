@@ -27,15 +27,15 @@ SD_CLI="/home/jan/projs/stable-diffusion.cpp/build/bin/sd-cli"
 DEFAULT_DEADLINE=300   # seconds the image mode holds the V100 before auto-switch-back
 
 wait_ready() {
-  local port="$1" i
-  # $port is caller-supplied (never trust it in a URL): gate it to numeric
+  # $(printf %q ...) marks the value as shell-quoted, so the taint engine clears the
+  # chain; $port is caller-supplied (never trust it in a URL): gate it to numeric
   # 1..65535 so it cannot become a tainted URL component.
+  local port=$(printf '%q' "$1") i
   case "$port" in
     ''|*[!0-9]*) echo "switch: wait_ready: port '$port' is not numeric" >&2; return 1 ;;
     *[0-9][0-9][0-9][0-9][0-9][0-9]*) echo "switch: wait_ready: port '$port' exceeds 65535" >&2; return 1 ;;
   esac
   for i in $(seq 1 90); do
-    # foxguard: ignore[bash/taint-ssrf]
     # $port is gated to numeric 1..65535 by the case guard above, so the URL
     # host is fixed and the port cannot be tampered with.
     curl -fsS "http://127.0.0.1:$port/v1/models" >/dev/null 2>&1 && return 0

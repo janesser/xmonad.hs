@@ -1,6 +1,6 @@
 # Installed by
 # .chezmoiscripts/run_once_5_aitools_8signal_pi.sh
-# to /etc/systemd/system/signal-pi.service
+# to /etc/systemd/user/signal-pi.service (moved from system unit)
 #
 # Persistent pi agent on raspberrypi that receives Signal messages. It runs
 # `pi --mode rpc --no-session` with the PI_SIGNAL_* env vars set; the
@@ -18,32 +18,36 @@
 #
 # `pi --mode rpc` stays alive on its own (it never exits on stdin EOF) and keeps
 # one session for the whole lifetime of the process, so the extension's ctx
-# never goes stale. A `tty` is allocated as stdin (TTYPath) — a device node
-# that never sends EOF, so the process survives reboots with no client.
-# Responses are written to stdout (the journal) and auto-sent to Signal.
-# If it dies, systemd restarts it.
+# never goes stale. A pty is allocated as stdin via TTYPath=/dev/ptmx (in place
+# of the former fixed /dev/tty2, which is root-only: a userspace unit cannot
+# open it) — the device node never sends EOF, so the process survives reboots
+# with no client. Responses are written to stdout (the journal) and auto-sent
+# to Signal. If it dies, systemd restarts it.
 
 [Unit]
 Description=Signal bot — persistent pi agent listening for Signal messages (raspberrypi)
 After=network-online.target signal-receive.service
-Wants=network-online.target signal-receive.service
+Wants=network-online.target
 
 [Service]
 Type=simple
-User=jan
 Environment=HOME=/home/jan
-Environment=USER=jan
 Environment=PATH=/usr/local/bin:/usr/bin:/bin:/home/jan/.local/bin
 Environment=PI_SIGNAL_ACCOUNT=+4917620128275
 Environment=PI_SIGNAL_DAEMON_URL=http://raspberrypi.local:8081
 Environment=PI_SIGNAL_PRIMARY=true
+# Readiness gate: wake cyberkleiber's llama.cpp backend before sending
+Environment=PI_SIGNAL_WAKEUP_CMD=/home/jan/.local/bin/wakeup.cyberkleiber
+Environment="PI_SIGNAL_READINESS_CMD=curl -s --max-time 5 -o /dev/null -w '%{http_code}' http://cyberkleiber.fritz.box:8081/v1/health"
+Environment=PI_SIGNAL_WAKEUP_DELAY=30
+Environment=PI_SIGNAL_MAX_BACKEND_RETRIES=5
 StandardInput=tty
-StandardOutput=journal
-StandardError=journal
-TTYPath=/dev/tty2
+StandardOutput=append:/home/jan/.pi/agent/signal-pi.log
+StandardError=append:/home/jan/.pi/agent/signal-pi.log
+TTYPath=/dev/ptmx
 ExecStart=/home/jan/.local/share/mise/installs/pi/latest/pi/pi --mode rpc --no-session
 Restart=on-failure
 RestartSec=15
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

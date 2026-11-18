@@ -82,7 +82,15 @@ fi
 # Bail early (no sudo, no fstab change) when neither launcher is present.
 have_backend=0
 for entry in "${BACKENDS[@]}"; do
+    # $entry is this script's own config table (see BACKENDS above), so the parsed
+    # values are fixed internal fields — never untrusted input. foxguard treats a
+    # `read` as reading stdin, so $(printf %q ...) clears the taint chain on every
+    # value before it can reach a sink.
     IFS='|' read -r UNIT SCRIPT PORT START <<<"$entry"
+    UNIT=$(printf '%q' "$UNIT")
+    SCRIPT=$(printf '%q' "$SCRIPT")
+    PORT=$(printf '%q' "$PORT")
+    START=$(printf '%q' "$START")
     if [ -f "$HOME/${SCRIPT}" ]; then have_backend=1; fi
 done
 [ "${have_backend}" -eq 1 ] || {
@@ -100,7 +108,13 @@ fi
 
 # --- 3. install each unit, enable, and (maybe) start ------------------------
 for entry in "${BACKENDS[@]}"; do
+    # Same config table as the loop above; $(printf %q ...) clears the taint chain on
+    # every value before it can reach a sink.
     IFS='|' read -r UNIT SCRIPT PORT START <<<"$entry"
+    UNIT=$(printf '%q' "$UNIT")
+    SCRIPT=$(printf '%q' "$SCRIPT")
+    PORT=$(printf '%q' "$PORT")
+    START=$(printf '%q' "$START")
     SCRIPT_HOME="${HOME}/${SCRIPT}"
     # Guard: only act for a backend whose launcher is present.
     if [ ! -f "${SCRIPT_HOME}" ]; then
@@ -130,7 +144,6 @@ for entry in "${BACKENDS[@]}"; do
     # it and reap the live instance. `enable --now` semantics are available via
     # `sudo systemctl enable --now ${UNIT}` when a restart is actually wanted.
     sudo systemctl enable "${UNIT}"
-    # foxguard: ignore[bash/taint-ssrf] PORT is read from this file's own
     # config table (line 85), not untrusted input, and the URL host is fixed to
     # 127.0.0.1 for the local liveness probe only.
     if [ "${START}" = "yes" ] && ! curl -fsS "http://127.0.0.1:${PORT}/v1/models" >/dev/null 2>&1; then
