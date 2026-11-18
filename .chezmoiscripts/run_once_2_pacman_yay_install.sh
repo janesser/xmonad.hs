@@ -36,6 +36,7 @@ sudo pacman -Syy
 sudo pacman -S --noconfirm \
     hylki-bin \
     rencal-bin \
-    vscodium-bin
+    vscodium-bin \
+    signal-tauri-bin
 
 exit 0
