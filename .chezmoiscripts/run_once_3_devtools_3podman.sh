@@ -30,8 +30,8 @@ if has_nvidia; then
         gpg --yes --dearmor > /tmp/nvidia-container-toolkit-keyring.gpg
     sudo install -o root -g root -m 0644 /tmp/nvidia-container-toolkit-keyring.gpg \
         /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
-    curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
-        sed 's@deb https@#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https@g' | \
+    curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+        sed 's@^deb @#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] @g' | \
         sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
     sudo apt remove --purge -y nvidia-container-toolkit
     echo FIXME as key is not refreshed, disable for now
