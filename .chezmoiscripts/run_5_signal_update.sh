@@ -13,17 +13,9 @@ log_ok()   { echo "[OK]   $*"; }
 log_warn() { echo "[WARN] $*"; }
 log_error(){ echo "[ERROR] $*"; }
 
-# signal-cli per-user install (see run_once_5_aitools_8signal_pi.sh)
-SIGNAL_CLI_LINK="$HOME/.local/bin/signal-cli"
-SIGNAL_CLI_DIR="$HOME/.local/lib/signal-cli"
-
-if ! command -v signal-cli &>/dev/null; then
-    log_warn "signal-cli not installed — this update script does nothing until install."
-    exit 0
-fi
 
 VERSION_INSTALLED=$(signal-cli --version 2>/dev/null | grep -oE '[0-9.]+' | head -1 || true)
-[ -z "$VERSION_INSTALLED" ] && { log_warn "Could not resolve the installed signal-cli version."; exit 0; }
+# [ -z "$VERSION_INSTALLED" ] && { log_warn "Could not resolve the installed signal-cli version."; exit 0; }
 
 # Latest release tag from GitHub (e.g. v0.14.10 -> 0.14.10).
 VERSION_LATEST=$(curl -sL -o /dev/null -w '%{url_effective}' \
@@ -58,23 +50,11 @@ curl -L -o "$TARBALL" \
     "https://github.com/AsamK/signal-cli/releases/download/${RELEASE_TAG}/signal-cli-${RELEASE_TAG#v}.tar.gz"
 [ -f "$TARBALL" ] || { log_error "Download of $TARBALL failed."; exit 1; }
 
-# `tar xf` needs root: the target dir may still be root-owned from the stale
-# /opt install (a per-user layout is not guaranteed to exist yet), so a plain
-# untar would fail for jan. Without this message, sudo's prompt looks unexplained.
-if [ -d "$SIGNAL_CLI_DIR/signal-cli-${VERSION_LATEST}" ]; then
-    log_ok "${VERSION_LATEST} already extracted per-user -- skipped."
-else
-    sudo tar xf "$TARBALL" -C "$SIGNAL_CLI_DIR"
-fi
 mkdir -p "$HOME/.local/bin"
-rm -f "$SIGNAL_CLI_LINK"
-ln -sf "${SIGNAL_CLI_DIR}/signal-cli-${VERSION_LATEST}/bin/signal-cli" "$SIGNAL_CLI_LINK"
-# only clean up when the tarball is still there (a re-run leaves it gone)
-if [ -f "$TARBALL" ]; then
-    sudo rm -f "$TARBALL"
-fi
+tar xf "$TARBALL" -C ~/.local/lib/
+ln -sf ~/.local/lib/signal-cli-${RELEASE_TAG#v}/bin/signal-cli ~/.local/bin/signal-cli
 
-log_ok "signal-cli updated to $VERSION_LATEST: ${SIGNAL_CLI_DIR}/signal-cli-${VERSION_LATEST}"
+log_ok "signal-cli updated to $VERSION_LATEST: ~/.local/lib/signal-${RELEASE_TAG#v}/bin/signal-cli"
 echo "[INFO] restarting signal-receive.service to use the new daemon..."
 systemctl --user restart signal-receive.service 2>/dev/null || \
     log_warn "(could not restart signal-receive.service — it may need a login shell)"

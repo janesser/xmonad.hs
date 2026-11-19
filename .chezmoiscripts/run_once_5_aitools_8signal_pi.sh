@@ -41,61 +41,11 @@ if [ "$java_version" -lt 25 ]; then
 fi
 log_ok "Java $java_version found."
 
-# --- 2. signal-cli (per-user install: ~/.local/lib + ~/.local/bin) -----------
-SIGNAL_CLI_LINK="$HOME/.local/bin/signal-cli"   # executable, in PATH
-SIGNAL_CLI_DIR="$HOME/.local/lib/signal-cli"    # installed releases
-
-# Version of the binary that is actually reachable right now. `signal-cli` in
-# PATH may still point at a stale system symlink (root-owned /usr/local/bin) or
-# an already-moved per-user copy — follow whatever resolves to the real file.
 VERSION_INSTALLED=""
 if command -v signal-cli &>/dev/null; then
     VERSION_INSTALLED=$(signal-cli --version 2>/dev/null | grep -oE '[0-9.]+' | head -1 || true)
 fi
-if [ -z "$VERSION_INSTALLED" ] && [ -L /usr/local/bin/signal-cli ]; then
-    # stale system symlink: /opt/signal-cli-X.Y.Z/bin/signal-cli → version from path
-    VERSION_INSTALLED=$(readlink /usr/local/bin/signal-cli | sed 's|.*/signal-cli-\([0-9.]*\)/bin.*|\1|')
-fi
-if [ -z "$VERSION_INSTALLED" ]; then
-    # nothing to follow: look for an existing per-user release copy
-    VERSION_INSTALLED=$(ls -d "$SIGNAL_CLI_DIR"/signal-cli-* 2>/dev/null | sed "s|.*/signal-cli-\([0-9.]*\)|\1|" | head -1)
-fi
 log_info "signal-cli version: ${VERSION_INSTALLED:-<not found>}"
-
-if [ -L "$SIGNAL_CLI_LINK" ] && [ "$(readlink -f "$SIGNAL_CLI_LINK")" = "${SIGNAL_CLI_DIR}/signal-cli-${VERSION_INSTALLED}/bin/signal-cli" ]; then
-    log_ok "signal-cli already installed per-user: $SIGNAL_CLI_LINK -> $(readlink -f "$SIGNAL_CLI_LINK")"
-else
-    # The one-time /opt install (from the pi-signal setup wizard) is in place —
-    # move it into the per-user layout so no root-owned paths are needed.
-    if [ -n "$VERSION_INSTALLED" ] && [ -f "/opt/signal-cli-${VERSION_INSTALLED}/bin/signal-cli" ]; then
-        log_info "moving /opt/signal-cli-${VERSION_INSTALLED} to ~/.local/lib/signal-cli-${VERSION_INSTALLED}"
-        # `mv` needs root here: the source is in /opt, which is root-owned (the setup
-        # wizard installed signal-cli there). Without a message, sudo's password prompt
-        # looks unexplained — this says exactly why root is requested.
-        if [ -d "$SIGNAL_CLI_DIR/signal-cli-${VERSION_INSTALLED}" ]; then
-            log_ok "already moved to per-user layout: $SIGNAL_CLI_DIR/signal-cli-${VERSION_INSTALLED} -- no move needed."
-        else
-            sudo mv "/opt/signal-cli-${VERSION_INSTALLED}" "$SIGNAL_CLI_DIR/signal-cli-${VERSION_INSTALLED}"
-        fi
-    elif [ -n "$VERSION_INSTALLED" ]; then
-        # The version was found but the /opt copy is gone (moved by an earlier run) —
-        # this is a re-run of a completed migration: nothing to move, not an error.
-        log_ok "no /opt/signal-cli-${VERSION_INSTALLED} left -- per-user layout already in place."
-    fi
-
-    mkdir -p "$HOME/.local/bin"
-    rm -f "$SIGNAL_CLI_LINK"
-    # The system symlink is root-owned: `rm` needs root even though the target is gone.
-    # A `-f` guard keeps re-runs quiet (the link no longer exists after the first run).
-    if [ -L /usr/local/bin/signal-cli ]; then
-        log_info "removing stale system symlink /usr/local/bin/signal-cli -> $(readlink /usr/local/bin/signal-cli)"
-        sudo rm -f /usr/local/bin/signal-cli
-    else
-        log_ok "/usr/local/bin/signal-cli does not exist -- nothing to remove."
-    fi
-    ln -sf "${SIGNAL_CLI_DIR}/signal-cli-${VERSION_INSTALLED}/bin/signal-cli" "$SIGNAL_CLI_LINK"
-    log_ok "signal-cli installed per-user: $SIGNAL_CLI_LINK -> $(readlink -f "$SIGNAL_CLI_LINK")"
-fi
 
 # Only download the release when a newer version exists on GitHub.
 VERSION_LATEST=$(curl -sL -o /dev/null -w '%{url_effective}' \

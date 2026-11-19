@@ -15,8 +15,6 @@ Cmnd_Alias BASE = \
     /usr/bin/journalctl, \
     /usr/bin/systemctl, \
     /usr/bin/install, \
-    /usr/bin/mkdir, \
-    /usr/bin/cp, \
     /usr/bin/tee, \
     /usr/bin/curl, \
     /usr/bin/cmp, \
