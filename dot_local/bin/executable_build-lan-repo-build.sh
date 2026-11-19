@@ -134,22 +134,32 @@ for aur in "${BUILD_SET[@]}"; do
             # Its audio stack also depends on `alsa-sys`, which needs libasound/alsa.pc (alsa-lib).
             sed -i 's/^makedepends=(rust cargo git)$/makedepends=(rust cargo git protobuf alsa-lib)/' "$p"
             log "patched PKGBUILD for $aur: added sha256sums=('SKIP') (git source) + makedepends=protobuf alsa-lib (protoc needed by spqr/prost-build; alsa needed by alsa-sys)"
-            # signal-tauri-bin's own Cargo.toml pins `rusqlite` to a whisperfish fork of rusqlite
-            # plus `[patch.crates-io]` entries for `rusqlite` and `libsqlite3-sys`. That forces
-            # SQLCipher's custom crypto provider instead of the vendored one, which is what makes
-            # the linked sqlite3 library miss `sqlite3_value_dup` at load time. Move back to the
-            # upstream release: crates.io `rusqlite = "0.36"` needs libsqlite3-sys ^0.34.0, and
-            # presage-store-sqlite needs ^0.36.0, so cargo resolves libsqlite3-sys 0.36.0 from
-            # crates.io — the upstream crate with vendored SQLCipher sources. `bundled-sqlcipher`
-            # is requested by the `rusqlite` dependency and enabled by presage-store-sqlite's
-            # default features, so it builds the vendored SQLCipher against the system OpenSSL.
+            # signal-tauri-bin's own Cargo.toml pins `rusqlite` to an old rev of the
+            # whisperfish fork of rusqlite (rev 2a42b335) plus `[patch.crates-io]` entries
+            # for `rusqlite` and `libsqlite3-sys`. That resolves fine (`libsqlite3-sys 0.36`
+            # satisfies both the fork's requirement and presage-store-sqlite's `^0.36.0`) —
+            # that is the working configuration already.
+            # The rev's vendored SQLCipher is only actually built when the
+            # `bundled-sqlcipher-custom-crypto` feature is enabled on that line: without it,
+            # `libsqlite3-sys` compiles plain SQLite (the fork's `-DSQLCIPHER_CRYPTO_CUSTOM=...`
+            # setup never runs) and presage's encryption stack is broken. Master of the fork
+            # dropped SQLCipher entirely, so moving anything there breaks it. Only the feature
+            # needs enabling; `[patch.crates-io]` already points at the same rev, so nothing
+            # else on this line needs touching.
             c="$(pkbuild_dir "$aur")/Cargo.toml"
             [ -f "$c" ] || continue
-            sed -i 's|^rusqlite = { git = "https://github.com/whisperfish/rusqlite", rev = "[0-9a-f]*", features = \["bundled-sqlcipher"\] }$|rusqlite = { version = "0.36", features = ["bundled-sqlcipher"] }|' "$c"
-            # drop the `[patch.crates-io]` entries for `rusqlite` and `libsqlite3-sys`
-            sed -i '/whisperfish\/rusqlite/d' "$c"
-            grep -q '^rusqlite = { version = "0.36"' "$c" || { log "FAILED: could not move signal-tauri-bin's rusqlite dependency back to upstream crates.io"; exit 1; }
-            log "patched Cargo.toml for $aur: moved rusqlite/libsqlite3-sys back to upstream crates.io (vendored SQLCipher + bundled-sqlcipher)"
+            sed -i 's|^rusqlite = { git = "https://github.com/whisperfish/rusqlite", rev = "[0-9a-f]*", features = \["bundled-sqlcipher"\] }$|rusqlite = { git = "https://github.com/whisperfish/rusqlite", rev = "2a42b3354c9194700d08aa070f70a131a470e7dc", features = ["bundled-sqlcipher-custom-crypto"] }|' "$c"
+            grep -q '^rusqlite = { git = "https://github.com/whisperfish/rusqlite", rev = "2a42b3354c9194700d08aa070f70a131a470e7dc", features = \["bundled-sqlcipher-custom-crypto"\] }' "$c" || { log "FAILED: could not enable the bundled-sqlcipher-custom-crypto feature for signal-tauri-bin"; exit 1; }
+            echo "=== [PATCHED] signal-tauri-bin Cargo.toml (debug) ===" >&2
+            grep -n 'rusqlite = {' "$c" | sed 's/^/  /' >&2
+            echo "=== [END PATCHED] ===" >&2
+            log "patched Cargo.toml for $aur: enabled bundled-sqlcipher-custom-crypto at rev 2a42b335 (fork main rev, no move needed)"
+            # sqlx's proc-macro .so needs libsqlite3 linked: its sqlite3_value_dup resolves only
+            # at load time. makepkg's buildenv exports RUSTFLAGS from /etc/makepkg.conf.d/rust.conf
+            # (-C force-frame-pointers=yes), which replaces any value passed via the environment, so
+            # re-apply -lsqlite3 here (in package(), after makepkg set its own) before cargo runs.
+            sed -i 's@^  cargo build --release$@export RUSTFLAGS=\"$RUSTFLAGS -lsqlite3\"\n  echo \"=== [DEBUG] RUSTFLAGS at start of package(): $RUSTFLAGS ===\"\n  # save the proc-macro .so (wiped on failure) so we can inspect its link table\n  find /builds/signal-tauri-bin/target/release/build/sqlx-macros -name "libsqlx_macros*.so" -exec cp {} /builds/ > /builds/copy.log 2\&1 @| true\n  cargo build --release --verbose > /builds/cargo-verbose.log 2\&1@' "$p"
+            log "patched PKGBUILD for $aur: re-applies -lsqlite3 to RUSTFLAGS (makepkg's buildenv sets its own, so the environment value is replaced)"
             ;;
     esac
 done
@@ -204,7 +214,9 @@ for pkg in "$@"; do
     # -n (not --noninteractive): this archlinux:base-devel sudo accepts short opts only
 # -Syu: full upgrade, required because base-devel's cached DB is partial (openssl
 # conflicts with installed curl/libarchive when the repo moved on)
-    su builder -c "cd /builds/$pkg && sudo -n pacman -Syu --noconfirm && makepkg --syncdeps --noconfirm --nocheck --force"
+    # -E preserves the container env (RUSTFLAGS, CARGO_BUILD_JOBS) through `sudo` — by
+    # default sudo resets the environment and cargo would never see the link flags.
+    su builder -c "cd /builds/$pkg && sudo -n -E pacman -Syu --noconfirm && makepkg --syncdeps --noconfirm --nocheck --force"
 done
 # The container's non-root users map onto a host UID that is not jan (a stale tree like
 # $BUILD_DIR/<pkg>/pkg/ can neither be cleaned nor inspected by jan afterwards). Map everything
@@ -224,7 +236,7 @@ EOF
         -v "$BUILD_DIR:/builds" \
         -e MAKEFLAGS="-j$NPROC" \
         -e CARGO_BUILD_JOBS="$NPROC" \
-        -e RUSTFLAGS="-C target-cpu=native -C parallel-compiler -lsqlite3" \
+        -e RUSTFLAGS="-C target-cpu=native -lsqlite3" \
         archlinux:base-devel \
         bash /builds/.build.sh "${REBUILD_SET[@]}" || {
         echo "=> $0: container build failed"

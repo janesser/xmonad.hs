@@ -42,8 +42,8 @@
 #
 # Build performance on the workstation host: makepkg uses MAKEFLAGS (parallel),
 # cargo/rustc read CARGO_BUILD_JOBS (crates in parallel) and RUSTFLAGS
-# (-C target-cpu=native picks Skylake SP, -C parallel-compiler splits one crate's
-# codegen across threads; rustc >= 1.78). These env vars are inert for non-rust
+# (-C target-cpu=native picks Skylake SP, -lsqlite3 links sqlite3 so the sqlx
+# proc-macro .so (sqlx_macros) resolves sqlite3_value_dup at load time; rustc >= 1.78).
 # package builds (gcc/clang never read them), so they can sit on the container
 # run line alongside the shared flags.
 #

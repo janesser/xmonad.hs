@@ -29,6 +29,11 @@
 # allowed by the base sudoers drop-in); removing the unit files needs a
 # password-validated root step, which is prompted for once if a terminal is available
 # (no TTY: the units stay stopped until jan removes them).
+#
+# This also cleans up one system-to-userspace artifact that the signal install scripts
+# leave behind on boxes where the migration was interrupted: the root-owned
+# /usr/local/bin/signal-cli symlink still points at an old /opt copy. The uninstaller
+# is a second line of defence — it can only help, and it never fails when nothing exists.
 
 set -euo pipefail
 
@@ -56,5 +61,14 @@ for unit in signal-receive.service pi-memory-hub.service llama-little-brother.se
         say "cannot remove /etc/systemd/system/${unit} (needs a terminal to authorize root)"
 done
 sudo -n systemctl daemon-reload 2>/dev/null || true
+
+# The system-to-userspace migration of signal-cli: the stale root-owned symlink that
+# still points at an /opt copy (a `rm -f` guard keeps this idempotent).
+if [ -L /usr/local/bin/signal-cli ]; then
+    sudo rm -f /usr/local/bin/signal-cli || \
+        say "cannot remove /usr/local/bin/signal-cli (needs a terminal to authorize root)"
+else
+    say "no stale /usr/local/bin/signal-cli left -- nothing to remove."
+fi
 
 say "OK: stale /etc/systemd/system/ units removed."

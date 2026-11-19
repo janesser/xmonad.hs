@@ -58,11 +58,21 @@ curl -L -o "$TARBALL" \
     "https://github.com/AsamK/signal-cli/releases/download/${RELEASE_TAG}/signal-cli-${RELEASE_TAG#v}.tar.gz"
 [ -f "$TARBALL" ] || { log_error "Download of $TARBALL failed."; exit 1; }
 
-sudo tar xf "$TARBALL" -C "$SIGNAL_CLI_DIR"
+# `tar xf` needs root: the target dir may still be root-owned from the stale
+# /opt install (a per-user layout is not guaranteed to exist yet), so a plain
+# untar would fail for jan. Without this message, sudo's prompt looks unexplained.
+if [ -d "$SIGNAL_CLI_DIR/signal-cli-${VERSION_LATEST}" ]; then
+    log_ok "${VERSION_LATEST} already extracted per-user -- skipped."
+else
+    sudo tar xf "$TARBALL" -C "$SIGNAL_CLI_DIR"
+fi
 mkdir -p "$HOME/.local/bin"
 rm -f "$SIGNAL_CLI_LINK"
 ln -sf "${SIGNAL_CLI_DIR}/signal-cli-${VERSION_LATEST}/bin/signal-cli" "$SIGNAL_CLI_LINK"
-sudo rm -f "$TARBALL"
+# only clean up when the tarball is still there (a re-run leaves it gone)
+if [ -f "$TARBALL" ]; then
+    sudo rm -f "$TARBALL"
+fi
 
 log_ok "signal-cli updated to $VERSION_LATEST: ${SIGNAL_CLI_DIR}/signal-cli-${VERSION_LATEST}"
 echo "[INFO] restarting signal-receive.service to use the new daemon..."

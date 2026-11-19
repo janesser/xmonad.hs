@@ -28,10 +28,16 @@ LIST="${LAN_REPO_LIST:-$HOME/.local/build-lan-repo/packages.list}"
 # --- hostname guard: only meaningful on the fleet build hosts -----------------------
 if [ "${FAMILY_GUARD_DONE:-}" != "1" ]; then
     FAMILY_GUARD_DONE=1
-    if [ "$(hostname)" != "cyberkleiber" ] && [ "$(hostname)" != "lincopta" ]; then
-        log "only intended for the fleet build hosts (cyberkleiber/lincopta); run on the build host, not on $(hostname)"
-        exit 1
-    fi
+    # `hostname` returns the FQDN (e.g. cyberkleiber.fritz.box) while the fleet name is
+    # the short form: `hostname -s` normalises both to one form so the guard works with
+    # either return value and needs no PATH stub.
+    case "$(hostname -s 2>/dev/null)" in
+        cyberkleiber|lincopta) ;;
+        *)
+            log "only intended for the fleet build hosts (cyberkleiber/lincopta); run on the build host, not on $(hostname)"
+            exit 1
+            ;;
+    esac
 fi
 
 # --- git clone over https (bypassing host-level ssh rewrites) -----------------------

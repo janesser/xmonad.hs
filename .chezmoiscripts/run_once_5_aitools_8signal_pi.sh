@@ -69,13 +69,30 @@ else
     # move it into the per-user layout so no root-owned paths are needed.
     if [ -n "$VERSION_INSTALLED" ] && [ -f "/opt/signal-cli-${VERSION_INSTALLED}/bin/signal-cli" ]; then
         log_info "moving /opt/signal-cli-${VERSION_INSTALLED} to ~/.local/lib/signal-cli-${VERSION_INSTALLED}"
-        mkdir -p "$SIGNAL_CLI_DIR"
-        sudo mv "/opt/signal-cli-${VERSION_INSTALLED}" "$SIGNAL_CLI_DIR/signal-cli-${VERSION_INSTALLED}"
+        # `mv` needs root here: the source is in /opt, which is root-owned (the setup
+        # wizard installed signal-cli there). Without a message, sudo's password prompt
+        # looks unexplained — this says exactly why root is requested.
+        if [ -d "$SIGNAL_CLI_DIR/signal-cli-${VERSION_INSTALLED}" ]; then
+            log_ok "already moved to per-user layout: $SIGNAL_CLI_DIR/signal-cli-${VERSION_INSTALLED} -- no move needed."
+        else
+            sudo mv "/opt/signal-cli-${VERSION_INSTALLED}" "$SIGNAL_CLI_DIR/signal-cli-${VERSION_INSTALLED}"
+        fi
+    elif [ -n "$VERSION_INSTALLED" ]; then
+        # The version was found but the /opt copy is gone (moved by an earlier run) —
+        # this is a re-run of a completed migration: nothing to move, not an error.
+        log_ok "no /opt/signal-cli-${VERSION_INSTALLED} left -- per-user layout already in place."
     fi
 
     mkdir -p "$HOME/.local/bin"
     rm -f "$SIGNAL_CLI_LINK"
-    sudo rm -f /usr/local/bin/signal-cli   # system symlink points at the old /opt copy
+    # The system symlink is root-owned: `rm` needs root even though the target is gone.
+    # A `-f` guard keeps re-runs quiet (the link no longer exists after the first run).
+    if [ -L /usr/local/bin/signal-cli ]; then
+        log_info "removing stale system symlink /usr/local/bin/signal-cli -> $(readlink /usr/local/bin/signal-cli)"
+        sudo rm -f /usr/local/bin/signal-cli
+    else
+        log_ok "/usr/local/bin/signal-cli does not exist -- nothing to remove."
+    fi
     ln -sf "${SIGNAL_CLI_DIR}/signal-cli-${VERSION_INSTALLED}/bin/signal-cli" "$SIGNAL_CLI_LINK"
     log_ok "signal-cli installed per-user: $SIGNAL_CLI_LINK -> $(readlink -f "$SIGNAL_CLI_LINK")"
 fi
