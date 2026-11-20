@@ -81,7 +81,6 @@ done
 
 echo ""
 log_ok "signal-pi install complete."
-echo "  signal-cli: $SIGNAL_CLI_LINK"
 echo "  loop script: ~/.local/bin/signal-receive-loop.sh (chezmoi)"
 echo "  units:      ~/.config/systemd/user/{signal-receive,signal-pi}.service (chezmoi)"
 echo "  update later: run_5_signal_update.sh runs on every chezmoi apply"
