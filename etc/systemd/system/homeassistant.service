@@ -11,8 +11,11 @@
 # - Foreground `podman run` (no -d): systemd tracks the container lifetime;
 #   ExecStartPre drops any stale/orphaned container first.
 # - /config is a persistent host volume (survives container recreation).
-# - --privileged: official container-install baseline (matches the ad-hoc
-#   container this replaces); follow-up increment to drop it.
+# - Runs UNPRIVILEGED (2026-11-20 hardening, replaces --privileged): no
+#   add-ons installed, no ZHA/ESPHome/BLE integrations in config_entries,
+#   port 8123 > 1024, pasta network. If a future add-on/integration needs
+#   devices or extra caps, re-add them specifically (--device / --cap-add),
+#   not blanket --privileged.
 
 [Unit]
 Description=Home Assistant container (rootless podman)
@@ -27,7 +30,6 @@ Group=jan
 Environment=HOME=/home/jan
 ExecStartPre=-/usr/bin/podman rm -f homeassistant
 ExecStart=/usr/bin/podman run --name homeassistant \
-    --privileged \
     -v /etc/localtime:/etc/localtime:ro \
     -v /home/jan/.local/share/homeassistant/config:/config \
     -e TZ=Europe/Berlin \
