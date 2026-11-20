@@ -1,30 +1,30 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "llama-cuda-card1/sage-a1.5",
+  "model": "llama-cuda-card1/qwen3.8-27b",
   "providers": {
     "llama-cuda-card1": {
-      "name": "Card 1 (:8081) — Sage-A1.5 Q4_K_M (V100 SXM2 CUDA0)",
+      "name": "Card 1 (:8081) — Qwen3.8-27B Q4_K_M (V100 SXM2 CUDA0)",
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
         "baseURL": "http://cyberkleiber:8081/v1"
       },
       "models": {
-        "sage-a1.5": {
-          "modelID": "InternScience/Sage-A1.5-Q4_K_M-GGUF:Q4_K_M",
+        "qwen3.8-27b": {
+          "modelID": "unsloth/Qwen3.8-27B-GGUF:Q4_K_M",
           "capabilities": {
             "tools": true,
             "input": ["text"],
             "output": ["text"]
           },
           "limit": {
-            "context": 262144,
+            "context": 235520,
             "output": 8192
           }
         }
       }
     },
     "llama-cuda-card2": {
-      "name": "Card 2 (:8082) — Sage-A1.5 Q4_K_M (PCIe V100 card 2)",
+      "name": "Card 2 (:8082) — pool: sage-a1.5, glm-4.7-flash, gemma-4 ×3, thinklite-27b, lfm3-1.7b, ornith-1.5-35b, nesi2-mtp, steuerllm",
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
         "baseURL": "http://cyberkleiber:8082/v1"
@@ -39,6 +39,114 @@
           },
           "limit": {
             "context": 262144,
+            "output": 8192
+          }
+        },
+        "glm-4.7-flash": {
+          "modelID": "unsloth/GLM-4.7-Flash-GGUF:Q4_K_M",
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 202752,
+            "output": 8192
+          }
+        },
+        "gemma-4-26b": {
+          "modelID": "unsloth/gemma-4-26B-A4B-it-GGUF:Q4_K_M",
+          "capabilities": {
+            "tools": false,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
+        },
+        "gemma-4-e2b": {
+          "modelID": "unsloth/gemma-4-E2B-it-GGUF:Q4_K_M",
+          "capabilities": {
+            "tools": false,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 8192
+          }
+        },
+        "gemma-4-e4b": {
+          "modelID": "unsloth/gemma-4-E4B-it-GGUF:Q4_K_XL",
+          "capabilities": {
+            "tools": false,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 8192
+          }
+        },
+        "thinklite-27b": {
+          "modelID": "Sparset/Thinklite-27B-GGUF:Q4_K_M",
+          "capabilities": {
+            "tools": false,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
+        },
+        "ornith-1.5-35b": {
+          "modelID": "ornith-ai/Ornith-1.5-35B-A3B-GGUF:Q4_K_M",
+          "capabilities": {
+            "tools": false,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
+        },
+        "lfm3-1.7b": {
+          "modelID": "LiquidAI/LFM3-1.7B-GGUF:Q8_0",
+          "capabilities": {
+            "tools": false,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
+        },
+        "nesi2-mtp": {
+          "modelID": "nesilabs/Nesi2:MTP",
+          "capabilities": {
+            "tools": false,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
+        },
+        "steuerllm": {
+          "modelID": "User954738/open_steuerllm-Q4_K_M-GGUF:Q4_K_M",
+          "capabilities": {
+            "tools": false,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 32768,
             "output": 8192
           }
         }
