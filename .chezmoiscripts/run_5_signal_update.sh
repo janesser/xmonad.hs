@@ -51,6 +51,7 @@ curl -L -o "$TARBALL" \
 [ -f "$TARBALL" ] || { log_error "Download of $TARBALL failed."; exit 1; }
 
 mkdir -p "$HOME/.local/bin"
+mkdir -p "$HOME/.local/lib"
 tar xf "$TARBALL" -C ~/.local/lib/
 ln -sf ~/.local/lib/signal-cli-${RELEASE_TAG#v}/bin/signal-cli ~/.local/bin/signal-cli
 
