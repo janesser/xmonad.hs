@@ -14,5 +14,12 @@ if [[ -z "$URL" ]] || [[ ! "$URL" =~ ^https://(www\.)?youtube\.com/ ]]; then
     exit 1
 fi
 
+MPV="mpv"
+if command -v flatpak; then
+    if flatpak info io.mpv.Mpv; then
+        MPV="flatpak run io.mpv.Mpv"
+    fi
+fi
+
 # no video rendering, no on-screen display, closes when the stream ends
-exec mpv --no-video --no-osc --no-keep-open "$URL"
+exec $MPV --no-video --no-osc --no-keep-open "$URL"
