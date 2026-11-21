@@ -21,7 +21,6 @@ omarchy plugin add https://github.com/TheMogli/ToDoma.git --enable --yes
 yay -Syy
 yay -S --noconfirm \
     cnrdrvcups-lb-bin \
-    pwvucontrol \
     rptui-bin
 
 

@@ -68,6 +68,7 @@ myBasicKeyMap :: [(String, NamedAction)]
 myBasicKeyMap =
   [ ("M-x", noName $ xmonadPrompt def)
   , ("M-e", spawn' "pcmanfm")
+  , ("M-S-w", addName "Web Browser (omarchy mimik)" $ spawn "x-www-browser")
   , ("C-ö", spawn' "copyq toggle")
   , ("<Print>", spawn' "shutter -s 2>/dev/null >/dev/null") -- ""
   , ("M-C-l", spawn' "xautolock -locknow")
@@ -90,10 +91,10 @@ myBasicKeyMap =
     ( "<XF86AudioRaiseVolume>"
     , spawn' "pactl set-sink-volume @DEFAULT_SINK@ +10%"
     )
-  , ("M-C-t", spawn' "standby.sh toggle")
+  , ("M-S-t", addName "Coffee mode (omarchy mimik)" $ spawn "standby.sh toggle")
   , ("M-f", addName "sendMessage ToggleStruts" $ sendMessage ToggleStruts)
   , ("M-C-k", spawn' "xkill")
-  , ("M-C-p", addName "xprops" $ spawn "x-terminal-emulator -e bash -c \"xprop && read -n 1 -p 'Press any key to continue..'\"")
+  , ("M-C-p", addName "xprops" $ spawn "xprop-detect.sh")
   , ("M-m", addName "manPrompt" $ manPrompt def)
   ]
 
@@ -133,6 +134,9 @@ myWindowKeys c =
       , ("M-C-S-<Space>", addName "rescreen" rescreen)
       , ("M-C-a", addName "copy window to all workspaces" $ windows copyToAll)
       , ("M-C-S-a", addName "kill all other window copies" killAllOtherCopies)
+      , ("M-w", addName "kill the currently focused window (omarchy mimik)" kill)
+      -- firefox float CTRL+SHIFT+9 (display is "C+S+]"")
+      , ("M-S-f", addName "float/unfloat videos (better than omarchy)" $ spawn "for w in $(xdotool search --class librewolf); do xdotool key --window $w ctrl+shift+9; done")
       ]
  where
   compositorRestart = compositorStop ++ " ; xcompmgr -cCfF"
@@ -158,7 +162,7 @@ myAgentKeys c =
     : mkNamedKeymap 
       c 
       [
-        ("M-C-h", spawn' "zutty herdr")
+        ("M-C-S-<Return>", addName "herdr (omarchy mimik)" $ spawn "zutty herdr")
       ]
 
 monWs :: String
@@ -245,6 +249,7 @@ myManageHook =
       className =? "Navigator"        -?> doShift browseWs
     , -- admin
       className =? "easyeffects"      <||>
+      className =? "pwvucontrol"      <||>
       className =? "KeePassXC"        -?> doShift adminWs
     ]
 {- FOURMOLU_ENABLE -}
@@ -307,16 +312,15 @@ myStatusBar = statusBarProp determineStartUp (clickablePP xmobarPP)
  where
   determineStartUp :: String
   determineStartUp = do
-    let xmobarrcHostspecificExists = unsafePerformIO $ doesFileExist xmobarrcHostspecific
+    hostname <- getHostName
+    homedir <- getHomeDirectory
+    xmobarrcHostspecific <- homedir ++ "/.config/xmonad/xmobarrc." ++ hostname
+    xmobarrcHostspecificExists <- doesFileExist xmobarrcHostspecific
     "xmobar "
       ++ if xmobarrcHostspecificExists
         then xmobarrcHostspecific
         else xmobarrcDefault
   xmobarrcDefault = "~/.config/xmonad/xmobarrc"
-  xmobarrcHostspecific = unsafePerformIO $ do
-    hostname <- getHostName
-    homedir <- getHomeDirectory
-    return $ homedir ++ "/.config/xmonad/xmobarrc." ++ hostname
 
 main :: IO ()
 main = xmonad
