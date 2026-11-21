@@ -23,10 +23,12 @@ else
     $GHCUP_PREFIX code -n -w $CONFIG_XMONAD
 fi
 
-# auto add to chezmoi
 if [ -x $(command -v chezmoi) ]; then
+    # auto add to chezmoi
     MY_XMONAD_FILES=`find $CONFIG_XMONAD -maxdepth 1 -type f`
     MY_XMONAD_LIB_FILES=`find $CONFIG_XMONAD/lib -maxdepth 1 -type f`
-    echo adding $MY_XMONAD_FILES $MY_XMONAD_LIB_FILES to chezmoi
+
+    # auto add vscodium haskell config
     chezmoi add $MY_XMONAD_FILES $MY_XMONAD_LIB_FILES
+    chezmoi re-add ~/.config/VSCodium/
 fi

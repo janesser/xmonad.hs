@@ -22,7 +22,6 @@ import ScreenCornersToggled (
   screenCornerToggledLayoutHook,
  )
 import System.Directory (doesFileExist, getHomeDirectory)
-import System.IO.Unsafe
 import XMonad
 import XMonad.Actions.CopyWindow
 import XMonad.Hooks.EwmhDesktops
@@ -306,36 +305,37 @@ myFadeHook =
     ]
 
 -- requires xdotool
-myStatusBar :: StatusBarConfig
-{-# NOINLINE myStatusBar #-}
-myStatusBar = statusBarProp determineStartUp (clickablePP xmobarPP)
+myStatusBar :: IO StatusBarConfig
+myStatusBar = do
+  hostname <- getHostName
+  homedir <- getHomeDirectory
+  let xmobarrcHostspecific = homedir ++ "/.config/xmonad/xmobarrc." ++ hostname
+  xmobarrcHostspecificExists <- doesFileExist xmobarrcHostspecific
+  let xmobarConfig =
+        "xmobar "
+          ++ if xmobarrcHostspecificExists
+            then xmobarrcHostspecific
+            else xmobarrcDefault
+  return $ statusBarProp xmobarConfig (clickablePP xmobarPP)
  where
-  determineStartUp :: String
-  determineStartUp = do
-    hostname <- getHostName
-    homedir <- getHomeDirectory
-    xmobarrcHostspecific <- homedir ++ "/.config/xmonad/xmobarrc." ++ hostname
-    xmobarrcHostspecificExists <- doesFileExist xmobarrcHostspecific
-    "xmobar "
-      ++ if xmobarrcHostspecificExists
-        then xmobarrcHostspecific
-        else xmobarrcDefault
   xmobarrcDefault = "~/.config/xmonad/xmobarrc"
 
 main :: IO ()
-main = xmonad
-  . withSB myStatusBar
-  . docks
-  . ewmhFullscreen
-  . ewmh
-  . withUrgencyHook NoUrgencyHook
-  . javaHack
-  $ myConfig
-    { logHook = fadeWindowsLogHook myFadeHook
-    , manageHook =
-        manageDocks <+> myFocusHook <> myManageHook
-    , layoutHook = myLayoutHook
-    , startupHook = myStartupHook
-    , handleEventHook = screenCornerToggledEventHook <+> fadeWindowsEventHook <+> fixSteamFlicker <+> floatingVideosEventHook -- <+> focusOnMouseMove
-    , terminal = "x-terminal-emulator"
-    }
+main = do
+  sb <- myStatusBar
+  xmonad
+    . withSB sb
+    . docks
+    . ewmhFullscreen
+    . ewmh
+    . withUrgencyHook NoUrgencyHook
+    . javaHack
+    $ myConfig
+      { logHook = fadeWindowsLogHook myFadeHook
+      , manageHook =
+          manageDocks <+> myFocusHook <> myManageHook
+      , layoutHook = myLayoutHook
+      , startupHook = myStartupHook
+      , handleEventHook = screenCornerToggledEventHook <+> fadeWindowsEventHook <+> fixSteamFlicker <+> floatingVideosEventHook -- <+> focusOnMouseMove
+      , terminal = "x-terminal-emulator"
+      }
