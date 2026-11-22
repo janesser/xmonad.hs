@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [[ "$(hostname)" = "lincopta" || "$(hostname)" = "flowerpower" ]]; then
+    echo Installing pwvucontrol.
+else
+    echo Not supported on this machine.
+    exit 0
+fi
+
 if command -v pwvucontrol; then
     echo you have a pwvucontrol, reinstalling to potentially have the same/newer version.
 fi
