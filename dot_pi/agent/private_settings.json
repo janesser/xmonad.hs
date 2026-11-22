@@ -8,7 +8,7 @@
     "git:github.com/janesser/pi-caldav",
     "git:github.com/janesser/pi-signal"
   ],
-  "lastChangelogVersion": "1.5.2",
+  "lastChangelogVersion": "1.6.0",
   "theme": "dark",
   "defaultProvider": "crossbar-llamacpp-cyberkleiber-fritz-box-8081",
   "defaultModel": "InternScience/Sage-A1.5-Q4_K_M-GGUF:Q4_K_M",
