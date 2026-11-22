@@ -3,28 +3,28 @@
   "model": "llama-cuda-card1/qwen3.8-27b",
   "providers": {
     "llama-cuda-card1": {
-      "name": "Card 1 (:8081) — Qwen3.8-27B Q4_K_M (V100 SXM2 CUDA0)",
+      "name": "Card 1 (:8081, V100 SXM2 CUDA0)",
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
         "baseURL": "http://cyberkleiber:8081/v1"
       },
       "models": {
-        "qwen3.8-27b": {
-          "modelID": "unsloth/Qwen3.8-27B-GGUF:Q4_K_M",
+        "sage-a1.5": {
+          "modelID": "InternScience/Sage-A1.5-Q4_K_M-GGUF:Q4_K_M",
           "capabilities": {
             "tools": true,
             "input": ["text"],
             "output": ["text"]
           },
           "limit": {
-            "context": 235520,
+            "context": 262144,
             "output": 8192
           }
         }
       }
     },
     "llama-cuda-card2": {
-      "name": "Card 2 (:8082) — pool: sage-a1.5, glm-4.7-flash, gemma-4 ×3, thinklite-27b, lfm3-1.7b, ornith-1.5-35b, nesi2-mtp, steuerllm",
+      "name": "Card 2 (:8082, V100 PCIe CUDA1)",
       "package": "@opencode/ai/providers/openai-compatible",
       "settings": {
         "baseURL": "http://cyberkleiber:8082/v1"
