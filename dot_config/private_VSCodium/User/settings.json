@@ -10,7 +10,6 @@
   "[shellscript]": {
     "editor.defaultFormatter": "mads-hartmann.bash-ide-vscode"
   },
-  "haskell.serverEnvironment": {},
   "git.rebaseWhenSync": true,
   "[haskell]": {
     "editor.defaultFormatter": "haskell.haskell"
@@ -24,7 +23,6 @@
   ],
   "haskell.formattingProvider": "fourmolu",
   "editor.renderWhitespace": "all",
-  "haskell.manageHLS": "GHCup",
   "files.associations": {
     "docker-compose.y*ml": "yaml"
   },
@@ -46,5 +44,5 @@
     "editor.defaultFormatter": "sumneko.lua"
   },
   "pendant.runtimeSource": "external",
-  "git.enableSmartCommit": true
+  "git.enableSmartCommit": true,
 }
