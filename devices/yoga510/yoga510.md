@@ -4,6 +4,10 @@ It is a [AMD A9-9410](https://cpu-benchmark.org/cpu/amd-a9-9410/) Soc with integ
 
 <https://wiki.archlinux.org/title/AMDGPU>
 
+## Maintenance manual
+
+<https://download.lenovo.com/consumer/mobiles_pub/yoga_510-14ast_510-14isk_510-15isk_510-14ikb_510-15ikb_hmm_201608.pdf>
+
 ## Known issues
 
 ### fan
