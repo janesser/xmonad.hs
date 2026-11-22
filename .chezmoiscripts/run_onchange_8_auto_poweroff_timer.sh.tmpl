@@ -27,7 +27,8 @@
 # toggle) changes and chezmoi re-runs it. On unchanged applies the script is
 # skipped entirely — no `sudo`, no prompt.
 #
-#   inputs hash: {{ print (include "etc/systemd/system/auto-poweroff.times") (include "etc/systemd/system/auto-poweroff.delay") (include "etc/systemd/system/auto-poweroff.sh") (include ".chezmoi.toml.tmpl") | sha256sum }}
+#   inputs hash: {{ print (include "etc/systemd/system/auto-poweroff.times") | sha256sum }}
+#   inputs hash: {{ print (include "etc/systemd/system/auto-poweroff.delay") | sha256sum }}
 # ------------------------------------------------------------------------------
 
 set -euo pipefail
@@ -80,7 +81,6 @@ Description=Auto poweroff at configured local times (chezmoi)
 
 [Service]
 Type=oneshot
-RemainAfterExit=yes
 User=root
 Environment=HOME=/root
 Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
