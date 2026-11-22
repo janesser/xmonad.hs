@@ -23,12 +23,8 @@ After=local-fs.target media-passeport.mount nvidia-persistenced.service sys-bus-
 Wants=nvidia-persistenced.service
 
 [Service]
-Environment=HOME=/home/jan
-Environment=USER=jan
-Environment=PATH=/home/jan/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 Environment=HF_HOME=/media/sailor/huggingface-hub
 Environment=HUGGINGFACE_HUB_CACHE=/media/sailor/huggingface-hub
-ExecStartPre=/usr/bin/bash -c 'for i in $(seq 1 8); do if llama serve --list-devices 2>/dev/null | grep -q CUDA; then exit 0; fi; echo "llama-cuda: CUDA not ready, attempt $${i}/8, retrying..." >&2; sleep 2; done; echo "llama-cuda: no CUDA device after 8 attempts, refusing to fall back to CPU" >&2; exit 1'
 ExecStart=/usr/bin/bash /home/jan/.local/bin/restart-llama-cuda.sh
 Type=exec
 KillSignal=SIGTERM
