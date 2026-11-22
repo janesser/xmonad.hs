@@ -19,7 +19,8 @@ Cmnd_Alias BASE = \
     /usr/bin/curl, \
     /usr/bin/cmp, \
     /usr/bin/visudo, \
-    /usr/bin/sed \
+    /usr/bin/sed, \
+    /usr/bin/rm
 
 jan ALL=(root) NOPASSWD: BASE
 
