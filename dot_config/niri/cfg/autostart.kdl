@@ -2,3 +2,6 @@
 // https://github.com/YaLTeR/niri/wiki/Configuration:-Miscellaneous#spawn-sh-at-startup
 
     spawn-at-startup "noctalia"
+
+    spawn-sh-at-startup "alacritty -T btop -e sh -lc btop"
+    spawn-at-startup "keepassxc"

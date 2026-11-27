@@ -1,3 +1,11 @@
+    workspace "top"
+    workspace "soc"
+    workspace "web"
+    workspace "ide"
+    workspace "edu"
+    workspace "gam"
+    workspace "ctr"
+    
     window-rule {
         geometry-corner-radius 20 // Set every window radius to 20
         clip-to-geometry true
@@ -42,4 +50,31 @@
           xray false
           // blur false
         }
+    }
+
+// niri msg pick-window
+
+    window-rule {
+        match title="btop"
+        open-maximized true
+        open-on-workspace "top"
+    }
+
+    window-rule {
+        match app-id="firefox"
+        match app-id="librewolf"
+        open-maximized true
+        open-on-workspace "web"
+    }
+
+    window-rule {
+        match app-id="keepassxc"
+        open-focused false
+        open-on-workspace "ctr"
+    }
+
+    window-rule {
+        match app-id="vscodium"
+        open-maximized true
+        open-on-workspace "ide"
     }

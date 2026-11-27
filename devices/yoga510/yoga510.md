@@ -8,9 +8,40 @@ It is a [AMD A9-9410](https://cpu-benchmark.org/cpu/amd-a9-9410/) Soc with integ
 
 <https://download.lenovo.com/consumer/mobiles_pub/yoga_510-14ast_510-14isk_510-15isk_510-14ikb_510-15ikb_hmm_201608.pdf>
 
+## Secure Boot
+
+Every boot waits 1m30s until awaiting /dev/tpm0 times out.
+
+Follow instructions from <https://wiki.cachyos.org/de/configuration/secure_boot_setup/>
+
+https://github.com/systemd/systemd/issues/33412#issuecomment-2557737935
+
+    sudo dmesg|grep -i tmp
+    # tpm_crb_acpi MSFT0101:00: error -EBUSY: can't request region for resource [mem 0xdfb76000-0xdfb79fff]
+    sudo less /proc/iomem
+    # !! acpi from dsdt overlaps which is visible df87f < dfb7d < dfb7e
+    # df87f000-dfb7efff : ACPI Non-volatile Storage
+    # dfb76000-dfb79fff : MSFT0101:00
+    # dfb7a000-dfb7dfff : MSFT0101:00
+    sudo nano /etc/default/limine
+    # add "memmap=0x8000%0xdfb76000-4" to kernel-args
+
+## Secure Boot
+
+Every boot waits 1m30s until awaiting /dev/tpm0 times out OUTDATED
+
+Follow instructions
+https://wiki.cachyos.org/de/configuration/secure_boot_setup/
+
+    sudo sbctl status # setup mode is required, otherwise return to BIOS
+    sudo sbctl create-keys
+    sudo sbctl enroll-keys --microsoft --firmware-builtin
+    sudo limine-enroll-config
+    sudo limine-update
+
 ## Known issues
 
-### fan
+### fan OUTDATED
 
 The A9 takes clocking to the edge which results in the fan, responding to almost any interaction.
 
@@ -50,13 +81,13 @@ videos playback will take more than two seconds to start and may be rambling dur
 
 e.g. on youtube, playback was fine, though pre-buffering fell short several times.
 
-#### Fix: Enable auto performance for amd SoC
+#### OUTDATED Fix: Enable auto performance for amd SoC
 
     cat /sys/devices/pci0000:00/0000:00:01.0/power_dpm_force_performance_level # should be "auto"
     # echo "auto" | sudo tee /sys/devices/pci0000:00/0000:00:01.0/power_dpm_force_performance_level
     watch -n 0.5 cat /sys/devices/pci0000:00/0000:00:01.0/pp_dpm_sclk
 
-### btop shows no gpu
+### btop shows no gpu OUTDATED
 
 rocm-smi won't work for STONEY chipset.
 
