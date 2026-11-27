@@ -2,6 +2,7 @@
 
 PORT="${PORT:-8081}"
 MODEL="${MODEL:-InternScience/Sage-A1.5-Q4_K_M-GGUF:Q4_K_M}"
+#MODEL="${MODEL:-unsloth/Qwen3.8-27B-GGUF:Q4_K_M}"
 
 got=0
 for pid in $(pgrep -x llama 2>/dev/null; pgrep -x llama-server 2>/dev/null); do
@@ -20,17 +21,13 @@ done
 [ "$got" = 0 ] && echo "no stale :$PORT backend to reap"
 sleep 2
 
-if ! mountpoint "$HOME/.cache/huggingface/hub" 2>/dev/null; then
-    echo "WARNING: HF cache is not a mountpoint — llama will fetch the model on demand if missing." >&2
-fi
-
 if [ "$MODEL" == "ANY" ]; then
     MODEL_PARAM="--models-max 1"
 else
     MODEL_PARAM="-hf $MODEL"
 fi
 
-exec llama serve $MODEL_PARAM \
+exec ~/.local/bin/llama serve $MODEL_PARAM \
     --host :: \
     --port "$PORT" \
     -dev CUDA0 \
