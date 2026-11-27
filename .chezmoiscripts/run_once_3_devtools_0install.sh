@@ -8,10 +8,14 @@ sudo apt install -y git gitk git-lfs direnv
 
 # snap
 sudo apt install -y snap
-sudo snap install lxd
 
+sudo snap remove --purge lxd
 sudo snap remove --purge kubectl
 sudo snap remove --purge helm
+sudo snap remove --purge marksman
+sudo snap remove --purge bash-language-server
+#sudo snap remove --purge gnome-46-2404
+#sudo snap remove --purge gtk-common-themes mesa-2404
 
 # git credential manager
 ## https://docs.github.com/en/get-started/git-basics/why-is-git-always-asking-for-my-credentials

@@ -15,13 +15,5 @@ else
   sudo autoremove -y
 fi
 
-# Language Servers, see https://docs.helix-editor.com/lang-support.html
-## TODO work through https://medium.com/@CaffeineForCode/helix-setup-for-markdown-b29d9891a812
-sudo snap install bash-language-server --classic
-sudo snap install marksman
-cargo uninstall markdown-oxide 2>/dev/null || true # cleanup earlier install
-
 # setting git core.editor
 git config --global core.editor hx
-
-go install charm.land/glow/v3@latest
